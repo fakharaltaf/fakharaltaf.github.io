@@ -252,7 +252,24 @@ function QualityGovernor() {
   return null
 }
 
+/** WebGPU only when there's a real hardware adapter; software fallbacks render better as WebGL2. */
+async function webgpuUnsuitable(): Promise<boolean> {
+  if (new URLSearchParams(location.search).has('webgl')) return true
+  try {
+    const adapter = await navigator.gpu?.requestAdapter()
+    if (!adapter) return true
+    const a = adapter as GPUAdapter & {
+      isFallbackAdapter?: boolean
+      info?: { isFallbackAdapter?: boolean }
+    }
+    return a.isFallbackAdapter === true || a.info?.isFallbackAdapter === true
+  } catch {
+    return true
+  }
+}
+
 export default function World() {
+  const gpuFailed = useWorld((s) => s.gpuFailed)
   const tier = useQuality((s) => s.tier)
   const particleCount = TIERS[tier].particles
   stats.particles = particleCount
@@ -263,14 +280,22 @@ export default function World() {
       flat
       dpr={[1, TIERS[tier].dpr]}
       camera={{ fov: FOV, near: 0.01, far: 100, position: [0, 0, CAM_Z] }}
+      key={gpuFailed ? 'webgl2' : 'auto'}
       gl={async ({ canvas }) => {
-        const forceWebGL = new URLSearchParams(location.search).has('webgl')
+        const forceWebGL = gpuFailed || (await webgpuUnsuitable())
         const r = new WebGPURenderer({
           canvas: canvas as HTMLCanvasElement,
           antialias: true,
           forceWebGL,
         })
         await r.init()
+        // A GPU that fails mid-visit (lost device, uncaught errors) hands over to WebGL2.
+        const device = (r.backend as { device?: GPUDevice }).device
+        if (device) {
+          const fallBack = () => useWorld.setState({ gpuFailed: true, ready: false })
+          void device.lost.then((info) => info.reason !== 'destroyed' && fallBack())
+          device.addEventListener('uncapturederror', fallBack, { once: true })
+        }
         return r
       }}
       onCreated={({ gl, scene }) => {
