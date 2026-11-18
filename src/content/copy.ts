@@ -1,0 +1,288 @@
+// The copy deck. Every visible string on the site lives here, so text can change without touching
+// components. Demo-specific strings get added in the stage that builds each demo.
+// Rules: no employer names, no invented facts, no lorem. Anything unknown is a TODO comment, never shown.
+
+export const site = {
+  url: 'https://fakharaltaf.github.io/',
+  title: 'Fakhar Altaf — automating literally everything',
+  description:
+    'Software engineer in Lahore. Backend on AWS Lambda, PMS integrations, and now ML. I automate my way out of every job I get, then they give me a new one.',
+  plainTitle: 'Fakhar Altaf — the short version',
+  plainDescription:
+    'Fakhar Altaf, software engineer in Lahore, open to relocating. Projects, stack, and how to reach me, without the zooming.',
+  madeIn: 'Made in Lahore.',
+} as const
+
+export const person = {
+  name: 'Fakhar Altaf',
+  role: 'Software engineer',
+  location: 'Lahore, Pakistan',
+  relocation: 'Open to relocating.',
+  tagline: 'automating literally everything',
+  oneLiner: 'I automate my way out of every job I get, then they give me a new one.',
+  motto: "zoom out, it'll all make sense",
+  whatIDo: [
+    'I work across whatever stack the project needs.',
+    'Backend: microservices on AWS Lambda.',
+    'Integrations: property management system (PMS) integrations for a short-term rental platform.',
+    'Before that I ran channel operations across Airbnb, Booking.com, Vrbo and Expedia, and automated most of it.',
+  ],
+  howIThink: 'I see architecture and workflows first. If it’s done twice, it gets a script.',
+  openTo: 'Integrations, solutions engineering and full stack roles. Relocation included.',
+  currently: 'Going deeper into ML.',
+  links: {
+    github: 'https://github.com/fakharaltaf',
+    linkedin: 'https://www.linkedin.com/in/fakharaltaf/',
+    email: 'fakharbinaltaf2004@gmail.com',
+  },
+} as const
+
+export const skip = {
+  experience: 'Skip the experience',
+  backToExperience: 'Take the long way: the zoomable version',
+  noscript: 'The zoomable version needs JavaScript. The plain version doesn’t:',
+  noscriptLink: 'read it here',
+} as const
+
+export const loading = {
+  // Shown only if the world is slow to stream in. The cursor is the loading screen.
+  slow: 'Still loading. The cursor is fine, it does this.',
+  verySlow: 'Your connection is taking the scenic route. The plain version is instant:',
+  srBusy: 'Loading the zoomable version of the site.',
+} as const
+
+export const levels = {
+  cursor: {
+    name: 'Cursor',
+    srHeading: 'A blinking cursor',
+    srBody:
+      'The site starts on one caret at the end of an empty line. Zoom out to see what it belongs to.',
+  },
+  line: {
+    name: 'Line',
+    code: "const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-')",
+    caption: 'Every big thing I’ve built started as one line I got tired of typing.',
+    srHeading: 'One line of code',
+  },
+  script: {
+    name: 'Script',
+    file: 'tidy.ts',
+    code: [
+      "import { readdir, rename } from 'node:fs/promises'",
+      "import { describe } from './describe'",
+      '',
+      "const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-')",
+      '',
+      '// IMG_4821.jpg → 2025-03-14-chai-at-midnight.jpg',
+      'export async function tidy(dir: string) {',
+      '  for (const f of await readdir(dir)) {',
+      '    const { date, title, ext } = await describe(f)',
+      '    await rename(`${dir}/${f}`, `${dir}/${date}-${slug(title)}.${ext}`)',
+      '  }',
+      '}',
+    ],
+    // Simulated files the script tidies up on loop. Fake data, clearly a demo.
+    files: [
+      ['IMG_4821.jpg', '2025-03-14-chai-at-midnight.jpg'],
+      ['Screenshot 2025-03-14 at 01.12.09.png', '2025-03-14-the-bug-at-1am.png'],
+      ['final_FINAL_v3.docx', '2025-03-15-final.docx'],
+      ['New Folder (7)', '2025-03-15-misc'],
+      ['untitled.py', '2025-03-16-scrape-everything.py'],
+      ['IMG_4822.jpg', '2025-03-16-more-chai.jpg'],
+    ],
+    caption: 'Done twice? It gets a script.',
+    srHeading: 'A small script that renames files',
+  },
+  project: {
+    name: 'Project',
+    srHeading: 'Inside a running project',
+    play: 'Play',
+    code: 'Code',
+    openDemo: 'Try the demo',
+    closeDemo: 'Back out',
+    closeHint: 'Esc',
+    loadingDemo: 'Booting the demo. It’s smaller than it looks.',
+    posterNote: 'Still frame. Reduced motion is on, or this device asked me to go easy.',
+    stackLabel: 'Stack',
+  },
+  constellation: {
+    name: 'Constellation',
+    caption: 'Zoom out. It’ll all make sense.',
+    hint: 'Grab a star. Fling it. Click it to go in.',
+    thread: (skill: string, projects: readonly string[]) => `${skill}: ${projects.join(', ')}`,
+    srHeading: 'Every project, connected by the skills they share',
+  },
+  person: {
+    name: 'Person',
+    pin: 'Lahore, Pakistan',
+    knockHint: 'The letters are loose. Sorry.',
+    srHeading: 'Who built all this',
+  },
+  outro: {
+    name: 'Outro',
+    lead: 'If something at your place gets done twice a day, I’d like to see it.',
+    email: 'Email me',
+    copyEmail: 'Copy email',
+    copied: 'Copied. Paste responsibly.',
+    github: 'GitHub',
+    linkedin: 'LinkedIn',
+    zoomBackIn: 'Zoom back in',
+    srHeading: 'Contact',
+  },
+} as const
+
+export const hud = {
+  label: 'Zoom level',
+  here: (level: string) => `You are here: ${level}`,
+  flyTo: (level: string) => `Fly to ${level}`,
+  backend: { webgpu: 'WebGPU', webgl2: 'WebGL2' },
+  quality: ['Low (it’s fine)', 'Medium', 'High', 'Ultra (fans on)'],
+  qualityLabel: 'Quality',
+  qualityAuto: 'Auto',
+  sound: { on: 'Sound on', off: 'Sound off', aria: 'Toggle sound' },
+  howItWorks: 'How this works',
+  viewSource: 'View source of this moment',
+  wireframe: 'Wireframe',
+} as const
+
+export const hints = {
+  idle: 'Scroll to zoom out',
+  idleTouch: 'Swipe up to zoom out',
+  reducedMotion: 'Reduced motion is on, so the camera steps between levels instead of flying.',
+} as const
+
+export const cursorLabels = {
+  zoom: 'zoom',
+  drag: 'drag',
+  play: 'play',
+  open: 'open',
+  fling: 'fling',
+} as const
+
+export const shortcuts = {
+  title: 'Shortcuts',
+  close: 'Got it',
+  items: [
+    { keys: ['↓', 'S'], label: 'Zoom out' },
+    { keys: ['↑', 'W'], label: 'Zoom in' },
+    { keys: ['Enter'], label: 'Open the focused project' },
+    { keys: ['Esc'], label: 'Back out' },
+    { keys: ['Tab'], label: 'Next thing you can poke' },
+    { keys: ['/', '`'], label: 'Terminal' },
+    { keys: ['X'], label: 'Wireframe mode' },
+    { keys: ['?'], label: 'This sheet' },
+  ],
+} as const
+
+export const automation = {
+  counter: (n: number) => `You’ve automated ${n} ${n === 1 ? 'thing' : 'things'}.`,
+  milestones: { 1: 'There it is.', 3: 'You’re getting it.', 5: 'I’d hire you.' } as Record<
+    number,
+    string
+  >,
+  panelLead: (action: string) => `You ${action} twice. Writing a script.`,
+  status: { typing: 'writing', running: 'running', automated: 'automated', disabled: 'off' },
+  disable: 'Fine, I’ll do it myself',
+  enable: 'Put the script back on',
+  marker: 'auto',
+  markerTooltip: 'This runs itself now.',
+  welcomeBack: 'Welcome back. Your scripts kept running.',
+  ending: 'Okay, you don’t need me. But I’d still like to work with you.',
+  // Past-tense phrases slotted into panelLead.
+  actions: {
+    openProject: 'opened a project',
+    swipeCard: 'swiped a card',
+    plantField: 'planted a field',
+    submitAnswer: 'answered a question',
+    expandToolCall: 'expanded a tool call',
+    dragRow: 'dragged a row',
+    toggleSound: 'toggled the sound',
+    openTerminal: 'opened the terminal',
+    flingStar: 'flung a star',
+  },
+} as const
+
+export const terminal = {
+  prompt: 'visitor@lahore:~$',
+  banner: 'Type help. Or don’t, and guess.',
+  help: [
+    ['help', 'this'],
+    ['ls projects', 'everything I’ve built that fits on a screen'],
+    ['open <project>', 'fly to it'],
+    ['whoami', 'technically, me'],
+    ['zoom out / zoom in', 'the scroll wheel, typed'],
+    ['theme', 'about the colours'],
+    ['sound on|off', 'off by default, as it should be'],
+    ['automate all', 'skip the part where you do things twice'],
+    ['reset', 'delete every script, start over'],
+    ['contact', 'how to reach me'],
+    ['exit', 'close this'],
+  ],
+  open: {
+    ok: (title: string) => `Flying to ${title}.`,
+    missing: (arg: string) => `No project called “${arg}”. ls projects has the real list.`,
+    noArg: 'Open what? Try: open raremind',
+  },
+  zoomOut: 'Zooming out.',
+  zoomIn: 'Zooming in.',
+  alreadyOut: 'Already as far out as it goes. That’s the point.',
+  alreadyIn: 'Any closer and you’d be inside the cursor.',
+  theme: 'The world only comes in dark. The plain version does light: /plain/',
+  soundOn: 'Sound on. Low volume, promise.',
+  soundOff: 'Sound off.',
+  soundUsage: 'sound on, or sound off. There is no sound maybe.',
+  automateAll: 'Writing scripts for everything. Lean back.',
+  reset:
+    'Reset. Every script deleted, every counter back to zero. You do everything by hand again.',
+  sudoHire: [
+    '[sudo] password for visitor: ********',
+    'Checking sudoers. You’re in it.',
+    'Opening email.',
+  ],
+  exit: 'Bye. Press / to come back.',
+  unknown: [
+    (c: string) => `${c}: command not found. Yet.`,
+    (c: string) => `${c}? Type it again and I’ll write a script for it. (I won’t.)`,
+    (c: string) => `${c}: that’s on the roadmap. The roadmap is a sticky note.`,
+    () => 'Not a command. Ambitious, though.',
+    (c: string) => `${c}: I don’t know that one. help does.`,
+  ],
+} as const
+
+export const github = {
+  heading: 'Lately on GitHub',
+  loading: 'Asking GitHub what I’ve been up to.',
+  offline: 'GitHub isn’t answering. Here’s a snapshot from build day.',
+  rateLimited: 'GitHub says I’ve asked too many times. Showing the snapshot.',
+  empty: 'Nothing public lately. Probably a private repo. Or sleep.',
+} as const
+
+export const errors = {
+  noWebgl: 'This browser can’t draw the 3D world. The plain version has everything:',
+  demoCrash: (title: string) =>
+    `The ${title} demo fell over. Here’s a still frame while I pretend that didn’t happen.`,
+  generic: 'Something broke. Not the first time, won’t be the last.',
+} as const
+
+export const notFound = {
+  title: 'Not found — Fakhar Altaf',
+  line: 'This line hasn’t been written yet.',
+  home: 'Back to the cursor',
+  plain: 'Or the plain version',
+} as const
+
+export const plain = {
+  skipToContent: 'Skip to content',
+  sections: {
+    what: 'What I do',
+    open: 'Open to',
+    projects: 'Projects',
+    contact: 'Contact',
+  },
+  currentlyLabel: 'Currently',
+  emailLabel: 'Email',
+  play: 'Play',
+  code: 'Code',
+  buildStamp: (size: string, date: string, commit: string) =>
+    `${size} of JS · built ${date} · ${commit}`,
+} as const
