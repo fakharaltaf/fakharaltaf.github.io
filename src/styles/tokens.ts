@@ -36,7 +36,7 @@ type Pair = { bg: string; fg: string }
 type ControlStates = Record<'default' | 'hover' | 'active' | 'focus' | 'disabled', Pair>
 
 // Every control sets background AND text as a locked pair in every state. Never inherit.
-export const controls: Record<'primary' | 'secondary' | 'action', ControlStates> = {
+export const controls: Record<'primary' | 'secondary' | 'action' | 'quiet', ControlStates> = {
   primary: {
     default: { bg: brand.anchor, fg: brand.onLight },
     hover: { bg: '#27B587', fg: brand.onLight },
@@ -58,7 +58,27 @@ export const controls: Record<'primary' | 'secondary' | 'action', ControlStates>
     focus: { bg: brand.action, fg: brand.onLight },
     disabled: { bg: brand.neutral, fg: '#9AA6A2' },
   },
+  // Text-only control on the canvas: same dark fill as the page, so it still sets a locked pair.
+  quiet: {
+    default: { bg: palette.dark.canvas, fg: palette.dark.muted },
+    hover: { bg: palette.dark.canvas, fg: palette.dark.ink },
+    active: { bg: palette.dark.canvas, fg: palette.dark.anchorInk },
+    focus: { bg: palette.dark.canvas, fg: palette.dark.ink },
+    disabled: { bg: palette.dark.canvas, fg: brand.neutral },
+  },
 }
+
+// Syntax colours for code drawn on canvas and in the script panel. Restrained: teal family + sand.
+export const syntax = {
+  plain: '#E9F0EE',
+  keyword: '#1D9E75',
+  type: '#9FC9BC',
+  fn: '#F2F7F5',
+  string: '#C9B48A',
+  number: '#C9B48A',
+  comment: '#7E8E89',
+  punct: '#8A9A95',
+} as const
 
 // Spring tokens: stiffness (N/m-ish) and damping. Used by the camera rig and UI motion.
 export const spring = {

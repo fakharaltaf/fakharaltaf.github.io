@@ -1,5 +1,71 @@
-// Stage 1: the static shell (caret + skip link from index.html) is the whole experience.
-// The zoom world mounts here in stage 2.
+import { Component, type ReactNode, Suspense, lazy, useEffect, useRef } from 'react'
+import { errors, site } from './content/copy.ts'
+import { Announcer, Hud, IdleHint } from './ui/Hud.tsx'
+import { Overlays } from './ui/Overlays.tsx'
+import { bindHash } from './world/hash.ts'
+import { bindInputs } from './world/input.ts'
+import { useWorld } from './world/store.ts'
+import { zoom } from './world/zoom.ts'
+import './ui/app.css'
+
+// three.js and everything 3D live in their own chunk; the CSS caret covers the wait.
+const World = lazy(() => import('./world/World.tsx'))
+
+class WorldBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+  componentDidCatch() {
+    useWorld.setState({ failed: true })
+  }
+  render() {
+    if (!this.state.failed) return this.props.children
+    return (
+      <p className="fallback">
+        {errors.noWebgl} <a href="/plain/">{site.plainTitle}</a>
+      </p>
+    )
+  }
+}
+
 export function App() {
-  return null
+  const ready = useWorld((s) => s.ready)
+  const reduced = useWorld((s) => s.reducedMotion)
+  const surface = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('world-ready', ready)
+    if (ready) document.querySelector('[data-boot-status]')?.remove()
+  }, [ready])
+
+  useEffect(() => {
+    zoom.discrete = reduced
+  }, [reduced])
+
+  useEffect(() => {
+    const mq = matchMedia('(prefers-reduced-motion: reduce)')
+    const sync = () => useWorld.setState({ reducedMotion: mq.matches })
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  useEffect(() => (surface.current ? bindInputs(surface.current) : undefined), [])
+  useEffect(() => bindHash(), [])
+
+  return (
+    <>
+      <div ref={surface} className="surface">
+        <WorldBoundary>
+          <Suspense fallback={null}>
+            <World />
+          </Suspense>
+        </WorldBoundary>
+      </div>
+      <Overlays />
+      <Hud />
+      <IdleHint />
+      <Announcer />
+    </>
+  )
 }

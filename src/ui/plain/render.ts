@@ -206,8 +206,8 @@ export function shell(): { head: string; body: string } {
     }),
     body: `<a class="skip-exp btn btn-secondary" href="/plain/">${esc(skip.experience)}</a>
 <div class="boot" aria-hidden="true"><span class="caret"></span></div>
-<div class="sr-only" role="status">${esc(loading.srBusy)}</div>
-<div class="sr-only"><h1>${esc(person.name)}</h1><p>${esc(person.oneLiner)}</p><p>${esc(person.role)}, ${esc(person.location)}.</p><a href="/plain/">${esc(site.plainTitle)}</a></div>
+<div class="sr-only" role="status" data-boot-status>${esc(loading.srBusy)}</div>
+<div class="sr-only"><h1>${esc(person.name)}</h1><p>${esc(person.oneLiner)}</p><p>${esc(person.role)}, ${esc(person.location)}.</p></div>
 <noscript><p class="slow">${esc(skip.noscript)} <a href="/plain/">${esc(skip.noscriptLink)}</a></p></noscript>`,
   }
 }

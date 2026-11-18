@@ -1,0 +1,294 @@
+/* Experience chrome. Tokens come from the generated :root block in index.html. */
+
+.surface {
+  position: fixed;
+  inset: 0;
+  touch-action: none;
+  opacity: var(--world-fade, 1);
+}
+.world {
+  position: absolute !important;
+  inset: 0;
+}
+.world-ready .boot {
+  display: none;
+}
+
+.overlays {
+  opacity: var(--world-fade, 1);
+}
+.fade {
+  position: fixed;
+  margin: 0;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 3;
+}
+
+/* Captions: one sentence per level, lower left, out of the camera's way. */
+.caption {
+  left: max(1.25rem, 8vw);
+  bottom: max(5.5rem, 15vh);
+  max-width: 24ch;
+  font: 550 clamp(1.15rem, 2.3vw, 1.65rem) / 1.3 var(--sans);
+  letter-spacing: -0.012em;
+  color: var(--ink);
+  pointer-events: none;
+}
+.caption.small {
+  font: 400 0.875rem/1.5 var(--mono);
+  max-width: none;
+  color: var(--muted);
+}
+
+/* Cards: plain text on the canvas. No boxes, no blur. */
+.card {
+  left: max(1.25rem, 6vw);
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(30rem, 32vw);
+  color: var(--ink);
+}
+.card > * {
+  margin: 0 0 1rem;
+}
+.card .kicker {
+  font: 500 0.75rem/1.5 var(--mono);
+  color: var(--anchor-ink);
+}
+.card h2 {
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+.card .big {
+  font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+  line-height: 1.3;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+}
+.card .what,
+.card .muted {
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+.card .label {
+  font: 500 0.75rem var(--mono);
+  color: var(--anchor-ink);
+  margin-right: 0.4em;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0;
+  list-style: none;
+}
+.chips li {
+  font: 400 0.75rem/1 var(--mono);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  padding: 0.45em 0.6em;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.btn {
+  border: 0;
+  cursor: pointer;
+}
+
+/* Outro: the DOM caret takes over from the collapsed particles, at the exact screen centre. */
+.outro {
+  inset: 0;
+  pointer-events: none;
+}
+.outro > * {
+  pointer-events: auto;
+}
+.outro .caret {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: clamp(10px, 1.4vw, 18px);
+  height: clamp(80px, 14vw, 170px);
+  margin: 0;
+}
+.outro-body {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  top: calc(50% + clamp(40px, 7vw, 85px) + 1.75rem);
+  text-align: center;
+}
+.outro-body > * {
+  margin: 0 0 1rem;
+}
+.motto {
+  font: 500 clamp(1rem, 2vw, 1.25rem) / 1.4 var(--mono);
+  color: var(--ink);
+}
+.outro .lead {
+  color: var(--muted);
+  max-width: 34ch;
+  margin-inline: auto;
+}
+.outro .actions {
+  justify-content: center;
+}
+
+/* Zoom HUD */
+.hud {
+  position: fixed;
+  z-index: 5;
+  right: max(0.5rem, env(safe-area-inset-right));
+  top: 50%;
+  translate: 0 -50%;
+  height: min(44vh, 20rem);
+  width: 9rem;
+  pointer-events: none;
+}
+.hud ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.hud li {
+  position: absolute;
+  right: 0;
+  top: calc(var(--y) * 100%);
+  translate: 0 -50%;
+}
+.hud-track {
+  position: absolute;
+  right: 14px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line);
+}
+.hud-dot {
+  position: absolute;
+  right: 11px;
+  top: calc(var(--p, 0) * 100%);
+  width: 7px;
+  height: 7px;
+  translate: 0 -50%;
+  background: var(--anchor);
+}
+.notch {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 4px 0 0.5rem;
+  border: 0;
+  cursor: pointer;
+  font: 400 0.6875rem/1 var(--mono);
+  background: transparent;
+  color: var(--muted);
+}
+.notch::after {
+  content: '';
+  width: 21px;
+  height: 1px;
+  background: currentColor;
+}
+.notch:hover,
+.notch:focus-visible {
+  background: transparent;
+  color: var(--ink);
+}
+.notch[aria-current] {
+  background: transparent;
+  color: var(--anchor-ink);
+}
+.notch-label {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.notch:hover .notch-label,
+.notch:focus-visible .notch-label,
+.notch[aria-current] .notch-label {
+  opacity: 1;
+}
+.hud-backend {
+  position: absolute;
+  right: 4px;
+  top: calc(100% + 1.5rem);
+  margin: 0;
+  font: 400 0.6875rem var(--mono);
+  color: var(--muted);
+}
+
+.hint {
+  position: fixed;
+  z-index: 4;
+  left: 50%;
+  bottom: max(2.5rem, env(safe-area-inset-bottom));
+  translate: -50% 0;
+  margin: 0;
+  font: 400 0.8125rem var(--mono);
+  color: var(--muted);
+  opacity: 0;
+  transition: opacity 0.6s;
+  pointer-events: none;
+}
+.hint.on {
+  opacity: 1;
+}
+
+.fallback {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: 3rem;
+  text-align: center;
+  font: 400 0.875rem/1.6 var(--mono);
+  color: var(--muted);
+}
+
+/* Portrait: cards move to the bottom; the camera leaves room for them. */
+@media (max-aspect-ratio: 1/1) {
+  .card {
+    top: auto;
+    bottom: max(1.25rem, env(safe-area-inset-bottom));
+    right: 3.25rem; /* clear of the HUD */
+    transform: none;
+    width: auto;
+    max-height: 46vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .card h2 {
+    font-size: 2rem;
+  }
+  .card .what {
+    font-size: 0.8125rem;
+  }
+  .caption {
+    bottom: max(4rem, 12vh);
+    right: 3.25rem;
+  }
+  .outro-body {
+    left: 3.25rem;
+    right: 3.25rem;
+  }
+  .hud {
+    height: min(34vh, 16rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notch-label,
+  .hint {
+    transition: none;
+  }
+}

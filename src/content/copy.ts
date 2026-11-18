@@ -116,6 +116,7 @@ export const levels = {
     name: 'Person',
     pin: 'Lahore, Pakistan',
     knockHint: 'The letters are loose. Sorry.',
+    openToLabel: 'Open to',
     srHeading: 'Who built all this',
   },
   outro: {
