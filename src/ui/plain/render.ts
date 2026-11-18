@@ -39,7 +39,12 @@ function head(o: { title: string; description: string; path: string; ld?: boolea
 <meta property="og:url" content="${url}">
 <meta property="og:title" content="${esc(o.title)}">
 <meta property="og:description" content="${esc(o.description)}">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="${site.url}og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="${esc(site.ogAlt)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${site.url}og.png">
 ${o.ld ? jsonLd() : ''}
 <style>${o.css}</style>`
 }
@@ -79,6 +84,7 @@ article{padding:0 0 1.75rem;margin:0 0 1.75rem;border-bottom:1px solid var(--lin
 article:last-child{border-bottom:0;margin-bottom:0}
 h3{margin:0 0 .4rem;font-size:1.25rem;line-height:1.3;font-weight:650;letter-spacing:-.01em}
 article p{margin:0 0 .75rem}
+article img{display:block;width:100%;height:auto;aspect-ratio:747/334;margin:.6rem 0 .9rem;background:var(--surface);border:1px solid var(--line)}
 .stack{display:flex;flex-wrap:wrap;gap:.25rem .9rem;margin:0 0 .75rem;padding:0;list-style:none;font:400 .8125rem/1.6 var(--mono);color:var(--muted)}
 .links{display:flex;gap:1.25rem;font:500 .875rem var(--mono)}
 .links a{display:inline-block;padding:.35rem 0}
@@ -119,6 +125,7 @@ export function renderPlain(
     .map(
       (p) => `<article id="${p.id}">
 <h3>${esc(p.title)}</h3>
+<img src="/shots/${p.id}.jpg" width="747" height="334" loading="lazy" decoding="async" alt="${esc(plain.shotAlt(p.title))}">
 <p>${esc(p.description)}</p>
 <ul class="stack" aria-label="${esc(levels.project.stackLabel)}">${p.stack.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>
 <p class="links">${p.links.play ? ext(p.links.play, `${plain.play}`) : ''}${ext(p.links.code, plain.code)}</p>

@@ -7,7 +7,8 @@ import { projects } from '../content/projects.ts'
 import { navigate } from '../world/hash.ts'
 import { useDemos } from '../demos/store.ts'
 import { remap } from '../world/levels.ts'
-import { dive } from '../world/zoom.ts'
+import { frameAt } from '../world/timeline.ts'
+import { dive, onFrame } from '../world/zoom.ts'
 import type { Frame } from '../world/timeline.ts'
 import { useFade } from './useFade.ts'
 
@@ -76,11 +77,18 @@ function ProjectCard() {
 /** Live public GitHub activity, cached; falls back to the build-time snapshot quietly. */
 function GitHubActivity() {
   const [a, setA] = useState<Sourced | null>(null)
+  // Only ask GitHub once the camera is on its way to this card: most visits never need it.
   useEffect(() => {
     let alive = true
-    void getActivity().then((x) => alive && setA(x))
+    let asked = false
+    const unsub = onFrame((p) => {
+      if (asked || frameAt(p).chain < 4.2) return
+      asked = true
+      void getActivity().then((x) => alive && setA(x))
+    })
     return () => {
       alive = false
+      unsub()
     }
   }, [])
   return (

@@ -8,6 +8,8 @@ export const site = {
   description:
     'Software engineer in Lahore. Backend on AWS Lambda, PMS integrations, and now ML. I automate my way out of every job I get, then they give me a new one.',
   plainTitle: 'Fakhar Altaf — the short version',
+  ogAlt:
+    'A constellation of six projects joined by the skills they share, with the name Fakhar Altaf.',
   plainDescription:
     'Fakhar Altaf, software engineer in Lahore, open to relocating. Projects, stack, and how to reach me, without the zooming.',
 } as const
@@ -440,6 +442,7 @@ export const plain = {
   emailLabel: 'Email',
   play: 'Play',
   code: 'Code',
+  shotAlt: (title: string) => `Still frame of the ${title} demo`,
   buildStamp: (size: string, date: string, commit: string) =>
     `${size} of JS · built ${date} · ${commit}`,
 } as const

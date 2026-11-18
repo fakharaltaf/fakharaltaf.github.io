@@ -8,17 +8,19 @@
     "test": "vitest run",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "capture": "node scripts/capture.mjs"
   },
   "type": "module",
   "private": true,
   "dependencies": {
-    "@dimforge/rapier3d-compat": "^0.21.0",
+    "@dimforge/rapier3d": "^0.21.0",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "three": "^0.187.0",
+    "vite-plugin-wasm": "^3.6.0",
     "zustand": "^5.1.0"
   },
   "devDependencies": {

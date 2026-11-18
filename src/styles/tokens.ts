@@ -125,5 +125,7 @@ export function toCss({ withLight = false } = {}): string {
   const syntaxCss = Object.entries(syntax)
     .map(([k, v]) => `.tok-${k}{color:${v}}`)
     .join('')
-  return fontFaces + base + light + controlCss() + syntaxCss
+  // prefers-contrast: muted text and hairlines step up; colours keep their meaning.
+  const contrast = `@media (prefers-contrast: more){:root{--muted:var(--ink);--line:#5b6a66}}`
+  return fontFaces + base + light + controlCss() + syntaxCss + contrast
 }

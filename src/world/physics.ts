@@ -2,7 +2,7 @@
 // constellation. Stars hang on springs (home + every thread), can be grabbed, flung, and bump
 // into each other. At the person level, the letters of the name stand on a line and can be
 // knocked over; left alone, they set themselves back up.
-import RAPIER from '@dimforge/rapier3d-compat'
+import * as RAPIER from '@dimforge/rapier3d'
 import { projects } from '../content/projects.ts'
 import { registerAction } from '../automation/runner.ts'
 import { track } from '../automation/store.ts'
@@ -32,7 +32,6 @@ export function flingRandomStar() {
 export async function startPhysics() {
   if (started) return
   started = true
-  await RAPIER.init()
 
   // ---- Stars -----------------------------------------------------------------
   const stars = new RAPIER.World({ x: 0, y: 0, z: 0 })

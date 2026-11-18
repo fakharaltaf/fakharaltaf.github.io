@@ -27,6 +27,9 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      # End-to-end on Playwright's Chromium (WebGL2 fallback path) against the production build.
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
