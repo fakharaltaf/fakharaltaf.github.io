@@ -615,3 +615,8 @@ body:has(.demo-host.expanded) :is(.overlays, .star-labels, .tray, .hud, .hint) {
     top: max(4.75rem, env(safe-area-inset-top));
   }
 }
+
+.card h2.long {
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  line-height: 1.1;
+}

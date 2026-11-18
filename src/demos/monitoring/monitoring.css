@@ -1,0 +1,53 @@
+.mo {
+  position: absolute;
+  inset: 0;
+  background: #0f1513;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font: 400 clamp(10px, 2.8cqh, 14px) / 1.5 var(--mono);
+}
+.mo p {
+  margin: 0;
+}
+.mo-room {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.mo-top {
+  position: absolute;
+  left: 1em;
+  right: 1em;
+  top: 0.8em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+  flex-wrap: wrap;
+}
+.mo-count {
+  color: var(--anchor-ink);
+}
+.mo-slider {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  color: var(--muted);
+}
+.mo-slider input {
+  width: min(12em, 30cqw);
+  min-height: 32px;
+  accent-color: var(--anchor);
+}
+.mo-bottom {
+  position: absolute;
+  left: 1em;
+  bottom: 0.8em;
+  right: 9em;
+  color: var(--muted);
+  font-size: 0.8em;
+}
+.mo-note {
+  opacity: 0.8;
+}

@@ -46,6 +46,47 @@ export default every(6_000, () => {
   if (tile !== undefined) farm.⟨palnt|plant⟩(tile)
 })`,
   },
+  expandToolCall: {
+    file: 'expand.ts',
+    cadenceMs: 7_000,
+    levels: ['constellation'],
+    source: `// You opened two tool calls. Now they open themselves.
+import { every } from './lib'
+import { trace } from './claude-trace'
+
+export default every(7_000, () => {
+  const closed = trace.toolCalls().find((call) => !call.⟨exapnded|expanded⟩)
+  closed?.expand()
+})`,
+  },
+  swipeCard: {
+    file: 'swipe.ts',
+    cadenceMs: 5_000,
+    levels: ['constellation'],
+    source: `// You swiped twice. Now the stack swipes itself, with taste.
+import { every } from './lib'
+import { stack } from './svype'
+
+export default every(5_000, () => {
+  const job = stack.top()
+  if (!job) return
+  stack.fling(job.match >= ⟨07|70⟩ ? 'right' : 'left')
+})`,
+  },
+  dragRow: {
+    file: 'classify.py',
+    cadenceMs: 5_000,
+    levels: ['constellation'],
+    source: `# You dragged rows twice. Now they classify themselves.
+from lna import engine, every, table
+
+
+@every(seconds=5)
+def classify_next():
+    row = next((r for r in table.rows if not r.classified), None)
+    if row:
+        engine.⟨rnu|run⟩(row)`,
+  },
   openTerminal: {
     file: 'open-terminal.ts',
     cadenceMs: 28_000,

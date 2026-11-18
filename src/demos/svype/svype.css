@@ -1,0 +1,139 @@
+.sv {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #0f1513;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-size: clamp(11px, 3.1cqh, 16px);
+  touch-action: none;
+}
+.sv:focus-visible {
+  outline: 2px solid var(--anchor);
+  outline-offset: -2px;
+}
+.sv p {
+  margin: 0;
+}
+.sv-stack {
+  position: absolute;
+  left: 50%;
+  top: 8cqh;
+  width: min(19em, 60cqw);
+  height: 58cqh;
+  translate: -50% 0;
+}
+.sv-card {
+  position: absolute;
+  inset: 0;
+  padding: 1.1em 1.2em;
+  background: #18211e;
+  border: 1px solid #2a3633;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+  user-select: none;
+  will-change: transform;
+}
+.sv-card.top {
+  cursor: grab;
+}
+.sv-card.top:active {
+  cursor: grabbing;
+}
+.sv-where {
+  font: 400 0.72em var(--mono);
+  color: var(--muted);
+}
+.sv-job {
+  margin: 0.35em 0 0.8em !important;
+  font: 650 1.35em/1.15 var(--sans);
+  letter-spacing: -0.01em;
+}
+.sv-match {
+  height: 4px;
+  background: rgb(233 240 238 / 0.12);
+}
+.sv-match span {
+  display: block;
+  height: 100%;
+  background: var(--anchor);
+}
+.sv-pct {
+  margin-top: 0.35em !important;
+  font: 500 0.8em var(--mono);
+  color: var(--anchor-ink);
+}
+.sv-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35em;
+  margin: 0.9em 0 0;
+  padding: 0;
+  list-style: none;
+  font: 400 0.68em var(--mono);
+  color: var(--muted);
+}
+.sv-tags li {
+  border: 1px solid var(--line);
+  padding: 0.3em 0.5em;
+}
+.sv-actions {
+  position: absolute;
+  left: 50%;
+  bottom: 13cqh;
+  translate: -50% 0;
+  display: flex;
+  gap: 0.6em;
+}
+.sv .btn {
+  min-height: 2.6em;
+  font-size: 0.8em;
+}
+.sv-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6cqh;
+  text-align: center;
+  font: 400 0.66em var(--mono);
+  color: var(--muted);
+}
+.sv-sim {
+  position: absolute;
+  left: 1em;
+  bottom: 1.6cqh;
+  font: 400 0.6em var(--mono);
+  color: var(--muted);
+}
+.sv-summary {
+  position: absolute;
+  inset: 8cqh 10cqw;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8em;
+  align-items: flex-start;
+}
+.sv-title {
+  font: 650 1.4em var(--sans);
+}
+.sv-summary ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sv-summary li {
+  display: flex;
+  gap: 1em;
+  justify-content: space-between;
+  min-width: 18em;
+  padding: 0.3em 0;
+  border-bottom: 1px solid var(--line);
+}
+@container (max-aspect-ratio: 1/1) {
+  .sv-stack {
+    width: 78cqw;
+    height: 52cqh;
+  }
+  .sv {
+    font-size: clamp(13px, 4cqw, 16px);
+  }
+}

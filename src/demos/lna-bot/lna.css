@@ -1,0 +1,115 @@
+.lna {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 4cqw;
+  padding: 5cqh 4cqw;
+  background: #0f1513;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font: 400 clamp(10px, 2.8cqh, 14px) / 1.5 var(--sans);
+  touch-action: none;
+}
+.lna p {
+  margin: 0;
+}
+.lna-h {
+  margin-bottom: 0.6em !important;
+  font: 500 0.75em var(--mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.lna table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.lna th {
+  text-align: left;
+  font: 500 0.72em var(--mono);
+  color: var(--muted);
+  padding: 0 0 0.4em;
+}
+.lna td {
+  padding: 0.35em 0.4em 0.35em 0;
+  border-top: 1px solid var(--line);
+}
+.lna tbody tr {
+  cursor: grab;
+  user-select: none;
+}
+.lna tbody tr.sent {
+  cursor: default;
+  color: var(--muted);
+}
+.lna-send.btn {
+  min-height: 28px;
+  font-size: 1em;
+  padding: 0 0.4em;
+}
+.lna-out {
+  font: 500 0.75em var(--mono);
+  color: var(--anchor-ink);
+}
+.lna-hint {
+  margin-top: 0.7em !important;
+  font: 400 0.7em var(--mono);
+  color: var(--muted);
+}
+.lna-engine {
+  border: 1px dashed #2f3b38;
+  padding: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7em;
+  transition: border-color 0.15s;
+}
+.lna-engine.armed {
+  border-color: var(--anchor);
+}
+.lna-engine pre {
+  margin: 0;
+  font: 400 0.78em/1.6 var(--mono);
+  white-space: pre-wrap;
+}
+.lna-rule {
+  transition: background 0.2s;
+}
+.lna-rule.fired {
+  background: rgb(29 158 117 / 0.22);
+  outline: 1px solid var(--anchor);
+}
+.lna-result {
+  font-size: 0.85em;
+}
+.lna-result.muted {
+  color: var(--muted);
+}
+.lna-label {
+  font: 500 0.75em var(--mono);
+  color: var(--anchor-ink);
+  margin-right: 0.5em;
+}
+.lna-sim {
+  margin-top: auto !important;
+  font: 400 0.65em var(--mono);
+  color: var(--muted);
+}
+.lna-ghost {
+  position: absolute;
+  translate: -50% -50%;
+  padding: 0.4em 0.8em;
+  background: var(--anchor);
+  color: var(--on-light);
+  font: 500 0.8em var(--mono);
+  pointer-events: none;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.4);
+}
+@container (max-aspect-ratio: 1/1) {
+  .lna {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    font-size: clamp(11px, 3.5cqw, 14px);
+  }
+}

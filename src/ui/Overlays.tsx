@@ -52,7 +52,9 @@ function ProjectCard() {
   return (
     <section ref={ref} className="fade card" aria-labelledby="pj-title">
       <p className="kicker">{levels.project.srHeading}</p>
-      <h2 id="pj-title">{p.title}</h2>
+      <h2 id="pj-title" className={p.title.length > 24 ? 'long' : undefined}>
+        {p.title}
+      </h2>
       <p>{p.description}</p>
       <ul className="chips" aria-label={levels.project.stackLabel}>
         {p.stack.map((s) => (

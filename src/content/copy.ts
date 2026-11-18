@@ -318,6 +318,61 @@ export const demosAgrarian = {
   gridLabel: 'Farm plot, 9 by 9 tiles. Arrow keys choose a tile, Enter plants a field.',
 }
 
+export const demosTrace = {
+  file: '~/.agent/sessions/tidy-fix.jsonl',
+  tailing: 'live tailing',
+  ended: 'session ended · replaying',
+  you: 'you',
+  agent: 'agent',
+  edit: 'edit',
+  expand: (name: string) => `Show ${name} arguments and result`,
+  args: 'args',
+  result: 'result',
+  sidebar: {
+    input: 'Input tokens',
+    output: 'Output tokens',
+    tools: 'Tool calls',
+    ratio: 'Output per input',
+  },
+  simulated: 'Session and token counts are simulated for this demo.',
+}
+
+export const demosMonitoring = {
+  people: (n: number) => `Tracking ${n} ${n === 1 ? 'person' : 'people'}`,
+  slider: 'People in the room',
+  attention: 'attention',
+  yawn: 'yawn',
+  legend: 'Box: stable ID · line: gaze · axes: head pose · bar: attention',
+  synthetic: 'Synthetic faces, no camera. Nobody real was tracked in the making of this demo.',
+  srSummary: (n: number, flagged: number) =>
+    `${n} synthetic people tracked, ${flagged} flagged for yawning.`,
+}
+
+export const demosSvype = {
+  pass: 'Pass',
+  like: 'Interested',
+  match: (n: number) => `${n}% match`,
+  hint: 'Drag a card, flick it. Too gentle and it comes back.',
+  hintKeys: 'Left and right arrows work too.',
+  summaryTitle: 'Your matches',
+  summaryEmpty: 'No matches. Picky. Respect.',
+  again: 'Shuffle the stack',
+  simulated: 'Jobs and match scores are simulated for this demo.',
+}
+
+export const demosLna = {
+  table: 'Learning needs',
+  cols: { competency: 'Competency', trainees: 'Trainees', level: 'Level' },
+  engine: 'Rules engine',
+  drop: 'Drag rows here',
+  send: (c: string) => `Send ${c} to the rules engine`,
+  fired: 'Rule fired',
+  outcome: 'Recommendation',
+  reset: 'Put them back',
+  hint: 'Drag a row into the engine, or press its arrow.',
+  simulated: 'Sample rows, simplified rules.',
+}
+
 export const github = {
   heading: 'Lately on GitHub',
   loading: 'Asking GitHub what I’ve been up to.',

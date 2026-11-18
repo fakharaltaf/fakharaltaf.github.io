@@ -21,6 +21,10 @@ import { type DemoProps, useDemos } from './store.ts'
 const DEMOS: Record<string, LazyExoticComponent<ComponentType<DemoProps>>> = {
   raremind: lazy(() => import('./raremind/RareMind.tsx')),
   agrarian: lazy(() => import('./agrarian/Agrarian.tsx')),
+  'claude-trace': lazy(() => import('./claude-trace/ClaudeTrace.tsx')),
+  monitoring: lazy(() => import('./monitoring/Monitoring.tsx')),
+  svype: lazy(() => import('./svype/Svype.tsx')),
+  'lna-bot': lazy(() => import('./lna-bot/LnaBot.tsx')),
 }
 
 /** Opacity of the hosted demo for the current frame, and which project it is. */
