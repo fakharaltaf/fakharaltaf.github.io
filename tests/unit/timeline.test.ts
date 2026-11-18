@@ -21,11 +21,12 @@ describe('timeline', () => {
     expect(frameAt(1).particles).toBe(0)
     expect(frameAt(1).outroCaret).toBe(1)
   })
-  it('morphs through every shape in order', () => {
-    expect(frameAt(CENTERS.project)).toMatchObject({ seg: 0, segT: 1 })
-    expect(frameAt(CENTERS.constellation)).toMatchObject({ seg: 1, segT: 1 })
-    expect(frameAt(CENTERS.person)).toMatchObject({ seg: 2, segT: 1 })
-    expect(frameAt(1)).toMatchObject({ seg: 3, segT: 1 })
+  it('rests on each particle shape in order (shape = seg + segT)', () => {
+    const shape = (p: number) => frameAt(p).seg + frameAt(p).segT
+    expect(shape(CENTERS.project)).toBe(1)
+    expect(shape(CENTERS.constellation)).toBe(2)
+    expect(shape(CENTERS.person)).toBe(3)
+    expect(shape(1)).toBe(4)
   })
 })
 
