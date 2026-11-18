@@ -158,7 +158,8 @@ export function createOcean(getDepth: () => number, reduced: () => boolean) {
     sub.rotation.z = -Math.min(0.5, descending * 0.12) + Math.sin(time * 0.9) * 0.02
     sub.rotation.y = -0.35
     prop.rotation.x += t * (4 + descending * 6)
-    camera.position.set(0.6, y + 0.5, 8.5)
+    // Tall screens pull back so the whole hull fits across.
+    camera.position.set(0.6, y + 0.5, 8.5 * Math.max(1, 0.95 / camera.aspect))
     camera.lookAt(0.6, y, 0)
 
     const deep = Math.min(1, Math.log1p(shown) / Math.log1p(4000))

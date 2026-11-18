@@ -136,14 +136,18 @@ export type Cam = { focus: Vec2; height: number } // height = universe units vis
 export function fit(box: Box, view: View, card: boolean, margin = 1.12): Cam {
   const portrait = view.aspect < 1
   // Landscape card: content lives in the band 40%–95% of the width (HUD sits right of it).
-  const usableW = card && !portrait ? 0.55 : 0.9
+  // Portrait card: content keeps clear of the HUD strip on the right edge.
+  const usableW = card ? (portrait ? 0.82 : 0.55) : 0.9
   const usableH = card && portrait ? 0.42 : 1
   const height = Math.max((box.h * margin) / usableH, (box.w * margin) / (view.aspect * usableW))
   const width = height * view.aspect
   const focus: Vec2 = [box.x, box.y]
   if (card && !portrait) focus[0] = box.x - width * 0.175
   // Portrait card: content lives in the band between the skip link and the card (50%–92%).
-  if (card && portrait) focus[1] = box.y - height * 0.21
+  if (card && portrait) {
+    focus[1] = box.y - height * 0.21
+    focus[0] = box.x + width * 0.07
+  }
   return { focus, height }
 }
 

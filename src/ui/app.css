@@ -593,3 +593,25 @@
   padding: 0 44px 0 0;
   translate: calc(-100% + 44px) 0;
 }
+
+/* A demo too small to play in place is a preview with one obvious way in. */
+.demo-host.compact:not(.expanded) > :not(.demo-expand) {
+  visibility: hidden;
+}
+.demo-host.compact:not(.expanded) .demo-expand {
+  left: 50%;
+  right: auto;
+  bottom: 50%;
+  translate: -50% 50%;
+  min-height: 44px !important;
+  font-size: 0.875rem !important;
+}
+/* Full screen means full attention: everything else steps aside. */
+body:has(.demo-host.expanded) :is(.overlays, .star-labels, .tray, .hud, .hint) {
+  display: none; /* not visibility: children set their own inline visibility */
+}
+@media (max-aspect-ratio: 1/1) {
+  .demo-host.expanded {
+    top: max(4.75rem, env(safe-area-inset-top));
+  }
+}

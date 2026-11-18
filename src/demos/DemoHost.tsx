@@ -65,6 +65,8 @@ export function DemoHost() {
       host.style.transform = `translate(${r.left.toFixed(1)}px, ${r.top.toFixed(1)}px)`
       host.style.width = `${r.width.toFixed(1)}px`
       host.style.height = `${r.height.toFixed(1)}px`
+      // Too small to play in place (phones): show a preview and one big button instead.
+      host.classList.toggle('compact', r.width < 460)
     })
   }, [host])
 
