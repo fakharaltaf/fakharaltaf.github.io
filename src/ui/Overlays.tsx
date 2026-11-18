@@ -1,6 +1,7 @@
 // The DOM half of each level: real, selectable, screen-reader-friendly text over the 3D world.
 import { useEffect, useState } from 'react'
-import { github, levels, person } from '../content/copy.ts'
+import { automation, github, levels, person } from '../content/copy.ts'
+import { useEggs } from './Eggs.tsx'
 import { type Sourced, getActivity } from '../systems/github.ts'
 import { projects } from '../content/projects.ts'
 import { navigate } from '../world/hash.ts'
@@ -133,6 +134,7 @@ function PersonCard() {
 }
 
 function Outro() {
+  const ending = useEggs((s) => s.ending)
   const ref = useFade<HTMLElement>(fades.outro, 0)
   const [copied, setCopied] = useState(false)
   const copy = async () => {
@@ -151,7 +153,7 @@ function Outro() {
         <h2 id="outro-title" className="motto">
           {person.motto}
         </h2>
-        <p className="lead">{levels.outro.lead}</p>
+        <p className="lead">{ending ? automation.ending : levels.outro.lead}</p>
         <p className="actions">
           <a className="btn btn-primary" href={`mailto:${person.links.email}`}>
             {levels.outro.email}

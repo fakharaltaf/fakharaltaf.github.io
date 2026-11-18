@@ -26,6 +26,8 @@ import { useWorld } from './store.ts'
 import { frameAt } from './timeline.ts'
 import { MAX_LETTERS, grab, letterXforms, letters, starOffsets } from './physicsState.ts'
 import { Render } from './Render.tsx'
+import { TIERS, decideTier, useQuality } from '../systems/quality.ts'
+import { stats } from '../systems/stats.ts'
 import { dive, emitFrame, tick, view, zoom } from './zoom.ts'
 
 const CAM_Z = 10
@@ -222,16 +224,40 @@ function Scene({ particleCount }: { particleCount: number }) {
 // Dev-only handle for scrubbing the timeline from the console and from screenshot scripts.
 if (import.meta.env.DEV) Object.assign(window, { __zoom: zoom })
 
+/** Measures real frame times and moves the quality tier (auto mode only, at most twice). */
+function QualityGovernor() {
+  const frames = useRef<number[]>([])
+  const started = useRef(0)
+  const changes = useRef(0)
+  useFrame((_, dt) => {
+    const now = performance.now()
+    if (!started.current) started.current = now
+    // Skip the first second (shader compiles, font loads), then judge 3-second windows.
+    if (now - started.current < 1000 || document.hidden) return
+    frames.current.push(dt * 1000)
+    if (frames.current.length < 180) return
+    const { mode, tier } = useQuality.getState()
+    const next = decideTier(frames.current, tier)
+    frames.current = []
+    if (mode !== 'auto' || changes.current >= 2 || next === tier) return
+    // After the first adjustment, only ever step down: rebuilding particles is a visible hitch.
+    if (changes.current > 0 && next > tier) return
+    changes.current++
+    useQuality.setState({ tier: next })
+  })
+  return null
+}
+
 export default function World() {
-  const mobile = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches
-  // shortcut: fixed counts per device class; the adaptive quality manager replaces this in stage 8.
-  const particleCount = mobile ? 18000 : 42000
+  const tier = useQuality((s) => s.tier)
+  const particleCount = TIERS[tier].particles
+  stats.particles = particleCount
 
   return (
     <Canvas
       className="world"
       flat
-      dpr={[1, mobile ? 1.5 : 2]}
+      dpr={[1, TIERS[tier].dpr]}
       camera={{ fov: FOV, near: 0.01, far: 100, position: [0, 0, CAM_Z] }}
       gl={async ({ canvas }) => {
         const forceWebGL = new URLSearchParams(location.search).has('webgl')
@@ -254,6 +280,7 @@ export default function World() {
     >
       <Scene particleCount={particleCount} />
       <Render />
+      <QualityGovernor />
     </Canvas>
   )
 }

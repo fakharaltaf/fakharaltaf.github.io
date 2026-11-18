@@ -145,8 +145,21 @@ export const hud = {
   qualityAuto: 'Auto',
   sound: { label: 'Sound', onShort: 'on', offShort: 'off' },
   howItWorks: 'How this works',
-  viewSource: 'View source of this moment',
+  viewSource: 'View source',
+  viewSourceLong: 'View source of this moment',
   wireframe: 'Wireframe',
+  stats: {
+    fps: 'fps',
+    frame: 'frame',
+    drawCalls: 'draw calls',
+    triangles: 'triangles',
+    particles: 'particles',
+    backend: 'backend',
+    quality: 'quality',
+    automated: 'automated',
+  },
+  openOnGitHub: 'Open the file on GitHub',
+  close: 'Close',
 } as const
 
 export const hints = {
@@ -162,6 +175,11 @@ export const cursorLabels = {
   open: 'open',
   fling: 'fling',
 } as const
+
+export const eggs = {
+  konami: 'Fast-forward: 6×. Like a script would.',
+  endingTour: 'Running the whole site by itself.',
+}
 
 export const shortcuts = {
   title: 'Shortcuts',

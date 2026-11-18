@@ -7,6 +7,8 @@ import { Announcer, Hud, IdleHint } from './ui/Hud.tsx'
 import { Terminal } from './ui/terminal/Terminal.tsx'
 import { DemoHost } from './demos/DemoHost.tsx'
 import { Overlays } from './ui/Overlays.tsx'
+import { Eggs } from './ui/Eggs.tsx'
+import { Engineering } from './ui/Engineering.tsx'
 import { StarLabels } from './ui/StarLabels.tsx'
 import { ThreadTips } from './ui/ThreadTips.tsx'
 import { frameAt } from './world/timeline.ts'
@@ -145,6 +147,8 @@ export function App() {
       <Tray />
       <ScriptPanel />
       <Terminal />
+      <Engineering />
+      <Eggs />
       {fine && <Cursor />}
     </>
   )
