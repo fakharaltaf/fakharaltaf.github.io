@@ -122,5 +122,8 @@ export function toCss({ withLight = false } = {}): string {
   const light = withLight
     ? `@media (prefers-color-scheme: light){:root{${vars(palette.light)};color-scheme:light}}`
     : ''
-  return fontFaces + base + light + controlCss()
+  const syntaxCss = Object.entries(syntax)
+    .map(([k, v]) => `.tok-${k}{color:${v}}`)
+    .join('')
+  return fontFaces + base + light + controlCss() + syntaxCss
 }

@@ -182,12 +182,27 @@ export const automation = {
     string
   >,
   panelLead: (action: string) => `You ${action} twice. Writing a script.`,
+  panelDone: 'Done. It runs by itself now.',
   status: { typing: 'writing', running: 'running', automated: 'automated', disabled: 'off' },
   disable: 'Fine, I’ll do it myself',
   enable: 'Put the script back on',
   marker: 'auto',
   markerTooltip: 'This runs itself now.',
   welcomeBack: 'Welcome back. Your scripts kept running.',
+  trayLabel: 'Things that run by themselves now',
+  pausedReducedMotion: 'Paused while reduced motion is on. They’ll wait.',
+  // What each automation is called in the tray.
+  names: {
+    openProject: 'Opening projects',
+    swipeCard: 'Swiping cards',
+    plantField: 'Planting fields',
+    submitAnswer: 'Answering trivia',
+    expandToolCall: 'Expanding tool calls',
+    dragRow: 'Dragging rows',
+    toggleSound: 'Toggling sound',
+    openTerminal: 'Opening the terminal',
+    flingStar: 'Flinging stars',
+  },
   ending: 'Okay, you don’t need me. But I’d still like to work with you.',
   // Past-tense phrases slotted into panelLead.
   actions: {
@@ -204,6 +219,10 @@ export const automation = {
 } as const
 
 export const terminal = {
+  title: 'terminal',
+  close: 'Close terminal',
+  inputLabel: 'Command',
+  autoBadge: 'auto',
   prompt: 'visitor@lahore:~$',
   banner: 'Type help. Or don’t, and guess.',
   help: [

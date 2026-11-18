@@ -4,6 +4,7 @@ import { person } from '../content/copy.ts'
 import { projects } from '../content/projects.ts'
 import { Color } from 'three/webgpu'
 import { brand, palette } from '../styles/tokens.ts'
+import { mulberry32 } from '../systems/random.ts'
 import { type Pt, opaquePixels, scriptCanvas, textPixels } from './canvases.ts'
 import {
   type Box,
@@ -22,16 +23,6 @@ export const STRIDE = SHAPES * 4
 
 /** Visual size of each shape, used to scale the mid-flight scatter. */
 export const SHAPE_SIZE = [SCRIPT_BOX.w, FRAME.w, FRAME.w * 5, PIN_R * 4, PIN_R * 4]
-
-export function mulberry32(seed: number) {
-  return () => {
-    seed |= 0
-    seed = (seed + 0x6d2b79f5) | 0
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
 
 type P = { x: number; y: number; z: number; size: number; c: Color; a: number }
 const col = (hex: string) => new Color(hex) // sRGB hex → linear working colour space

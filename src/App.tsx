@@ -1,11 +1,15 @@
 import { Component, type ReactNode, Suspense, lazy, useEffect, useRef } from 'react'
 import { errors, site } from './content/copy.ts'
+import { startRunner } from './automation/runner.ts'
+import { ScriptPanel } from './automation/ScriptPanel.tsx'
+import { Tray } from './automation/Tray.tsx'
 import { Announcer, Hud, IdleHint } from './ui/Hud.tsx'
+import { Terminal } from './ui/terminal/Terminal.tsx'
 import { Overlays } from './ui/Overlays.tsx'
 import { bindHash } from './world/hash.ts'
 import { bindInputs } from './world/input.ts'
 import { useWorld } from './world/store.ts'
-import { zoom } from './world/zoom.ts'
+import { emitFrame, tick, zoom } from './world/zoom.ts'
 import './ui/app.css'
 
 // three.js and everything 3D live in their own chunk; the CSS caret covers the wait.
@@ -52,6 +56,23 @@ export function App() {
 
   useEffect(() => (surface.current ? bindInputs(surface.current) : undefined), [])
   useEffect(() => bindHash(), [])
+  useEffect(() => startRunner(), [])
+
+  // If the 3D world can't start, the DOM layer still needs a frame loop (zoom, typing, automations).
+  const failed = useWorld((s) => s.failed)
+  useEffect(() => {
+    if (!failed) return
+    let raf = 0
+    let last = performance.now()
+    const loop = (now: number) => {
+      tick((now - last) / 1000)
+      last = now
+      emitFrame(zoom.value)
+      raf = requestAnimationFrame(loop)
+    }
+    raf = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(raf)
+  }, [failed])
 
   return (
     <>
@@ -66,6 +87,9 @@ export function App() {
       <Hud />
       <IdleHint />
       <Announcer />
+      <Tray />
+      <ScriptPanel />
+      <Terminal />
     </>
   )
 }
