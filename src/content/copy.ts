@@ -143,7 +143,7 @@ export const hud = {
   quality: ['Low (it’s fine)', 'Medium', 'High', 'Ultra (fans on)'],
   qualityLabel: 'Quality',
   qualityAuto: 'Auto',
-  sound: { on: 'Sound on', off: 'Sound off', aria: 'Toggle sound' },
+  sound: { label: 'Sound', onShort: 'on', offShort: 'off' },
   howItWorks: 'How this works',
   viewSource: 'View source of this moment',
   wireframe: 'Wireframe',
@@ -378,6 +378,22 @@ export const github = {
   offline: 'GitHub isn’t answering. Here’s a snapshot from build day.',
   rateLimited: 'GitHub says I’ve asked too many times. Showing the snapshot.',
   empty: 'Nothing public lately. Probably a private repo. Or sleep.',
+  /** Static pages can't say "today": "40 pushes · last on 18 Nov 2026". */
+  pushedOn: (pushes: number, iso: string) =>
+    `${pushes} ${pushes === 1 ? 'push' : 'pushes'} · last on ${new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`,
+  /** "40 pushes · 2 days ago", for the live site. */
+  pushed: (pushes: number, iso: string, now = Date.now()) => {
+    const days = Math.floor((now - Date.parse(iso)) / 86_400_000)
+    const when =
+      days <= 0
+        ? 'today'
+        : days === 1
+          ? 'yesterday'
+          : days < 14
+            ? `${days} days ago`
+            : `${Math.round(days / 7)} weeks ago`
+    return `${pushes} ${pushes === 1 ? 'push' : 'pushes'} · ${when}`
+  },
 } as const
 
 export const errors = {

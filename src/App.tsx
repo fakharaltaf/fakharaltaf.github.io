@@ -15,6 +15,8 @@ import { bindHash } from './world/hash.ts'
 import { bindInputs } from './world/input.ts'
 import { useWorld } from './world/store.ts'
 import { emitFrame, tick, zoom } from './world/zoom.ts'
+import { setHum, sfx } from './systems/audio.ts'
+import { Cursor } from './systems/Cursor.tsx'
 import './ui/app.css'
 
 // three.js and everything 3D live in their own chunk; the CSS caret covers the wait.
@@ -54,6 +56,8 @@ export function App() {
   const ready = useWorld((s) => s.ready)
   const reduced = useWorld((s) => s.reducedMotion)
   const surface = useRef<HTMLDivElement>(null)
+  // Custom cursor only for a real mouse; touch keeps the platform's behaviour.
+  const fine = typeof matchMedia === 'function' && matchMedia('(pointer: fine)').matches
 
   useEffect(() => {
     document.documentElement.classList.toggle('world-ready', ready)
@@ -74,6 +78,26 @@ export function App() {
   useEffect(() => (surface.current ? bindInputs(surface.current) : undefined), [])
   useEffect(() => bindHash(), [])
   useEffect(() => startRunner(), [])
+
+  // Sound: the hum follows the zoom (sampled, not every frame), and visitor clicks tick.
+  useEffect(() => {
+    let last = 0
+    const unsub = onFrame((p) => {
+      const now = performance.now()
+      if (now - last < 200) return
+      last = now
+      setHum(p)
+    })
+    const click = (e: MouseEvent) => {
+      if (e.isTrusted && (e.target as Element).closest?.('.btn, .notch, .star-label, button'))
+        sfx.click()
+    }
+    addEventListener('click', click, true)
+    return () => {
+      unsub()
+      removeEventListener('click', click, true)
+    }
+  }, [])
 
   // Rapier (WASM) loads the first time the camera nears the constellation, never before.
   useEffect(() => {
@@ -121,6 +145,7 @@ export function App() {
       <Tray />
       <ScriptPanel />
       <Terminal />
+      {fine && <Cursor />}
     </>
   )
 }

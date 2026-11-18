@@ -1,6 +1,7 @@
 // Static HTML for the pages that must work without JavaScript: plain mode, 404, and the
 // experience shell's <head>. Pure functions over the copy deck; the Vite plugin writes them out.
-import { notFound, person, plain, site, skip, levels, loading } from '../../content/copy.ts'
+import { github, notFound, person, plain, site, skip, levels, loading } from '../../content/copy.ts'
+import type { Activity } from '../../systems/githubCore.ts'
 import { projects } from '../../content/projects.ts'
 import { toCss } from '../../styles/tokens.ts'
 
@@ -81,6 +82,8 @@ article p{margin:0 0 .75rem}
 .stack{display:flex;flex-wrap:wrap;gap:.25rem .9rem;margin:0 0 .75rem;padding:0;list-style:none;font:400 .8125rem/1.6 var(--mono);color:var(--muted)}
 .links{display:flex;gap:1.25rem;font:500 .875rem var(--mono)}
 .links a{display:inline-block;padding:.35rem 0}
+ul.gh{margin:0;padding:0;list-style:none}
+ul.gh li{margin:0 0 .6rem}
 dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.5rem 1.25rem}
 dt{font:400 .8125rem/1.9 var(--mono);color:var(--muted)}
 dd{margin:0;word-break:break-word}
@@ -97,7 +100,20 @@ article{break-inside:avoid}
 a[href^="http"]::after{content:" (" attr(href) ")";font-size:.8em;color:#444}
 }`
 
-export function renderPlain(stamp: BuildStamp): string {
+const ghList = (a: Activity) =>
+  a.repos.length
+    ? `<ul class="gh">${a.repos
+        .map(
+          (r) =>
+            `<li>${ext(r.url, r.name)} <span class="note">${esc(github.pushedOn(r.pushes, r.pushedAt))}</span>${r.message ? `<br><span class="note">${esc(r.message)}</span>` : ''}</li>`,
+        )
+        .join('')}</ul>`
+    : `<p class="note">${esc(github.empty)}</p>`
+
+export function renderPlain(
+  stamp: BuildStamp,
+  gh: Activity = { fetchedAt: '', repos: [] },
+): string {
   const { links } = person
   const projectHtml = projects
     .map(
@@ -137,7 +153,10 @@ ${head({ title: site.plainTitle, description: site.plainDescription, path: 'plai
 <section aria-labelledby="h-projects"><h2 id="h-projects"><span>03</span> ${esc(plain.sections.projects)}</h2><div>
 ${projectHtml}
 </div></section>
-<section aria-labelledby="h-contact"><h2 id="h-contact"><span>04</span> ${esc(plain.sections.contact)}</h2><div>
+<section aria-labelledby="h-gh"><h2 id="h-gh"><span>04</span> ${esc(github.heading)}</h2><div>
+${ghList(gh)}
+</div></section>
+<section aria-labelledby="h-contact"><h2 id="h-contact"><span>05</span> ${esc(plain.sections.contact)}</h2><div>
 <dl>
 <dt>${esc(plain.emailLabel)}</dt><dd><a href="mailto:${links.email}">${links.email}</a></dd>
 <dt>GitHub</dt><dd>${ext(links.github, 'github.com/fakharaltaf')}</dd>

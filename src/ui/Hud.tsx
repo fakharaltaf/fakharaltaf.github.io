@@ -3,6 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 import { hints, hud, levels } from '../content/copy.ts'
 import { navigate } from '../world/hash.ts'
 import { CENTERS, LEVELS, levelName } from '../world/levels.ts'
+import { registerAction } from '../automation/runner.ts'
+import { track } from '../automation/store.ts'
+import { useSettings } from '../systems/settings.ts'
 import { useWorld } from '../world/store.ts'
 import { onFrame, zoom } from '../world/zoom.ts'
 
@@ -10,6 +13,16 @@ export function Hud() {
   const level = useWorld((s) => s.level)
   const backend = useWorld((s) => s.backend)
   const dot = useRef<HTMLSpanElement>(null)
+  const sound = useSettings((s) => s.sound)
+
+  // Automated: it only ever turns sound off by itself, never on (see scripts/sound.ts).
+  useEffect(
+    () =>
+      registerAction('toggleSound', () => {
+        if (useSettings.getState().sound) useSettings.setState({ sound: false })
+      }),
+    [],
+  )
 
   useEffect(
     () =>
@@ -40,7 +53,22 @@ export function Hud() {
           </li>
         ))}
       </ol>
-      {backend && <p className="hud-backend">{hud.backend[backend]}</p>}
+      <div className="hud-foot">
+        <button
+          type="button"
+          className="btn btn-quiet sound-toggle"
+          aria-pressed={sound}
+          onClick={() => {
+            useSettings.setState({ sound: !sound })
+            track('toggleSound')
+          }}
+        >
+          {/* Name stays "Sound"; aria-pressed carries the state for screen readers. */}
+          {hud.sound.label}
+          <span aria-hidden="true"> · {sound ? hud.sound.onShort : hud.sound.offShort}</span>
+        </button>
+        {backend && <p className="hud-backend">{hud.backend[backend]}</p>}
+      </div>
     </nav>
   )
 }

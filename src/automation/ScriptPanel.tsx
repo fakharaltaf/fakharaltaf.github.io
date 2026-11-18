@@ -6,6 +6,8 @@ import { scripts } from '../content/scripts.ts'
 import { highlightLine } from '../ui/code/highlight.ts'
 import { useWorld } from '../world/store.ts'
 import { onFrame } from '../world/zoom.ts'
+import { sfx } from '../systems/audio.ts'
+import { haptic } from '../systems/haptics.ts'
 import { runNow } from './runner.ts'
 import { useAutomation } from './store.ts'
 import { finalText, keystrokes } from './typing.ts'
@@ -44,6 +46,7 @@ export function ScriptPanel() {
       while (i < keys.length && now >= due) due += keys[i++]!.delay
       if (i === start) return
       setProgress([id, i])
+      sfx.key()
       if (i === keys.length) finished = setTimeout(() => setPanelPhase('running'), 500)
     })
     return () => {
@@ -55,6 +58,8 @@ export function ScriptPanel() {
   // Running: perform the action once, visibly, as the script.
   useEffect(() => {
     if (panel?.phase !== 'running') return
+    sfx.unlock()
+    haptic('unlock')
     if (!reduced) runNow(panel.id) // reduced motion: automated, but nothing runs by itself
     const t = setTimeout(() => setPanelPhase('done'), 1200)
     return () => clearTimeout(t)

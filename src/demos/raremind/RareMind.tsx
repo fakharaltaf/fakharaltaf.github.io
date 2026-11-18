@@ -2,6 +2,7 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { demos } from '../../content/copy.ts'
 import { registerAction } from '../../automation/runner.ts'
+import { sfx } from '../../systems/audio.ts'
 import { track } from '../../automation/store.ts'
 import { addView } from '../../world/views.ts'
 import { useWorld } from '../../world/store.ts'
@@ -82,6 +83,9 @@ export default function RareMind({ host }: DemoProps) {
     const s = useRound.getState().submit(raw)
     if (!s) return
     if (by === 'visitor' && s.kind !== 'empty') track('submitAnswer')
+    // Only the visitor's own answers ping: automations never make noise.
+    if (by === 'visitor' && s.kind === 'hit')
+      sfx.ping(Math.min(1, useRound.getState().depth / 6000))
     setMeter(-1)
     if (s.kind === 'hit') void animateMeter(s.tier)
   }

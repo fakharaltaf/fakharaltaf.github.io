@@ -219,10 +219,24 @@
 .notch[aria-current] .notch-label {
   opacity: 1;
 }
-.hud-backend {
+.hud-foot {
   position: absolute;
   right: 4px;
-  top: calc(100% + 1.5rem);
+  top: calc(100% + 1rem);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  pointer-events: auto;
+}
+.sound-toggle.btn {
+  min-height: 32px;
+  font-size: 0.6875rem;
+}
+.sound-toggle[aria-pressed='true'] {
+  color: var(--anchor-ink);
+}
+.hud-backend {
   margin: 0;
   font: 400 0.6875rem var(--mono);
   color: var(--muted);
@@ -640,4 +654,76 @@ body:has(.demo-host.expanded) :is(.overlays, .star-labels, .tray, .hud, .hint) {
 
 .caption.hint-line {
   bottom: max(3.5rem, 10vh);
+}
+
+/* ---- Custom cursor (fine pointers only) ------------------------------- */
+html.has-cursor,
+html.has-cursor * {
+  cursor: none !important;
+}
+html.has-cursor :is(input, textarea) {
+  cursor: text !important;
+}
+.cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  pointer-events: none;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s,
+    border-radius 0.15s;
+  mix-blend-mode: difference;
+}
+.cursor span {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  translate: 0 -50%;
+  font: 500 0.6875rem var(--mono);
+  color: var(--ink);
+  white-space: nowrap;
+}
+.cursor[data-mode='link'] {
+  border-radius: 4px;
+  border-color: var(--anchor);
+  mix-blend-mode: normal;
+}
+.cursor[data-mode='text'],
+.cursor[data-mode='none'] {
+  opacity: 0;
+}
+.cursor[data-mode='drag'],
+.cursor[data-mode='fling'] {
+  border-color: var(--anchor);
+  background: rgb(29 158 117 / 0.18);
+  mix-blend-mode: normal;
+}
+.cursor[data-mode='fling'] {
+  border-color: var(--action);
+}
+.cursor[data-mode='play'],
+.cursor[data-mode='open'] {
+  border-color: var(--anchor);
+  mix-blend-mode: normal;
+}
+
+.card .gh ul {
+  margin: 0.3rem 0 0;
+  padding: 0;
+  list-style: none;
+  font: 400 0.8125rem/1.5 var(--mono);
+}
+.card .gh li {
+  margin: 0 0 0.35rem;
+}
+.card .gh .msg {
+  display: block;
+  color: var(--muted);
+}
+.card .gh .small {
+  font-size: 0.75rem;
 }

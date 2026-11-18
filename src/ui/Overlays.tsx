@@ -1,6 +1,7 @@
 // The DOM half of each level: real, selectable, screen-reader-friendly text over the 3D world.
-import { useState } from 'react'
-import { levels, person } from '../content/copy.ts'
+import { useEffect, useState } from 'react'
+import { github, levels, person } from '../content/copy.ts'
+import { type Sourced, getActivity } from '../systems/github.ts'
 import { projects } from '../content/projects.ts'
 import { navigate } from '../world/hash.ts'
 import { useDemos } from '../demos/store.ts'
@@ -71,6 +72,45 @@ function ProjectCard() {
   )
 }
 
+/** Live public GitHub activity, cached; falls back to the build-time snapshot quietly. */
+function GitHubActivity() {
+  const [a, setA] = useState<Sourced | null>(null)
+  useEffect(() => {
+    let alive = true
+    void getActivity().then((x) => alive && setA(x))
+    return () => {
+      alive = false
+    }
+  }, [])
+  return (
+    <div className="gh">
+      <p className="label">{github.heading}</p>
+      {!a ? (
+        <p className="muted">{github.loading}</p>
+      ) : a.repos.length === 0 ? (
+        <p className="muted">{github.empty}</p>
+      ) : (
+        <ul>
+          {a.repos.map((r) => (
+            <li key={r.url}>
+              <a href={r.url} target="_blank" rel="noopener">
+                {r.name}
+              </a>{' '}
+              <span className="muted">{github.pushed(r.pushes, r.pushedAt)}</span>
+              {r.message && <span className="msg">{r.message}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+      {a?.source === 'snapshot' && (
+        <p className="muted small">
+          {a.reason === 'rateLimited' ? github.rateLimited : github.offline}
+        </p>
+      )}
+    </div>
+  )
+}
+
 function PersonCard() {
   const ref = useFade<HTMLElement>(fades.person)
   return (
@@ -87,6 +127,7 @@ function PersonCard() {
         <span className="label">{levels.person.openToLabel}</span> {person.openTo}
       </p>
       <p className="muted">{person.currently}</p>
+      <GitHubActivity />
     </section>
   )
 }
