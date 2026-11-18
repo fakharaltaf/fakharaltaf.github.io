@@ -10,7 +10,9 @@ export default defineConfig({
   reporter: process.env.CI ? 'github' : 'list',
   use: {
     baseURL: 'http://localhost:4175',
-    viewport: { width: 1280, height: 800 },
+    // CI renders in software (no GPU): a smaller canvas keeps it near real time.
+    viewport: process.env.CI ? { width: 960, height: 600 } : { width: 1280, height: 800 },
+    trace: 'retain-on-failure',
     channel: process.env.CI ? undefined : 'chrome',
     launchOptions: { args: ['--enable-unsafe-webgpu'] },
   },

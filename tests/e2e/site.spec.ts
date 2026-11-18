@@ -32,7 +32,8 @@ test('zooms from the cursor to the outro and back, one level at a time', async (
   await expect(page).toHaveURL(/#outro$/, { timeout: 15_000 })
   await expect(page.locator('.outro .motto')).toBeVisible()
   await page.keyboard.press('Home')
-  await expect(current(page)).toHaveAttribute('aria-label', 'Fly to Cursor', { timeout: 20_000 })
+  // The longest single flight on the site; CI's software renderer gets extra time for it.
+  await expect(current(page)).toHaveAttribute('aria-label', 'Fly to Cursor', { timeout: 45_000 })
 })
 
 test('the HUD flies anywhere, and back/forward follow', async ({ page }) => {
