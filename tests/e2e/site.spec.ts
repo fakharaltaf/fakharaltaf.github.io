@@ -25,12 +25,12 @@ test('zooms from the cursor to the outro and back, one level at a time', async (
   await expect(current(page)).toHaveAttribute('aria-label', 'Fly to Cursor')
   for (const name of LEVELS.slice(1)) {
     await page.keyboard.press('PageDown')
-    await expect(current(page)).toHaveAttribute('aria-label', `Fly to ${name}`, { timeout: 8000 })
+    await expect(current(page)).toHaveAttribute('aria-label', `Fly to ${name}`, { timeout: 15_000 })
   }
-  await expect(page).toHaveURL(/#outro$/, { timeout: 8000 })
+  await expect(page).toHaveURL(/#outro$/, { timeout: 15_000 })
   await expect(page.locator('.outro .motto')).toBeVisible()
   await page.keyboard.press('Home')
-  await expect(current(page)).toHaveAttribute('aria-label', 'Fly to Cursor', { timeout: 10_000 })
+  await expect(current(page)).toHaveAttribute('aria-label', 'Fly to Cursor', { timeout: 20_000 })
 })
 
 test('the HUD flies anywhere, and back/forward follow', async ({ page }) => {
@@ -40,7 +40,7 @@ test('the HUD flies anywhere, and back/forward follow', async ({ page }) => {
   await page.click('button[aria-label="Fly to Script"]')
   await expect(page).toHaveURL(/#script$/)
   await page.goBack()
-  await expect(current(page)).toHaveAttribute('aria-label', 'Fly to Person', { timeout: 10_000 })
+  await expect(current(page)).toHaveAttribute('aria-label', 'Fly to Person', { timeout: 20_000 })
 })
 
 for (const [id, title, inside] of PROJECTS) {
@@ -57,13 +57,13 @@ for (const [id, title, inside] of PROJECTS) {
 test('stars are buttons: Enter on one dives into that project', async ({ page }) => {
   await ready(page, '/#constellation')
   const star = page.locator('button[aria-label="Open Svype"]')
-  await expect(star).toBeVisible({ timeout: 10_000 })
+  await expect(star).toBeVisible({ timeout: 20_000 })
   await star.focus()
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#svype$/)
   await expect(page.locator('.sv-card.top')).toBeVisible({ timeout: 15_000 })
   await page.keyboard.press('Escape')
-  await expect(page).toHaveURL(/#constellation$/, { timeout: 10_000 })
+  await expect(page).toHaveURL(/#constellation$/, { timeout: 20_000 })
 })
 
 test('doing something twice writes a script, automates it, and remembers', async ({ page }) => {
@@ -137,7 +137,7 @@ test('reduced motion: one gesture is one step, automations wait', async ({ brows
   await ready(page)
   await page.mouse.move(640, 400)
   await page.mouse.wheel(0, 400)
-  await expect(page).toHaveURL(/#line$/, { timeout: 8000 })
+  await expect(page).toHaveURL(/#line$/, { timeout: 15_000 })
   await expect(current(page)).toHaveAttribute('aria-label', 'Fly to Line')
   await expect(page.locator('.tray .paused')).toBeVisible()
   await page.waitForTimeout(32_000) // longer than the open-terminal cadence

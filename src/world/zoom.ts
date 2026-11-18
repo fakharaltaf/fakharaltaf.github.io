@@ -74,7 +74,8 @@ export function stepSpring(
   dt: number,
   k: { stiffness: number; damping: number } = spring.camera,
 ) {
-  let remaining = Math.min(dt, 0.1)
+  // Up to 0.25s per frame: slow devices keep real-time speed; a tab switch can't explode it.
+  let remaining = Math.min(dt, 0.25)
   while (remaining > 0) {
     const h = Math.min(remaining, 1 / 120)
     const accel = k.stiffness * (target - s.value) - k.damping * s.velocity
