@@ -13,8 +13,10 @@ import {
   PIN_R,
   PIN_SHRINK,
   PIN_TIP,
+  SCREEN,
   SCRIPT_BOX,
   STARS,
+  frameBox,
   nameAnchor,
 } from './layout.ts'
 
@@ -85,27 +87,21 @@ export function buildShapes(n: number, portrait: boolean) {
   const code = opaquePixels(scriptCanvas(32, true), 1)
   const s0 = mix([[1, () => fromPixels(code, 1.5)]])
 
-  // 1: the project: an architecture sketch with the script as one module, bottom-left.
+  // 1: the project: the live demo's screen on top, the modules that run it along the bottom,
+  // and the script as one of them, bottom-left, exactly where it already was.
   const L = FRAME.x - FRAME.w / 2
-  const B = FRAME.y - FRAME.h / 2
   const fx = (u: number) => L + u * FRAME.w
-  const fy = (v: number) => B + v * FRAME.h
-  const box = (u0: number, v0: number, u1: number, v1: number): Box => ({
-    x: fx((u0 + u1) / 2),
-    y: fy((v0 + v1) / 2),
-    w: (u1 - u0) * FRAME.w,
-    h: (v1 - v0) * FRAME.h,
-  })
+  const fy = (v: number) => FRAME.y - FRAME.h / 2 + v * FRAME.h
   const raremind = projects[0]!
-  const scriptSlot: Box = { ...SCRIPT_BOX, w: SCRIPT_BOX.w * 1.3, h: SCRIPT_BOX.h * 1.6 }
-  const screen = box(0.04, 0.34, 0.62, 0.84)
+  const scriptSlot: Box = { ...SCRIPT_BOX, w: SCRIPT_BOX.w * 1.3, h: SCRIPT_BOX.h * 1.8 }
+  const screen = SCREEN
   const modules: [Box, string][] = [
-    [box(0.68, 0.62, 0.96, 0.84), 'client · React'],
-    [box(0.68, 0.34, 0.96, 0.56), 'api · Fastify'],
-    [box(0.68, 0.06, 0.96, 0.28), 'db · PostgreSQL'],
-    [box(0.2, 0.06, 0.5, 0.28), 'ocean · Three.js'],
+    [frameBox(0.17, 0.04, 0.38, 0.22), 'ocean · Three.js'],
+    [frameBox(0.41, 0.04, 0.6, 0.22), 'client · React'],
+    [frameBox(0.63, 0.04, 0.8, 0.22), 'api · Fastify'],
+    [frameBox(0.83, 0.04, 0.97, 0.22), 'db · PostgreSQL'],
   ]
-  const em = FRAME.h * 0.03
+  const em = FRAME.h * 0.026
   const labels = modules.flatMap(([b, t]) =>
     textPixels(t, {
       x: b.x - b.w / 2 + em,
@@ -127,23 +123,23 @@ export function buildShapes(n: number, portrait: boolean) {
     }),
   )
   const title = textPixels(raremind.title, {
-    x: fx(0.04),
-    y: fy(0.92),
-    em: FRAME.h * 0.07,
+    x: fx(0.03),
+    y: fy(0.93),
+    em: FRAME.h * 0.055,
     align: 'left',
     weight: 650,
   })
   const wires: [number, number, number, number][] = [
-    [fx(0.82), fy(0.62), fx(0.82), fy(0.56)],
-    [fx(0.82), fy(0.34), fx(0.82), fy(0.28)],
-    [fx(0.62), fy(0.73), fx(0.68), fy(0.73)],
-    [fx(0.5), fy(0.17), fx(0.68), fy(0.17)],
-    [scriptSlot.x + scriptSlot.w / 2, scriptSlot.y, fx(0.2), scriptSlot.y],
+    [scriptSlot.x + scriptSlot.w / 2, scriptSlot.y, fx(0.17), scriptSlot.y],
+    [fx(0.38), fy(0.13), fx(0.41), fy(0.13)],
+    [fx(0.6), fy(0.13), fx(0.63), fy(0.13)],
+    [fx(0.8), fy(0.13), fx(0.83), fy(0.13)],
+    [fx(0.5), fy(0.22), fx(0.5), fy(0.3)],
   ]
   const s1Pre = mix([
     [10, () => onRect(FRAME, 1.4, muted, 0.9)],
-    [4, () => onSegment(L, fy(0.88), L + FRAME.w, fy(0.88), 1.1, muted, 0.6)],
-    [10, () => onRect(screen, 1.3, anchor, 0.8)],
+    [4, () => onSegment(L, fy(0.885), L + FRAME.w, fy(0.885), 1.1, muted, 0.6)],
+    [12, () => onRect(screen, 1.3, anchor, 0.8)],
     [14, () => onRect(pick(modules)[0], 1.3, muted, 0.85)],
     [6, () => onRect(scriptSlot, 1.3, anchor, 0.9)],
     [12, () => fromPixels(labels, 1.4, 0.95)],

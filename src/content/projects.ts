@@ -3,6 +3,8 @@ import type { SkillId } from './skills.ts'
 export type Project = {
   id: string // also the URL hash
   title: string
+  /** Short name where space is tight (star labels). Defaults to the title. */
+  short?: string
   description: string
   stack: readonly string[]
   // Constellation threads. Only skills implied by the stated stack, never guessed.
@@ -48,6 +50,7 @@ export const projects: readonly Project[] = [
   {
     id: 'monitoring',
     title: 'Multi-person facial and behavioural monitoring',
+    short: 'Behaviour monitoring',
     description:
       'Real-time tracking of up to 30 people with gaze, head pose, attentiveness and yawn detection.',
     stack: ['Python', 'ONNX Runtime'],

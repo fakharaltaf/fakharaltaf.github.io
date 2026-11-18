@@ -3,7 +3,9 @@ import { useState } from 'react'
 import { levels, person } from '../content/copy.ts'
 import { projects } from '../content/projects.ts'
 import { navigate } from '../world/hash.ts'
+import { useDemos } from '../demos/store.ts'
 import { remap } from '../world/levels.ts'
+import { dive } from '../world/zoom.ts'
 import type { Frame } from '../world/timeline.ts'
 import { useFade } from './useFade.ts'
 
@@ -13,8 +15,8 @@ const window_ = (a: number, b: number, c: number) => (f: Frame) =>
 const fades = {
   line: window_(0, 0.6, 0.12),
   script: window_(1, 0.6, 0.12),
-  project: window_(2, 0.7, 0.3),
-  constellation: window_(3, 0.7, 0.3),
+  project: (f: Frame) => (dive.id ? remap(dive.value, 0.6, 1) : window_(2, 0.7, 0.3)(f)),
+  constellation: (f: Frame) => window_(3, 0.7, 0.3)(f) * (1 - dive.value),
   person: window_(4, 0.7, 0.3),
   outro: (f: Frame) => f.outroCaret,
 }
@@ -45,7 +47,8 @@ const Ext = ({ href, label, cls }: { href: string; label: string; cls: string })
 
 function ProjectCard() {
   const ref = useFade<HTMLElement>(fades.project)
-  const p = projects[0]!
+  const id = useDemos((s) => s.present) ?? 'raremind'
+  const p = projects.find((x) => x.id === id) ?? projects[0]!
   return (
     <section ref={ref} className="fade card" aria-labelledby="pj-title">
       <p className="kicker">{levels.project.srHeading}</p>

@@ -103,6 +103,10 @@ export const levels = {
     closeHint: 'Esc',
     loadingDemo: 'Booting the demo. It’s smaller than it looks.',
     posterNote: 'Still frame. Reduced motion is on, or this device asked me to go easy.',
+    expand: 'Full screen',
+    collapse: 'Back to the world',
+    openStar: (title: string) => `Open ${title}`,
+    noDemo: 'No live demo for this one yet. The code is the demo for now.',
     stackLabel: 'Stack',
   },
   constellation: {
@@ -268,6 +272,51 @@ export const terminal = {
     (c: string) => `${c}: I don’t know that one. help does.`,
   ],
 } as const
+
+export const demos = {
+  raremind: {
+    label: 'Daily question',
+    question: 'Name a fruit. Not an apple. Not a banana.',
+    placeholder: 'Your answer',
+    inputLabel: 'Your answer to the daily question',
+    submit: 'Dive',
+    start: 'Start the clock',
+    seconds: (s: number) => `${s}s`,
+    tiers: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', ultra: 'Ultra rare' },
+    hit: (name: string, share: number, tier: string, metres: number) =>
+      `${name}: ${share}% of players said it. ${tier}. Down ${metres} m.`,
+    excluded: 'Said not an apple. Said not a banana. The submarine heard.',
+    unknown: (a: string) => `“${a}” isn’t on the list. Either it’s very rare or it isn’t a fruit.`,
+    duplicate: 'Already said that one. The ocean remembers.',
+    empty: 'Type something. Anything. Rarer is better.',
+    timeUp: 'Time. The submarine waits for no one.',
+    again: 'Again',
+    depthLabel: 'Depth',
+    metres: (m: number) => `${m.toLocaleString('en')} m`,
+    trench: 'Deeper than the Mariana Trench. Respect.',
+    simulated: 'Answer shares are simulated for this demo.',
+    saidLabel: 'Your answers',
+  },
+}
+
+export const demosAgrarian = {
+  seed: (n: number) => `seed ${n}`,
+  newSeed: 'New seed',
+  when: (year: number, season: string) => `Year ${year} · ${season}`,
+  seasons: { spring: 'Spring', summer: 'Summer', autumn: 'Autumn', winter: 'Winter' },
+  coins: (n: number) => `${n} coins`,
+  hint: 'Click a tile to plant a field. Harvests do the rest.',
+  hintKeys: 'Arrow keys pick a tile, Enter plants.',
+  fastForward: 'Fast-forward a year',
+  fastForwarding: 'Fast-forwarding',
+  sameSeed: 'Same seed, same farm. Try it.',
+  events: {
+    barn: 'Barn built. Harvests are worth 50% more.',
+    tractor: 'Tractor bought. It plants on its own now. Relatable.',
+    house: 'Someone moved in. It’s a village now.',
+  },
+  gridLabel: 'Farm plot, 9 by 9 tiles. Arrow keys choose a tile, Enter plants a field.',
+}
 
 export const github = {
   heading: 'Lately on GitHub',

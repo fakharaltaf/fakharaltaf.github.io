@@ -11,18 +11,20 @@ import {
   MeshBasicNodeMaterial,
   PlaneGeometry,
   SRGBColorSpace,
+  Vector3,
   WebGPURenderer,
 } from 'three/webgpu'
 import { brand, palette } from '../styles/tokens.ts'
 import { type Drawn, type Region, filesCanvas, lineCanvas, scriptCanvas } from './canvases.ts'
-import { CARET_H, CARET_W, cameraAt, caretX, restCams } from './layout.ts'
+import { CARET_H, CARET_W, blendCam, cameraAt, caretX, fit, restCams, screenFor } from './layout.ts'
 import { pointerNdc } from './input.ts'
 import { levelAt } from './levels.ts'
 import { Particles, makeUniforms } from './Particles.tsx'
 import { SHAPE_SIZE } from './shapes.ts'
 import { useWorld } from './store.ts'
 import { frameAt } from './timeline.ts'
-import { emitFrame, tick, zoom } from './zoom.ts'
+import { Render } from './Render.tsx'
+import { dive, emitFrame, tick, view, zoom } from './zoom.ts'
 
 const CAM_Z = 10
 const FOV = 50
@@ -42,6 +44,7 @@ function plane(region: Region, tex: CanvasTexture | null, color?: string) {
 }
 
 const texOf = (d: Pick<Drawn, 'canvas'>) => new CanvasTexture(d.canvas)
+const tmp = new Vector3()
 
 function Scene({ particleCount }: { particleCount: number }) {
   const root = useRef<Group>(null)
@@ -50,15 +53,15 @@ function Scene({ particleCount }: { particleCount: number }) {
   const portrait = size.width < size.height
   const u = useMemo(() => makeUniforms(), [])
 
-  const rest = useMemo(
-    () =>
-      restCams({
-        aspect: size.width / size.height,
-        vh: size.height,
-        caretPx: Math.min(260, Math.max(120, size.width * 0.22)),
-      }),
+  const viewInfo = useMemo(
+    () => ({
+      aspect: size.width / size.height,
+      vh: size.height,
+      caretPx: Math.min(260, Math.max(120, size.width * 0.22)),
+    }),
     [size.width, size.height],
   )
+  const rest = useMemo(() => restCams(viewInfo), [viewInfo])
 
   const parts = useMemo(() => {
     const line = lineCanvas()
@@ -98,16 +101,25 @@ function Scene({ particleCount }: { particleCount: number }) {
     tick(dt)
     const p = zoom.value
     const f = frameAt(p)
-    const cam = cameraAt(p, rest)
+    let cam = cameraAt(p, rest)
+    if (dive.id && dive.value > 0) {
+      cam = blendCam(cam, fit(screenFor(dive.id), viewInfo, true, 1.06), dive.value)
+    }
     const s = VIEW_H / cam.height
+    view.focus = cam.focus
+    view.height = cam.height
+    view.vw = size.width
+    view.vh = size.height
+    view.scale = s
     const g = root.current
     if (!g) return
     g.scale.setScalar(s)
     g.position.set(-cam.focus[0] * s, -cam.focus[1] * s, 0)
 
-    // Gentle parallax from the pointer; stronger where the world is actually 3D.
+    // Parallax from the pointer, only where the world is actually 3D. Flat levels stay exact so
+    // DOM overlays (demos, labels) line up with the world to the pixel.
     const rm = zoom.discrete
-    const depth = rm ? 0 : 0.05 + 0.3 * Math.min(1, Math.max(0, f.chain - 3))
+    const depth = rm ? 0 : 0.3 * Math.min(1, Math.max(0, f.chain - 3.3)) * (1 - dive.value)
     const o = orbit.current
     o.yaw += (pointer.x * depth - o.yaw) * Math.min(1, dt * 3)
     o.pitch += (pointer.y * depth * 0.5 - o.pitch) * Math.min(1, dt * 3)
@@ -140,7 +152,7 @@ function Scene({ particleCount }: { particleCount: number }) {
 
     // Particles.
     const unitsPerPx = cam.height / size.height
-    u.opacity.value = f.particles
+    u.opacity.value = f.particles * (1 - 0.6 * dive.value)
     u.from.forEach((w, k) => (w.value = k === f.seg ? 1 : 0))
     u.to.forEach((w, k) => (w.value = k === f.seg + 1 ? 1 : 0))
     u.t.value = f.segT
@@ -157,6 +169,12 @@ function Scene({ particleCount }: { particleCount: number }) {
     if (level !== lastLevel.current) {
       lastLevel.current = level
       useWorld.setState({ level })
+    }
+    g.updateMatrixWorld()
+    camera.updateMatrixWorld()
+    view.project = (x, y, z = 0) => {
+      tmp.set(x, y, z).applyMatrix4(g.matrixWorld).project(camera)
+      return [((tmp.x + 1) / 2) * size.width, ((1 - tmp.y) / 2) * size.height]
     }
     if (zoom.fade !== lastFade.current) {
       lastFade.current = zoom.fade
@@ -210,6 +228,7 @@ export default function World() {
       }}
     >
       <Scene particleCount={particleCount} />
+      <Render />
     </Canvas>
   )
 }

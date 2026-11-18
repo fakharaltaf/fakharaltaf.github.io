@@ -1,7 +1,8 @@
 // Every way of zooming feeds the same target value: wheel, trackpad pinch, touch swipe/pinch,
 // mouse drag, keys. Returns an unbind function.
 import { CENTERS, stepCenter } from './levels.ts'
-import { flyTo, nudge, zoom } from './zoom.ts'
+import { useDemos } from '../demos/store.ts'
+import { dive, flyTo, nudge, undive, zoom } from './zoom.ts'
 
 /** Pointer in normalised device coords (-1..1), for parallax and particle repulsion. */
 export const pointerNdc = { x: 0, y: 0, active: false }
@@ -150,6 +151,13 @@ export function bindInputs(surface: HTMLElement): () => void {
         break
       case 'End':
         flyTo(CENTERS.outro)
+        break
+      case 'Escape':
+        // Back out one step: full screen demo, then the terminal handles itself, then a dive.
+        if (useDemos.getState().expanded) useDemos.setState({ expanded: false })
+        else if (document.querySelector('.terminal:not(.is-auto)')) return
+        else if (dive.id) undive()
+        else return
         break
       default:
         return

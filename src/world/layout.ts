@@ -40,14 +40,29 @@ export const SCRIPT_BOX: Box = (() => {
 })()
 export const SCRIPT_TITLE_Y = rowY(0) + LH / 2 + TITLE_H / 2
 
-// ---- Level 3: the project. The script is one module, bottom-left, of a running project.
+// ---- Level 3: the project. The script is one module, bottom-left, of a running project
+// whose live demo fills most of the frame.
 const F = SCRIPT_BOX.w * 10.5
 export const FRAME: Box = {
-  x: SCRIPT_BOX.x - SCRIPT_BOX.w / 2 - F * 0.04 + F / 2,
-  y: SCRIPT_BOX.y - SCRIPT_BOX.h / 2 - F * 0.04 + (F * 0.6) / 2,
+  x: SCRIPT_BOX.x - SCRIPT_BOX.w / 2 - F * 0.03 + F / 2,
+  y: SCRIPT_BOX.y - SCRIPT_BOX.h / 2 - F * 0.05 + (F * 0.75) / 2,
   w: F,
-  h: F * 0.6,
+  h: F * 0.75,
 }
+/** A box inside the frame, in frame-relative units (u: left→right, v: bottom→top). */
+export function frameBox(u0: number, v0: number, u1: number, v1: number, frame: Box = FRAME): Box {
+  const L = frame.x - frame.w / 2
+  const B = frame.y - frame.h / 2
+  return {
+    x: L + ((u0 + u1) / 2) * frame.w,
+    y: B + ((v0 + v1) / 2) * frame.h,
+    w: (u1 - u0) * frame.w,
+    h: (v1 - v0) * frame.h,
+  }
+}
+/** Where a project's live demo sits inside its frame. */
+export const SCREEN_UV = [0.03, 0.3, 0.97, 0.86] as const
+export const SCREEN: Box = frameBox(...SCREEN_UV)
 
 // ---- Level 4: the constellation. RareMind's star sits exactly where its frame was.
 const S = FRAME.w * 1.3
@@ -63,6 +78,14 @@ export const STARS = projects.map((p) => {
   const o = STAR_OFFSETS[p.id] ?? [0, 0, 0]
   return { id: p.id, pos: [FRAME.x + o[0] * S, FRAME.y + o[1] * S, o[2] * S] as const }
 })
+/** A project's own frame, centred on its star (RareMind's is the Level 3 frame itself). */
+export function frameFor(id: string): Box {
+  if (id === 'raremind') return FRAME
+  const star = STARS.find((s) => s.id === id)
+  return star ? { ...FRAME, x: star.pos[0], y: star.pos[1] } : FRAME
+}
+export const screenFor = (id: string): Box => frameBox(...SCREEN_UV, frameFor(id))
+
 const xs = STARS.map((s) => s.pos[0])
 const ys = STARS.map((s) => s.pos[1])
 export const CONSTELLATION: Box = {
@@ -110,15 +133,15 @@ export type View = { aspect: number; vh: number; caretPx: number }
 export type Cam = { focus: Vec2; height: number } // height = universe units visible vertically
 
 /** Fit a box, optionally leaving room for a DOM card (left on landscape, bottom on portrait). */
-function fit(box: Box, view: View, card: boolean, margin = 1.12): Cam {
+export function fit(box: Box, view: View, card: boolean, margin = 1.12): Cam {
   const portrait = view.aspect < 1
-  // Landscape card: content lives in the band 40%–90% of the width (HUD sits right of it).
-  const usableW = card && !portrait ? 0.5 : 0.9
+  // Landscape card: content lives in the band 40%–95% of the width (HUD sits right of it).
+  const usableW = card && !portrait ? 0.55 : 0.9
   const usableH = card && portrait ? 0.42 : 1
   const height = Math.max((box.h * margin) / usableH, (box.w * margin) / (view.aspect * usableW))
   const width = height * view.aspect
   const focus: Vec2 = [box.x, box.y]
-  if (card && !portrait) focus[0] = box.x - width * 0.15
+  if (card && !portrait) focus[0] = box.x - width * 0.175
   // Portrait card: content lives in the band between the skip link and the card (50%–92%).
   if (card && portrait) focus[1] = box.y - height * 0.21
   return { focus, height }
@@ -169,4 +192,35 @@ export function cameraAt(p: number, rest: Record<LevelId, Cam>): Cam {
   // While the line types itself, the camera follows the caret, then settles on the whole line.
   if (i === 0) focus[0] = caretX(typedChars(t)) + (b.focus[0] - caretX(typedChars(t))) * ease(t)
   return { focus, height: Math.exp(logH) }
+}
+
+/** A curved flight between two cameras: focus along a bent path, zoom in log space. */
+export function blendCam(a: Cam, b: Cam, t: number): Cam {
+  const e = ease(Math.min(1, Math.max(0, t)))
+  const dx = b.focus[0] - a.focus[0]
+  const dy = b.focus[1] - a.focus[1]
+  const cx = (a.focus[0] + b.focus[0]) / 2 - dy * 0.22
+  const cy = (a.focus[1] + b.focus[1]) / 2 + dx * 0.22
+  const u = 1 - e
+  return {
+    focus: [
+      u * u * a.focus[0] + 2 * u * e * cx + e * e * b.focus[0],
+      u * u * a.focus[1] + 2 * u * e * cy + e * e * b.focus[1],
+    ],
+    height: Math.exp(Math.log(a.height) + (Math.log(b.height) - Math.log(a.height)) * e),
+  }
+}
+
+/** Project a universe box to CSS pixels using the current frame's camera (flat, z = 0). */
+export function projectBox(
+  b: Box,
+  v: { focus: [number, number]; height: number; vw: number; vh: number },
+) {
+  const k = v.vh / v.height
+  return {
+    left: v.vw / 2 + (b.x - b.w / 2 - v.focus[0]) * k,
+    top: v.vh / 2 - (b.y + b.h / 2 - v.focus[1]) * k,
+    width: b.w * k,
+    height: b.h * k,
+  }
 }

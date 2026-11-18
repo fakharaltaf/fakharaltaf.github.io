@@ -2,15 +2,32 @@
 // Arriving at a level by zooming replaces the hash (no history spam); deliberate jumps push.
 import { projects } from '../content/projects.ts'
 import { CENTERS, type LevelId, isLevelId, levelAt } from './levels.ts'
-import { flyTo, onFrame, zoom } from './zoom.ts'
+import { dive, diveInto, flyTo, onFrame, undive, zoom } from './zoom.ts'
 
 export function targetForHash(hash: string): number | null {
   const id = decodeURIComponent(hash.replace(/^#/, ''))
   if (!id) return CENTERS.cursor
   if (isLevelId(id)) return CENTERS[id]
-  // shortcut: every project lands on the project level until stage 5 adds per-project flights.
-  if (projects.some((p) => p.id === id)) return CENTERS.project
+  // RareMind is the Level 3 project; every other project is a dive from its star.
+  if (id === 'raremind') return CENTERS.project
+  if (projects.some((p) => p.id === id)) return CENTERS.constellation
   return null
+}
+
+/** Go wherever a hash points, diving into a project's star if it names one. */
+function follow(hash: string) {
+  const id = decodeURIComponent(hash.replace(/^#/, ''))
+  const t = targetForHash(hash)
+  if (t === null) return
+  if (id !== 'raremind' && projects.some((p) => p.id === id)) return diveInto(id)
+  if (dive.id) undive()
+  flyTo(t)
+}
+
+/** Open a project: RareMind by zooming, the rest by diving into their star. Adds history. */
+export function openProject(id: string) {
+  history.pushState(null, '', `#${id}`)
+  follow(`#${id}`)
 }
 
 const hashFor = (l: LevelId) => (l === 'cursor' ? location.pathname + location.search : `#${l}`)
@@ -22,25 +39,28 @@ export function navigate(level: LevelId) {
 }
 
 export function bindHash(): () => void {
-  const go = () => {
-    const t = targetForHash(location.hash)
-    if (t !== null) flyTo(t)
-  }
+  const go = () => follow(location.hash)
   // Loading a hash flies there from the cursor, after the first frames so the move is visible.
-  const initial = targetForHash(location.hash)
-  const first = setTimeout(() => initial !== null && flyTo(initial), 400)
+  const initial = location.hash
+  const first = setTimeout(() => follow(initial), 400)
   addEventListener('popstate', go)
 
-  let shown: LevelId = 'cursor'
+  let shown: LevelId | 'dive' = 'cursor'
   const unsub = onFrame((p) => {
     const atRest = Math.abs(zoom.velocity) < 1e-3 && Math.abs(p - zoom.target) < 1e-3
     if (!atRest) return
+    if (dive.id) {
+      if (dive.value > 0.99 && location.hash !== `#${dive.id}`)
+        history.replaceState(null, '', `#${dive.id}`)
+      shown = 'dive' // so backing out rewrites the hash to #constellation
+      return
+    }
     const level = levelAt(p)
     if (level === shown) return
     shown = level
     const current = location.hash.slice(1)
-    // Keep a project hash while resting on the project level.
-    if (level === 'project' && projects.some((x) => x.id === current)) return
+    // Keep RareMind's hash while resting on the project level.
+    if (level === 'project' && current === 'raremind') return
     if (current !== (level === 'cursor' ? '' : level))
       history.replaceState(null, '', hashFor(level))
   })

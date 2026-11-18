@@ -1,7 +1,7 @@
 // The single zoom value. Every input writes `target`; the render loop springs `value` toward it.
 // Plain mutable state on purpose: it changes every frame and must never trigger React renders.
 import { spring } from '../styles/tokens.ts'
-import { clamp01, nearestCenter } from './levels.ts'
+import { CENTERS, clamp01, nearestCenter } from './levels.ts'
 
 export const zoom = {
   target: 0,
@@ -17,14 +17,47 @@ export const zoom = {
   fade: 1,
 }
 
+/**
+ * Diving into a star: a second, independent camera move layered on the constellation level.
+ * value 0 = constellation, 1 = inside that project's frame.
+ */
+export const dive = { id: null as string | null, target: 0, value: 0, velocity: 0 }
+
+/** Camera state of the current frame, for projecting world boxes onto DOM overlays. */
+export const view = {
+  focus: [0, 0] as [number, number],
+  height: 1,
+  vw: 1,
+  vh: 1,
+  scale: 1,
+  /** Universe point → CSS px through the real (possibly orbiting) camera. Set by the world. */
+  project: (x: number, y: number, z = 0): [number, number] => [x, y + z],
+}
+
 const SNAP_AFTER_MS = 900
 
+export function diveInto(id: string) {
+  dive.id = id
+  dive.target = 1
+  flyTo(CENTERS.constellation)
+}
+
+export function undive() {
+  dive.target = 0
+}
+
 export function nudge(dp: number, now = performance.now()) {
+  // Inside a dive, zooming out backs out of the project; zooming further in has nowhere to go.
+  if (dive.id) {
+    if (dp > 0) undive()
+    return
+  }
   zoom.target = clamp01(zoom.target + dp)
   zoom.lastInput = now
 }
 
 export function flyTo(p: number, now = performance.now()) {
+  if (dive.id && p !== CENTERS.constellation) undive()
   zoom.target = clamp01(p)
   zoom.lastInput = now
 }
@@ -55,6 +88,15 @@ export function stepSpring(
 
 /** One frame of zoom: snap-to-rest when idle, then spring (or jump, in discrete mode). */
 export function tick(dt: number, now = performance.now()) {
+  if (dive.id) {
+    if (zoom.discrete) dive.value = dive.target
+    else stepSpring(dive, dive.target, dt, spring.gentle)
+    if (dive.target === 0 && dive.value < 0.002) {
+      dive.id = null
+      dive.value = 0
+      dive.velocity = 0
+    }
+  }
   if (!zoom.holding && now - zoom.lastInput > SNAP_AFTER_MS) {
     zoom.target = nearestCenter(zoom.target)
   }

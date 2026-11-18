@@ -1,0 +1,78 @@
+.ag {
+  position: absolute;
+  inset: 0;
+  color: var(--ink);
+  font-size: clamp(11px, 3.2cqh, 17px);
+}
+.ag p {
+  margin: 0;
+}
+.ag-plot {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+}
+.ag-plot:focus-visible {
+  outline: 2px solid var(--anchor);
+  outline-offset: -2px;
+}
+.ag-hud {
+  position: absolute;
+  left: 4cqw;
+  top: 6cqh;
+  pointer-events: none;
+}
+.ag-hud .btn {
+  pointer-events: auto;
+}
+.ag-when {
+  font: 500 0.75em var(--mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ag-coins {
+  font: 600 1.7em/1.2 var(--sans);
+  font-variant-numeric: tabular-nums;
+}
+.ag-seed {
+  display: flex;
+  gap: 0.8em;
+  align-items: baseline;
+  font: 400 0.75em var(--mono);
+  color: var(--muted);
+}
+.ag-bottom {
+  position: absolute;
+  left: 4cqw;
+  bottom: 5cqh;
+  max-width: 34cqw;
+  pointer-events: none;
+}
+.ag-bottom .btn {
+  pointer-events: auto;
+  min-height: 2.6em;
+  font-size: 0.8em;
+  margin-top: 0.6em;
+}
+.ag-event {
+  font: 500 0.9em/1.4 var(--sans);
+  text-wrap: balance;
+}
+.ag-keys {
+  margin-top: 0.3em !important;
+  font: 400 0.65em var(--mono);
+  color: var(--muted);
+}
+.btn:disabled {
+  cursor: progress;
+}
+@container (max-aspect-ratio: 1/1) {
+  .ag-bottom {
+    max-width: none;
+    right: 4cqw;
+  }
+  .ag {
+    font-size: clamp(13px, 4cqw, 17px);
+  }
+}

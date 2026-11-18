@@ -1,0 +1,145 @@
+/* Sized in container units so the demo scales with the world as the camera flies in. */
+.rm {
+  position: absolute;
+  inset: 0;
+  color: var(--ink);
+  font-size: clamp(11px, 3.4cqh, 18px);
+}
+.rm p {
+  margin: 0;
+}
+.rm-label {
+  font: 500 0.7em/1.4 var(--mono);
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.rm-q {
+  position: absolute;
+  left: 4cqw;
+  top: 6cqh;
+  max-width: 46cqw;
+}
+.rm-question {
+  margin-top: 0.4em !important;
+  font: 600 1.55em/1.2 var(--sans);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.rm-gauge {
+  position: absolute;
+  right: 4cqw;
+  top: 6cqh;
+  text-align: right;
+}
+.rm-depth {
+  font: 500 2em/1.1 var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.rm-note {
+  color: var(--anchor-ink);
+  font: 500 0.75em var(--mono);
+  max-width: 18em;
+  margin-left: auto !important;
+}
+.rm-said {
+  list-style: none;
+  margin: 0.8em 0 0;
+  padding: 0;
+  font: 400 0.75em/1.6 var(--mono);
+  color: var(--muted);
+  text-transform: capitalize;
+  max-height: 9.6em;
+  overflow: hidden;
+}
+.rm-bottom {
+  position: absolute;
+  left: 4cqw;
+  bottom: 5cqh;
+  width: min(30em, 60cqw);
+}
+.rm-meter {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  margin: 0 0 0.6em;
+  padding: 0;
+  list-style: none;
+  font: 500 0.62em/1 var(--mono);
+  color: var(--muted);
+}
+.rm-meter li {
+  padding: 0.55em 0 0;
+  border-top: 3px solid rgb(233 240 238 / 0.14);
+  transition: border-color 0.12s;
+}
+.rm-meter li.lit {
+  border-color: var(--anchor);
+  color: var(--ink);
+}
+.rm-meter li.lit-3 {
+  border-color: var(--action);
+}
+.rm-result {
+  min-height: 2.8em;
+  font: 500 0.85em/1.4 var(--sans);
+}
+.rm-form {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  margin-top: 0.4em;
+}
+.rm-form input {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.6em;
+  padding: 0 0.8em;
+  font: 400 1em var(--sans);
+  background: rgb(11 15 14 / 0.72);
+  color: var(--ink);
+  border: 1px solid rgb(233 240 238 / 0.25);
+  border-radius: 2px;
+}
+.rm-form input::placeholder {
+  color: var(--muted);
+}
+.rm-form input:focus-visible {
+  outline: 2px solid var(--anchor);
+  outline-offset: 1px;
+}
+.rm .btn {
+  min-height: 2.6em;
+  font-size: 0.85em;
+}
+.rm-timer {
+  font: 500 1em var(--mono);
+  font-variant-numeric: tabular-nums;
+  min-width: 2.6em;
+  text-align: right;
+  color: var(--muted);
+}
+.rm-sim {
+  margin-top: 0.7em !important;
+  font: 400 0.62em var(--mono);
+  color: var(--muted);
+}
+@container (max-aspect-ratio: 1/1) {
+  .rm-q {
+    max-width: 80cqw;
+  }
+  .rm-gauge {
+    top: auto;
+    bottom: 42cqh;
+  }
+  .rm-said {
+    display: none;
+  }
+  .rm-bottom {
+    width: auto;
+    right: 4cqw;
+  }
+  .rm {
+    font-size: clamp(13px, 4.2cqw, 18px);
+  }
+}

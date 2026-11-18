@@ -5,7 +5,9 @@ import { ScriptPanel } from './automation/ScriptPanel.tsx'
 import { Tray } from './automation/Tray.tsx'
 import { Announcer, Hud, IdleHint } from './ui/Hud.tsx'
 import { Terminal } from './ui/terminal/Terminal.tsx'
+import { DemoHost } from './demos/DemoHost.tsx'
 import { Overlays } from './ui/Overlays.tsx'
+import { StarLabels } from './ui/StarLabels.tsx'
 import { bindHash } from './world/hash.ts'
 import { bindInputs } from './world/input.ts'
 import { useWorld } from './world/store.ts'
@@ -84,6 +86,8 @@ export function App() {
         </WorldBoundary>
       </div>
       <Overlays />
+      <StarLabels />
+      <DemoHost />
       <Hud />
       <IdleHint />
       <Announcer />

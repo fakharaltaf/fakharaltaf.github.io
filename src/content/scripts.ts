@@ -16,6 +16,36 @@ export type Script = {
 export const AUTO_TERMINAL_COMMANDS = ['whoami', 'ls projects', 'help'] as const
 
 export const scripts: Partial<Record<ActionId, Script>> = {
+  submitAnswer: {
+    file: 'dive.ts',
+    cadenceMs: 9_000,
+    levels: ['project'],
+    source: `// You answered twice. Now the submarine finds its own answers.
+import { every, pick, typeInto } from './lib'
+import { answers, round } from './raremind'
+
+export default every(9_000, async () => {
+  if (!round.isOpen()) round.start()
+  // Rarer answers dive deeper, so aim for the bottom of the list.
+  const rare = answers.filter((a) => a.share < 2 && !round.said(a))
+  await typeInto('#raremind-answer', pick(rare).name)
+  round.⟨sumbit|submit⟩()
+})`,
+  },
+  plantField: {
+    file: 'plant.ts',
+    cadenceMs: 6_000,
+    levels: ['constellation'],
+    source: `// You planted twice. Now the farm plants itself.
+import { every } from './lib'
+import { farm } from './agrarian'
+
+export default every(6_000, () => {
+  // Same seed, same choice: automation stays deterministic too.
+  const tile = farm.nextPlot()
+  if (tile !== undefined) farm.⟨palnt|plant⟩(tile)
+})`,
+  },
   openTerminal: {
     file: 'open-terminal.ts',
     cadenceMs: 28_000,
