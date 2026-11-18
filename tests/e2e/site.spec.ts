@@ -11,6 +11,8 @@ const PROJECTS = [
 ] as const
 
 async function ready(page: Page, path = '/') {
+  // Behaviour, not looks: the lowest quality tier keeps CI's software renderer responsive.
+  await page.addInitScript(() => localStorage.setItem('zo:quality:v1', '0'))
   await page.goto(path)
   await page.waitForFunction(
     () => document.documentElement.classList.contains('world-ready'),

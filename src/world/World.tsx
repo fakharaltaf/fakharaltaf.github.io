@@ -228,6 +228,7 @@ if (import.meta.env.DEV) Object.assign(window, { __zoom: zoom })
 function QualityGovernor() {
   const frames = useRef<number[]>([])
   const started = useRef(0)
+  const windowStart = useRef(0)
   const changes = useRef(0)
   useFrame((_, dt) => {
     const now = performance.now()
@@ -235,7 +236,10 @@ function QualityGovernor() {
     // Skip the first second (shader compiles, font loads), then judge 3-second windows.
     if (now - started.current < 1000 || document.hidden) return
     frames.current.push(dt * 1000)
-    if (frames.current.length < 180) return
+    // Judge every 3 seconds of real time (not N frames: a slow device would wait forever).
+    if (!windowStart.current) windowStart.current = now
+    if (now - windowStart.current < 3000) return
+    windowStart.current = now
     const { mode, tier } = useQuality.getState()
     const next = decideTier(frames.current, tier)
     frames.current = []

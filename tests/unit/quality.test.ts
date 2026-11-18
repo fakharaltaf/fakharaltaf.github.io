@@ -5,7 +5,10 @@ const frames = (ms: number, n = 120) => Array.from({ length: n }, (_, i) => ms +
 
 describe('quality manager', () => {
   it('waits for enough samples', () => {
-    expect(decideTier(frames(80, 10), 2, false)).toBe(2)
+    expect(decideTier(frames(80, 5), 2, false)).toBe(2)
+  })
+  it('drops two tiers when far behind (software rendering)', () => {
+    expect(decideTier(frames(200, 10), 3, false)).toBe(1)
   })
   it('steps down when frames are slow, never below 0', () => {
     expect(decideTier(frames(30), 2, false)).toBe(1)

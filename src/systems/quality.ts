@@ -41,10 +41,12 @@ export function setQualityMode(mode: Tier | 'auto') {
  * up a tier only with lots of headroom. Hysteresis keeps it from flapping.
  */
 export function decideTier(frames: number[], tier: Tier, mobile = coarse): Tier {
-  if (frames.length < 30) return tier
+  if (frames.length < 8) return tier
   const sorted = [...frames].sort((a, b) => a - b)
   const median = sorted[Math.floor(sorted.length / 2)]!
   const budget = mobile ? 33 : 17.5 // 30 fps on phones, 60 on laptops
+  // Far behind (software rendering, very old GPUs): drop two tiers at once.
+  if (median > budget * 3 && tier > 1) return (tier - 2) as Tier
   if (median > budget * 1.25 && tier > 0) return (tier - 1) as Tier
   if (median < budget * 0.55 && tier < 3) return (tier + 1) as Tier
   return tier
