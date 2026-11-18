@@ -5,6 +5,7 @@ import { projects } from '../content/projects.ts'
 import { track } from '../automation/store.ts'
 import { openProject } from '../world/hash.ts'
 import { STARS } from '../world/layout.ts'
+import { starPos } from '../world/physicsState.ts'
 import { remap } from '../world/levels.ts'
 import { frameAt } from '../world/timeline.ts'
 import { dive, onFrame, view } from '../world/zoom.ts'
@@ -29,10 +30,10 @@ export function StarLabels() {
         w.inert = o < 0.5
       }
       if (o <= 0) return
-      STARS.forEach((s, i) => {
+      STARS.forEach((_, i) => {
         const el = refs.current[i]
         if (!el) return
-        const [x, y] = view.project(s.pos[0], s.pos[1], s.pos[2])
+        const [x, y] = view.project(...starPos(i))
         el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`
         // Near the right edge (and the HUD), the label sits on the star's left.
         el.classList.toggle('flip', x > view.vw * 0.68)

@@ -90,12 +90,12 @@ export const spring = {
 
 export const font = {
   mono: '"JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace',
-  sans: 'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+  sans: 'Figtree, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
 } as const
 
 export const fontFaces = `
 @font-face{font-family:"JetBrains Mono";src:url(/fonts/jetbrains-mono.woff2) format("woff2");font-weight:100 800;font-display:swap}
-@font-face{font-family:Inter;src:url(/fonts/inter.woff2) format("woff2");font-weight:100 900;font-display:swap}`
+@font-face{font-family:Figtree;src:url(/fonts/figtree.woff2) format("woff2");font-weight:300 900;font-display:swap}`
 
 const vars = (o: Record<string, string>) =>
   Object.entries(o)

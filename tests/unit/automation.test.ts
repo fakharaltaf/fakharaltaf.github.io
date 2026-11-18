@@ -52,9 +52,9 @@ describe('store flow', () => {
     expect(useAutomation.getState().panel).toBeNull()
   })
   it('ignores actions that have no script yet', () => {
-    track('flingStar')
-    track('flingStar')
-    expect(useAutomation.getState().statuses.flingStar).toBe('unseen')
+    // Every listed action has a script now; the guard still protects unknown ids at runtime.
+    track('nope' as 'flingStar')
+    expect(useAutomation.getState().panel).toBeNull()
   })
 })
 
@@ -106,5 +106,12 @@ describe('terminal parser', () => {
     expect(complete('zo')).toBe('zoom ')
     expect(complete('open ra')).toBe('open raremind')
     expect(complete('xyz')).toBe('xyz')
+  })
+})
+
+describe('scripts', () => {
+  it('every trackable action has a script', async () => {
+    const { ACTION_IDS, SCRIPTED_IDS } = await import('../../src/automation/store')
+    expect(SCRIPTED_IDS).toEqual(ACTION_IDS)
   })
 })

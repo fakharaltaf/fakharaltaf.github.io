@@ -12,6 +12,7 @@ import {
   PlaneGeometry,
   SRGBColorSpace,
   Vector3,
+  type Vector4,
   WebGPURenderer,
 } from 'three/webgpu'
 import { brand, palette } from '../styles/tokens.ts'
@@ -23,6 +24,7 @@ import { Particles, makeUniforms } from './Particles.tsx'
 import { SHAPE_SIZE } from './shapes.ts'
 import { useWorld } from './store.ts'
 import { frameAt } from './timeline.ts'
+import { MAX_LETTERS, grab, letterXforms, letters, starOffsets } from './physicsState.ts'
 import { Render } from './Render.tsx'
 import { dive, emitFrame, tick, view, zoom } from './zoom.ts'
 
@@ -153,12 +155,26 @@ function Scene({ particleCount }: { particleCount: number }) {
     // Particles.
     const unitsPerPx = cam.height / size.height
     u.opacity.value = f.particles * (1 - 0.6 * dive.value)
+    for (let i = 0; i < u.stars.array.length; i++)
+      (u.stars.array[i] as Vector4).set(
+        starOffsets[i * 3]!,
+        starOffsets[i * 3 + 1]!,
+        starOffsets[i * 3 + 2]!,
+        0,
+      )
+    for (let i = 0; i < letters.boxes.length && i < MAX_LETTERS; i++)
+      (u.letterXf.array[i] as Vector4).set(
+        letterXforms[i * 4]!,
+        letterXforms[i * 4 + 1]!,
+        letterXforms[i * 4 + 2]!,
+        0,
+      )
     u.from.forEach((w, k) => (w.value = k === f.seg ? 1 : 0))
     u.to.forEach((w, k) => (w.value = k === f.seg + 1 ? 1 : 0))
     u.t.value = f.segT
     u.scatter.value = rm ? 0 : Math.sin(Math.PI * f.segT) * SHAPE_SIZE[f.seg + 1]! * 0.05
     u.shimmer.value = rm ? 0 : unitsPerPx * 1.5
-    u.radius.value = rm || !pointer.active ? 0 : unitsPerPx * 70
+    u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * 70
     u.pointer.value.set(
       cam.focus[0] + pointer.x * cam.height * (size.width / size.height) * 0.5,
       cam.focus[1] + pointer.y * cam.height * 0.5,
@@ -175,6 +191,15 @@ function Scene({ particleCount }: { particleCount: number }) {
     view.project = (x, y, z = 0) => {
       tmp.set(x, y, z).applyMatrix4(g.matrixWorld).project(camera)
       return [((tmp.x + 1) / 2) * size.width, ((1 - tmp.y) / 2) * size.height]
+    }
+    view.unproject = (px, py, z = 0) => {
+      tmp.set((px / size.width) * 2 - 1, -(py / size.height) * 2 + 1, 0.5).unproject(camera)
+      const dir = tmp.sub(camera.position).normalize()
+      const planeZ = z * s // the root only scales and translates in x/y
+      const k = (planeZ - camera.position.z) / dir.z
+      const wx = camera.position.x + dir.x * k
+      const wy = camera.position.y + dir.y * k
+      return [(wx - g.position.x) / s, (wy - g.position.y) / s]
     }
     if (zoom.fade !== lastFade.current) {
       lastFade.current = zoom.fade

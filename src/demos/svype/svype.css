@@ -45,7 +45,7 @@
 }
 .sv-job {
   margin: 0.35em 0 0.8em !important;
-  font: 650 1.35em/1.15 var(--sans);
+  font: 700 1.35em/1.15 var(--sans);
   letter-spacing: -0.01em;
 }
 .sv-match {
@@ -113,7 +113,7 @@
   align-items: flex-start;
 }
 .sv-title {
-  font: 650 1.4em var(--sans);
+  font: 700 1.4em var(--sans);
 }
 .sv-summary ul {
   margin: 0;

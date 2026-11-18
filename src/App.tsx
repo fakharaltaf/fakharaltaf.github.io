@@ -8,6 +8,9 @@ import { Terminal } from './ui/terminal/Terminal.tsx'
 import { DemoHost } from './demos/DemoHost.tsx'
 import { Overlays } from './ui/Overlays.tsx'
 import { StarLabels } from './ui/StarLabels.tsx'
+import { ThreadTips } from './ui/ThreadTips.tsx'
+import { frameAt } from './world/timeline.ts'
+import { onFrame } from './world/zoom.ts'
 import { bindHash } from './world/hash.ts'
 import { bindInputs } from './world/input.ts'
 import { useWorld } from './world/store.ts'
@@ -15,7 +18,19 @@ import { emitFrame, tick, zoom } from './world/zoom.ts'
 import './ui/app.css'
 
 // three.js and everything 3D live in their own chunk; the CSS caret covers the wait.
-const World = lazy(() => import('./world/World.tsx'))
+const World = lazy(() =>
+  Promise.all([
+    import('./world/World.tsx'),
+    // Particles sample real glyphs: wait for the fonts (never longer than 2.5s).
+    Promise.race([
+      Promise.all([
+        document.fonts.load('700 72px Figtree'),
+        document.fonts.load('400 32px "JetBrains Mono"'),
+      ]),
+      new Promise((r) => setTimeout(r, 2500)),
+    ]),
+  ]).then(([m]) => m),
+)
 
 class WorldBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false }
@@ -60,6 +75,17 @@ export function App() {
   useEffect(() => bindHash(), [])
   useEffect(() => startRunner(), [])
 
+  // Rapier (WASM) loads the first time the camera nears the constellation, never before.
+  useEffect(() => {
+    let loading = false
+    const unsub = onFrame((p) => {
+      if (loading || frameAt(p).chain < 3.2) return
+      loading = true
+      void import('./world/physics.ts').then((m) => m.startPhysics())
+    })
+    return unsub
+  }, [])
+
   // If the 3D world can't start, the DOM layer still needs a frame loop (zoom, typing, automations).
   const failed = useWorld((s) => s.failed)
   useEffect(() => {
@@ -87,6 +113,7 @@ export function App() {
       </div>
       <Overlays />
       <StarLabels />
+      <ThreadTips />
       <DemoHost />
       <Hud />
       <IdleHint />

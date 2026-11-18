@@ -5,6 +5,7 @@ import { projects } from '../content/projects.ts'
 import { Color } from 'three/webgpu'
 import { brand, palette } from '../styles/tokens.ts'
 import { mulberry32 } from '../systems/random.ts'
+import { letters } from './physicsState.ts'
 import { type Pt, opaquePixels, scriptCanvas, textPixels } from './canvases.ts'
 import {
   type Box,
@@ -26,7 +27,20 @@ export const STRIDE = SHAPES * 4
 /** Visual size of each shape, used to scale the mid-flight scatter. */
 export const SHAPE_SIZE = [SCRIPT_BOX.w, FRAME.w, FRAME.w * 5, PIN_R * 4, PIN_R * 4]
 
-type P = { x: number; y: number; z: number; size: number; c: Color; a: number }
+type P = {
+  x: number
+  y: number
+  z: number
+  size: number
+  c: Color
+  a: number
+  /** Constellation binding: stars a, b and position t between them (a = -1: unbound). */
+  sa?: number
+  sb?: number
+  st?: number
+  /** Index of the name letter this particle belongs to (person level). */
+  letter?: number
+}
 const col = (hex: string) => new Color(hex) // sRGB hex → linear working colour space
 
 export function buildShapes(n: number, portrait: boolean) {
@@ -127,7 +141,7 @@ export function buildShapes(n: number, portrait: boolean) {
     y: fy(0.93),
     em: FRAME.h * 0.055,
     align: 'left',
-    weight: 650,
+    weight: 700,
   })
   const wires: [number, number, number, number][] = [
     [scriptSlot.x + scriptSlot.w / 2, scriptSlot.y, fx(0.17), scriptSlot.y],
@@ -166,9 +180,13 @@ export function buildShapes(n: number, portrait: boolean) {
     }),
   )
   const starP = (core: boolean): P => {
-    const s = pick(STARS).pos
+    const k = Math.floor(rnd() * STARS.length)
+    const s = STARS[k]!.pos
     const sd = core ? 0.018 * S : 0.09 * S
     return {
+      sa: k,
+      sb: k,
+      st: 0,
       x: s[0] + gauss() * sd,
       y: s[1] + gauss() * sd,
       z: s[2] + gauss() * sd,
@@ -187,6 +205,11 @@ export function buildShapes(n: number, portrait: boolean) {
         const a = STARS[i]!.pos
         const b = STARS[j]!.pos
         const p = onSegment(a[0], a[1], b[0], b[1], 1.1, anchor, 0.45, a[2], b[2])
+        // Bind to both ends (t along the thread) so it stretches when either star moves.
+        const len2 = (b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2 || 1
+        p.sa = i
+        p.sb = j
+        p.st = ((p.x - a[0]) * (b[0] - a[0]) + (p.y - a[1]) * (b[1] - a[1])) / len2
         p.x += gauss() * S * 0.006
         p.y += gauss() * S * 0.006
         return p
@@ -225,8 +248,37 @@ export function buildShapes(n: number, portrait: boolean) {
     y: na.y,
     em: na.em,
     align: portrait ? 'center' : 'left',
-    weight: 650,
+    weight: 700,
   })
+  // Split the name into letters (physics bodies at the person level) by measured advances.
+  const nameLeft = Math.min(...name.map((q) => q.x))
+  const nameRight = Math.max(...name.map((q) => q.x))
+  const probe = document.createElement('canvas').getContext('2d')!
+  probe.font = '700 100px Figtree, ui-sans-serif, system-ui, sans-serif'
+  const full = probe.measureText(person.name).width
+  const scale = (nameRight - nameLeft) / full
+  const edges = [...person.name].map(
+    (_, k) => nameLeft + probe.measureText(person.name.slice(0, k)).width * scale,
+  )
+  edges.push(nameRight + 1)
+  const glyphs = [...person.name].flatMap((ch, k) => (ch === ' ' ? [] : [k]))
+  letters.em = na.em
+  letters.boxes = glyphs.map((k) => {
+    const mine = name.filter((q) => q.x >= edges[k]! && q.x < edges[k + 1]!)
+    const ys = mine.map((q) => q.y)
+    const top = Math.max(...ys)
+    const bottom = Math.min(...ys)
+    return {
+      cx: (edges[k]! + edges[k + 1]!) / 2,
+      cy: (top + bottom) / 2,
+      w: edges[k + 1]! - edges[k]!,
+      h: top - bottom,
+    }
+  })
+  const letterOf = (x: number) => {
+    const k = edges.findIndex((e, j) => x >= e && x < edges[j + 1]!)
+    return glyphs.indexOf(k)
+  }
   const s3 = s2.map((p, i): P => {
     if (i < n * 0.45) {
       return {
@@ -236,7 +288,9 @@ export function buildShapes(n: number, portrait: boolean) {
         z: p.z * PIN_SHRINK,
       }
     }
-    return i < n * 0.63 ? pinP() : { ...fromPixels(name, 1.9), c: ink }
+    if (i < n * 0.63) return { ...pinP(), sa: -1 }
+    const q = fromPixels(name, 1.9)
+    return { ...q, c: ink, sa: -1, letter: letterOf(q.x) }
   })
 
   // 4: the outro. Everything collapses to one bright point, which becomes the cursor again.
@@ -251,6 +305,15 @@ export function buildShapes(n: number, portrait: boolean) {
 
   const pos = new Float32Array(n * STRIDE)
   const color = new Float32Array(n * STRIDE)
+  // Bindings: (starA, starB, t, inPinHead) and (letter, 0, 0, 0). -1 means unbound.
+  const bind = new Float32Array(n * 8)
+  s2.forEach((p, i) => {
+    bind[i * 8] = p.sa ?? -1
+    bind[i * 8 + 1] = p.sb ?? -1
+    bind[i * 8 + 2] = p.st ?? 0
+    bind[i * 8 + 3] = s3[i]!.sa !== -1 ? 1 : 0
+    bind[i * 8 + 4] = s3[i]!.letter ?? -1
+  })
   ;[s0, s1, s2, s3, s4].forEach((shape, k) =>
     shape.forEach((p, i) => {
       const o = i * STRIDE + k * 4
@@ -264,5 +327,5 @@ export function buildShapes(n: number, portrait: boolean) {
       color[o + 3] = p.a
     }),
   )
-  return { pos, color }
+  return { pos, color, bind }
 }

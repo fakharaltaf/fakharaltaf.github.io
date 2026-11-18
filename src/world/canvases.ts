@@ -199,7 +199,7 @@ export function textPixels(
   },
 ): Pt[] {
   const ppu = 72 / o.em // ~72px per em, whatever the universe scale
-  const family = o.mono ? MONO : 'Inter, ui-sans-serif, system-ui, sans-serif'
+  const family = o.mono ? MONO : 'Figtree, ui-sans-serif, system-ui, sans-serif'
   const probe = document.createElement('canvas').getContext('2d')
   if (!probe) return []
   probe.font = `${o.weight ?? 600} 72px ${family}`

@@ -32,7 +32,7 @@ function head(o: { title: string; description: string; path: string; ld?: boolea
 <link rel="canonical" href="${url}">
 <meta name="theme-color" content="#0B0F0E">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/figtree.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/jetbrains-mono.woff2" as="font" type="font/woff2" crossorigin>
 <meta property="og:type" content="website">
 <meta property="og:url" content="${url}">
@@ -63,8 +63,7 @@ const plainCss = `${baseCss}
 .skip:focus{top:1rem;color:var(--on-light)}
 .wrap{max-width:48rem;margin:0 auto;padding:clamp(2.5rem,8vw,6rem) max(1rem,env(safe-area-inset-right)) 3rem max(1rem,env(safe-area-inset-left))}
 .kicker{margin:0 0 1rem;font:500 .8125rem/1.4 var(--mono);color:var(--muted)}
-.kicker b{color:var(--anchor-ink);font-weight:500}
-h1{margin:0;font-size:clamp(2.75rem,9vw,5rem);line-height:1;font-weight:650;letter-spacing:-.035em}
+h1{margin:0;font-size:clamp(2.75rem,9vw,5rem);line-height:1;font-weight:700;letter-spacing:-.03em}
 .lead{margin:1.5rem 0 .5rem;font-size:clamp(1.2rem,2.6vw,1.45rem);line-height:1.4;max-width:34ch}
 .where{margin:0;color:var(--muted)}
 .cta{display:flex;flex-wrap:wrap;gap:.75rem;margin:2rem 0 0}
@@ -77,7 +76,7 @@ ul.what li{margin:0 0 .5rem}
 .note{color:var(--muted)}
 article{padding:0 0 1.75rem;margin:0 0 1.75rem;border-bottom:1px solid var(--line)}
 article:last-child{border-bottom:0;margin-bottom:0}
-h3{margin:0 0 .4rem;font-size:1.25rem;line-height:1.3;font-weight:600;letter-spacing:-.01em}
+h3{margin:0 0 .4rem;font-size:1.25rem;line-height:1.3;font-weight:650;letter-spacing:-.01em}
 article p{margin:0 0 .75rem}
 .stack{display:flex;flex-wrap:wrap;gap:.25rem .9rem;margin:0 0 .75rem;padding:0;list-style:none;font:400 .8125rem/1.6 var(--mono);color:var(--muted)}
 .links{display:flex;gap:1.25rem;font:500 .875rem var(--mono)}
@@ -120,7 +119,7 @@ ${head({ title: site.plainTitle, description: site.plainDescription, path: 'plai
 <a class="skip" href="#main">${esc(plain.skipToContent)}</a>
 <div class="wrap">
 <header>
-<p class="kicker"><b>~/lahore</b> $ ${esc(person.tagline)}</p>
+<p class="kicker">${esc(person.tagline)}</p>
 <h1>${esc(person.name)}<span class="caret" aria-hidden="true"></span></h1>
 <p class="lead">${esc(person.oneLiner)}</p>
 <p class="where">${esc(person.role)} · ${esc(person.location)} · ${esc(person.relocation)}</p>
@@ -149,7 +148,7 @@ ${projectHtml}
 <footer>
 <p class="motto">// ${esc(person.motto)}</p>
 <p class="back"><a href="/">${esc(skip.backToExperience)}</a></p>
-<p>${esc(site.madeIn)} ${esc(plain.buildStamp(stamp.size, stamp.date, stamp.commit))}</p>
+<p>${esc(plain.buildStamp(stamp.size, stamp.date, stamp.commit))}</p>
 </footer>
 </div>
 </body>

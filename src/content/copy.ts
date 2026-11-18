@@ -10,7 +10,6 @@ export const site = {
   plainTitle: 'Fakhar Altaf — the short version',
   plainDescription:
     'Fakhar Altaf, software engineer in Lahore, open to relocating. Projects, stack, and how to reach me, without the zooming.',
-  madeIn: 'Made in Lahore.',
 } as const
 
 export const person = {

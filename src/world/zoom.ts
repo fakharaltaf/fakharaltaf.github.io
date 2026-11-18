@@ -32,6 +32,8 @@ export const view = {
   scale: 1,
   /** Universe point → CSS px through the real (possibly orbiting) camera. Set by the world. */
   project: (x: number, y: number, z = 0): [number, number] => [x, y + z],
+  /** CSS px → universe point on the plane at universe depth z. Set by the world. */
+  unproject: (px: number, py: number, z = 0): [number, number] => [px, py + z],
 }
 
 const SNAP_AFTER_MS = 900

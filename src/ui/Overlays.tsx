@@ -25,14 +25,16 @@ function Caption({
   text,
   fade,
   small,
+  hint,
 }: {
   text: string
   fade: (f: Frame) => number
   small?: boolean
+  hint?: boolean
 }) {
   const ref = useFade<HTMLParagraphElement>(fade)
   return (
-    <p ref={ref} className={`fade caption${small ? ' small' : ''}`}>
+    <p ref={ref} className={`fade caption${small ? ' small' : ''}${hint ? ' hint-line' : ''}`}>
       {text}
     </p>
   )
@@ -136,7 +138,9 @@ export function Overlays() {
       <Caption text={levels.script.caption} fade={fades.script} />
       <ProjectCard />
       <Caption text={levels.constellation.caption} fade={fades.constellation} small />
+      <Caption text={levels.constellation.hint} fade={fades.constellation} small hint />
       <PersonCard />
+      <Caption text={levels.person.knockHint} fade={fades.person} small hint />
       <Outro />
     </div>
   )

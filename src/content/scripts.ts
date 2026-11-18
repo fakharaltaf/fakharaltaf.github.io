@@ -87,6 +87,47 @@ def classify_next():
     if row:
         engine.⟨rnu|run⟩(row)`,
   },
+  openProject: {
+    file: 'tour.ts',
+    cadenceMs: 14_000,
+    levels: ['constellation'],
+    source: `// You opened two projects. Now the constellation gives its own tour.
+import { every, pick } from './lib'
+import { constellation } from './world'
+
+export default every(14_000, async () => {
+  const star = pick(constellation.stars.filter((s) => !s.⟨visted|visited⟩))
+  await constellation.flyInto(star)
+  await constellation.backOut({ after: 6_000 })
+})`,
+  },
+  flingStar: {
+    file: 'fling.ts',
+    cadenceMs: 8_000,
+    levels: ['constellation'],
+    source: `// You flung two stars. Now they fling themselves. Springs bring them home.
+import { every, pick } from './lib'
+import { constellation } from './world'
+
+export default every(8_000, () => {
+  const star = pick(constellation.stars)
+  const angle = Math.random() * Math.PI * 2
+  star.applyImpulse({ x: Math.cos(angle), y: Math.⟨cso|sin⟩(angle) })
+})`,
+  },
+  toggleSound: {
+    file: 'sound.ts',
+    cadenceMs: 30_000,
+    levels: 'any',
+    source: `// You toggled sound twice. It can't decide either.
+import { every } from './lib'
+import { settings } from './site'
+
+export default every(30_000, () => {
+  // Quietly: it only ever turns sound off by itself, never on.
+  if (settings.sound) settings.⟨sound = flase|sound = false⟩
+})`,
+  },
   openTerminal: {
     file: 'open-terminal.ts',
     cadenceMs: 28_000,

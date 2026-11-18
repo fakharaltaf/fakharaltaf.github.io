@@ -9,25 +9,32 @@ import {
   PointsNodeMaterial,
   Sprite,
   Vector3,
+  Vector4,
 } from 'three/webgpu'
 import {
   float,
   hash,
   instanceIndex,
+  cos,
   instancedBufferAttribute,
+  int,
   length,
   max,
   mix,
   mx_noise_vec3,
   smoothstep,
   sin,
+  step,
   time,
   uniform,
+  uniformArray,
   uv,
   vec2,
   vec3,
   vec4,
 } from 'three/tsl'
+import { PIN_SHRINK, STARS } from './layout.ts'
+import { MAX_LETTERS, letters } from './physicsState.ts'
 import { SHAPES, STRIDE, buildShapes } from './shapes.ts'
 
 export type ParticleUniforms = ReturnType<typeof makeUniforms>
@@ -43,6 +50,19 @@ export function makeUniforms() {
     pointer: uniform(new Vector3(1e9, 1e9, 0)),
     radius: uniform(0), // repulsion radius, universe units
     sizeScale: uniform(1),
+    /** Physics: per-star offsets and per-letter (dx, dy, angle). Written every frame. */
+    stars: uniformArray(
+      STARS.map(() => new Vector4()),
+      'vec4',
+    ),
+    letterXf: uniformArray(
+      Array.from({ length: MAX_LETTERS }, () => new Vector4()),
+      'vec4',
+    ),
+    letterCenter: uniformArray(
+      Array.from({ length: MAX_LETTERS }, () => new Vector4()),
+      'vec4',
+    ),
   }
 }
 
@@ -56,7 +76,10 @@ export function Particles({
   u: ParticleUniforms
 }) {
   const sprite = useMemo(() => {
-    const { pos, color } = buildShapes(count, portrait)
+    const { pos, color, bind } = buildShapes(count, portrait)
+    letters.boxes.forEach((b, i) => {
+      if (i < MAX_LETTERS) (u.letterCenter.array[i] as Vector4).set(b.cx, b.cy, 0, 0)
+    })
     // Must be an InstancedInterleavedBuffer: three only steps a plain typed array per vertex.
     // The typings return an untyped Node for interleaved attributes; the layout is vec4 by construction.
     const posBuf = new InstancedInterleavedBuffer(pos, STRIDE)
@@ -65,6 +88,9 @@ export function Particles({
       instancedBufferAttribute(buf, 'vec4', STRIDE, k * 4) as unknown as Node<'vec4'>
     const P = Array.from({ length: SHAPES }, (_, k) => attr(posBuf, k))
     const C = Array.from({ length: SHAPES }, (_, k) => attr(colBuf, k))
+    const bindBuf = new InstancedInterleavedBuffer(bind, 8)
+    const B0 = instancedBufferAttribute(bindBuf, 'vec4', 8, 0) as unknown as Node<'vec4'>
+    const B1 = instancedBufferAttribute(bindBuf, 'vec4', 8, 4) as unknown as Node<'vec4'>
     const pick = (attrs: typeof P, w: typeof u.from) =>
       attrs.slice(1).reduce((acc, a, k) => acc.add(a.mul(w[k + 1]!)), attrs[0]!.mul(w[0]!))
 
@@ -81,9 +107,31 @@ export function Particles({
     const wander = mx_noise_vec3(
       vec3(seed.mul(97.1), hash(instanceIndex.add(7)).mul(53.3), time.mul(0.25)),
     )
-    let p = mix(a.xyz, b.xyz, ti)
-      .add(wander.mul(arc.mul(u.scatter)))
-      .add(wander.mul(u.shimmer))
+    // How much of this particle is in the constellation (S2) or the person (S3) right now.
+    const w2 = mix(u.from[2]!, u.to[2]!, ti)
+    const w3 = mix(u.from[3]!, u.to[3]!, ti)
+    let base = mix(a.xyz, b.xyz, ti)
+    // Stars and threads follow the physics; inside the pin they move at the pin's scale.
+    // Uniform-array elements are untyped in the typings; every array here is vec4.
+    const at = (arr: typeof u.stars, i: Node<'int'>) => arr.element(i) as unknown as Node<'vec4'>
+    const starOff = mix(
+      at(u.stars, int(max(B0.x, 0))).xyz,
+      at(u.stars, int(max(B0.y, 0))).xyz,
+      B0.z,
+    )
+    const starW = w2.add(w3.mul(B0.w).mul(PIN_SHRINK)).mul(step(0, B0.x))
+    base = base.add(starOff.mul(starW))
+    // Name letters: rotate about the letter's centre, then translate. Only at the person level.
+    const li = int(max(B1.x, 0))
+    const xf = at(u.letterXf, li)
+    const ctr = at(u.letterCenter, li).xy
+    const rel = base.xy.sub(ctr)
+    const rot = vec2(
+      rel.x.mul(cos(xf.z)).sub(rel.y.mul(sin(xf.z))),
+      rel.x.mul(sin(xf.z)).add(rel.y.mul(cos(xf.z))),
+    )
+    base = vec3(mix(base.xy, ctr.add(rot).add(xf.xy), w3.mul(step(0, B1.x))), base.z)
+    let p = base.add(wander.mul(arc.mul(u.scatter))).add(wander.mul(u.shimmer))
     // Cursor repulsion in the XY plane.
     const d = p.xy.sub(u.pointer.xy)
     const dist = length(d).max(1e-6)

@@ -5,8 +5,18 @@ import { RULES, classify } from '../../src/demos/lna-bot/LnaBot'
 describe('claude trace word diff', () => {
   it('marks only the words that changed, and rebuilds both sides', () => {
     const d = wordDiff('title: file.name,', 'title: file.name.replace(x),')
-    expect(d.filter((p) => p.op !== 'add').map((p) => p.text).join('')).toBe('title: file.name,')
-    expect(d.filter((p) => p.op !== 'del').map((p) => p.text).join('')).toBe('title: file.name.replace(x),')
+    expect(
+      d
+        .filter((p) => p.op !== 'add')
+        .map((p) => p.text)
+        .join(''),
+    ).toBe('title: file.name,')
+    expect(
+      d
+        .filter((p) => p.op !== 'del')
+        .map((p) => p.text)
+        .join(''),
+    ).toBe('title: file.name.replace(x),')
     expect(d[0]).toEqual({ text: 'title:', op: 'same' })
   })
 })
