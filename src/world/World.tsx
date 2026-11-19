@@ -20,7 +20,7 @@ import { type Drawn, type Region, filesCanvas, lineCanvas, scriptCanvas } from '
 import { CARET_H, CARET_W, blendCam, cameraAt, caretX, fit, restCams, screenFor } from './layout.ts'
 import { pointerNdc } from './input.ts'
 import { levelAt } from './levels.ts'
-import { Particles, makeUniforms } from './Particles.tsx'
+import { Particles, REPEL_PX, makeUniforms } from './Particles.tsx'
 import { SHAPE_SIZE } from './shapes.ts'
 import { useWorld } from './store.ts'
 import { frameAt } from './timeline.ts'
@@ -176,7 +176,7 @@ function Scene({ particleCount }: { particleCount: number }) {
     u.t.value = f.segT
     u.scatter.value = rm ? 0 : Math.sin(Math.PI * f.segT) * SHAPE_SIZE[f.seg + 1]! * 0.05
     u.shimmer.value = rm ? 0 : unitsPerPx * 1.5
-    u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * 70
+    u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * REPEL_PX
 
     const level = levelAt(p)
     if (level !== lastLevel.current) {
@@ -198,13 +198,8 @@ function Scene({ particleCount }: { particleCount: number }) {
       const wy = camera.position.y + dir.y * k
       return [(wx - g.position.x) / s, (wy - g.position.y) / s]
     }
-    // The same projection as the labels and the cursor, so the hole sits right under the pointer
-    // everywhere (a flat approximation drifted further off toward the edges).
-    const [px, py] = view.unproject(
-      ((pointer.x + 1) / 2) * size.width,
-      ((1 - pointer.y) / 2) * size.height,
-    )
-    u.pointer.value.set(px, py, 0)
+    u.pointer.value.set(pointer.x, pointer.y, 0) // compared on screen, in the shader
+    u.halfPx.value.set(size.width / 2, size.height / 2, 0)
     if (zoom.fade !== lastFade.current) {
       lastFade.current = zoom.fade
       document.documentElement.style.setProperty('--world-fade', zoom.fade.toFixed(3))

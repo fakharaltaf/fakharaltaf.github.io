@@ -12,8 +12,10 @@ import {
   Vector4,
 } from 'three/webgpu'
 import {
+  cameraProjectionMatrix,
   float,
   hash,
+  modelViewMatrix,
   instanceIndex,
   cos,
   instancedBufferAttribute,
@@ -37,6 +39,9 @@ import { PIN_SHRINK, STARS } from './layout.ts'
 import { MAX_LETTERS, letters } from './physicsState.ts'
 import { SHAPES, STRIDE, buildShapes } from './shapes.ts'
 
+/** The cursor's hole in the particles, in CSS px. */
+export const REPEL_PX = 70
+
 export type ParticleUniforms = ReturnType<typeof makeUniforms>
 
 export function makeUniforms() {
@@ -47,8 +52,9 @@ export function makeUniforms() {
     opacity: uniform(0),
     scatter: uniform(0), // universe units of mid-flight drift
     shimmer: uniform(0), // universe units of idle drift
-    pointer: uniform(new Vector3(1e9, 1e9, 0)),
-    radius: uniform(0), // repulsion radius, universe units
+    pointer: uniform(new Vector3(1e9, 1e9, 0)), // NDC (x, y); z unused
+    halfPx: uniform(new Vector3(1, 1, 0)), // half the canvas size in CSS px (x, y)
+    radius: uniform(0), // repulsion strength, universe units (0 = off)
     sizeScale: uniform(1),
     /** Physics: per-star offsets and per-letter (dx, dy, angle). Written every frame. */
     stars: uniformArray(
@@ -132,14 +138,16 @@ export function Particles({
     )
     base = vec3(mix(base.xy, ctr.add(rot).add(xf.xy), w3.mul(step(0, B1.x))), base.z)
     let p = base.add(wander.mul(arc.mul(u.scatter))).add(wander.mul(u.shimmer))
-    // Cursor repulsion in the XY plane.
-    const d = p.xy.sub(u.pointer.xy)
+    // Cursor repulsion, measured on screen: particles sit at different depths (the constellation
+    // is 3D and tilts), so a single world plane put the hole beside the cursor, not under it.
+    const clip = cameraProjectionMatrix.mul(modelViewMatrix).mul(vec4(p, 1))
+    const d = clip.xy.div(clip.w.max(1e-6)).sub(u.pointer.xy).mul(u.halfPx.xy)
     const dist = length(d).max(1e-6)
     // Star bodies (bound to the same star at both ends) hold their shape: pushing them apart
     // turned a star into a ring around the cursor, right where you reach to grab it.
     const isStar = step(0, B0.x).mul(float(1).sub(step(0.5, B0.x.sub(B0.y).abs())))
-    const push = max(float(0), u.radius.sub(dist))
-      .div(u.radius.max(1e-6))
+    const push = max(float(0), float(REPEL_PX).sub(dist))
+      .div(REPEL_PX)
       .mul(float(1).sub(isStar.mul(w2.add(w3).min(1))))
     p = vec3(p.xy.add(d.div(dist).mul(push.mul(push).mul(u.radius).mul(0.55))), p.z)
 
