@@ -1,5 +1,18 @@
 /* Experience chrome. Tokens come from the generated :root block in index.html. */
 
+/* The experience never scrolls as a page, so every touch gesture is ours: without this the
+   browser claimed swipes that started on text or the card and cancelled them. Panels that
+   really scroll hand vertical swipes back (pan-y); sideways swipes still browse projects. */
+html,
+body {
+  touch-action: none;
+}
+.terminal-log,
+.script-panel,
+.eng-source {
+  touch-action: pan-y;
+}
+
 .surface {
   position: fixed;
   inset: 0;
@@ -300,6 +313,7 @@
     max-height: 46vh;
     overflow-y: auto;
     overscroll-behavior: contain;
+    touch-action: pan-y;
   }
   .card h2 {
     font-size: 2rem;

@@ -103,6 +103,20 @@ test('a live site that never answers falls back to a link', async ({ page }) => 
   await expect(page.locator('.live')).toHaveCount(0, { timeout: 15_000 })
 })
 
+test('a sideways trackpad swipe browses one project and stays inside', async ({ page }) => {
+  await ready(page, '/#claude-trace')
+  await expect(page.locator('.demo-host')).toHaveAttribute('data-fade', '1', { timeout: 15_000 })
+  await page.mouse.move(20, 300)
+  // A real swipe: a strong start, momentum tailing off, and a little vertical wobble.
+  for (let i = 0; i < 60; i++) {
+    await page.mouse.wheel(Math.max(1, 40 * Math.exp(-i / 14)), Math.sin(i * 0.7) * 3)
+    await page.waitForTimeout(16)
+  }
+  await expect(page).toHaveURL(/#monitoring$/, { timeout: 15_000 })
+  await page.waitForTimeout(1500)
+  await expect(page).toHaveURL(/#monitoring$/) // not two projects, not back out to the galaxy
+})
+
 test('stars are buttons: Enter on one dives into that project', async ({ page }) => {
   await ready(page, '/#constellation')
   const star = page.locator('button[aria-label="Open Svype"]')

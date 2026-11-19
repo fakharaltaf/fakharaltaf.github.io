@@ -35,9 +35,16 @@ export function bindInputs(surface: HTMLElement): () => void {
 
   // Wheel + trackpad (pinch arrives as ctrl+wheel). One discrete step per gesture when reduced.
   let wheelLock = 0
-  let sideAccum = 0
-  let sideLock = 0
-  let lastSide = 0
+  // A trackpad gesture (including its momentum) is one run of wheel events with no gap over
+  // GAP ms. Each gesture picks an axis once: sideways browses projects (exactly once), up/down
+  // zooms. Without this, a swipe's vertical wobble backed out of the project, and its momentum
+  // outlasted any timer and flipped twice.
+  const GAP = 250
+  let wheelAt = 0
+  let wheelAxis: 'x' | 'y' | null = null
+  let wheelX = 0
+  let wheelY = 0
+  let browsed = false
   on(
     window,
     'wheel',
@@ -49,16 +56,25 @@ export function bindInputs(surface: HTMLElement): () => void {
       e.preventDefault()
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1
       const dy = e.deltaY * unit
-      // A sideways swipe on a trackpad flips through the projects, one per gesture.
       const dx = e.deltaX * unit
-      if (Math.abs(dx) > Math.abs(dy) * 1.5) {
-        const now = performance.now()
-        if (now - lastSide > 250) sideAccum = 0
-        lastSide = now
-        sideAccum += dx
-        if (now > sideLock && Math.abs(sideAccum) > 60 && !useDemos.getState().expanded) {
-          if (browseProjects(sideAccum > 0 ? 1 : -1)) sideLock = now + 700
-          sideAccum = 0
+      const now = performance.now()
+      if (now - wheelAt > GAP) {
+        wheelAxis = null
+        wheelX = wheelY = 0
+        browsed = false
+      }
+      wheelAt = now
+      if (!e.ctrlKey && wheelAxis === null) {
+        wheelX += dx
+        wheelY += dy
+        if (Math.abs(wheelX) + Math.abs(wheelY) < 8) return // too little to tell yet
+        wheelAxis = Math.abs(wheelX) > Math.abs(wheelY) ? 'x' : 'y'
+      }
+      if (wheelAxis === 'x' && !e.ctrlKey) {
+        wheelX += dx
+        if (!browsed && Math.abs(wheelX) > 60 && !useDemos.getState().expanded) {
+          browsed = true // one project per gesture, however long its momentum runs
+          browseProjects(wheelX > 0 ? 1 : -1)
         }
         return
       }
@@ -82,10 +98,15 @@ export function bindInputs(surface: HTMLElement): () => void {
   let dragAccum = 0
   let stepped = false
   let start = { x: 0, y: 0 }
+  // Same idea for a drag: it's sideways (browse) or up/down (zoom), decided once it's moved.
+  let dragAxis: 'x' | 'y' | null = null
   on(surface, 'pointerdown', (e) => {
     surface.setPointerCapture(e.pointerId)
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY })
-    if (pts.size === 1) start = { x: e.clientX, y: e.clientY }
+    if (pts.size === 1) {
+      start = { x: e.clientX, y: e.clientY }
+      dragAxis = null
+    }
     zoom.holding = true
     vel = 0
     dragAccum = 0
@@ -114,6 +135,13 @@ export function bindInputs(surface: HTMLElement): () => void {
       lastDist = dist
       return
     }
+    if (dragAxis === null) {
+      const mx = next.x - start.x
+      const my = next.y - start.y
+      if (Math.hypot(mx, my) < 10) return
+      dragAxis = Math.abs(mx) > Math.abs(my) * 1.2 ? 'x' : 'y'
+    }
+    if (dragAxis === 'x') return // a sideways drag never zooms; it browses on release
     const dp = (prev.y - next.y) / (innerHeight * 4)
     vel = dp / dtMs
     stepOrNudgeContinuous(dp)
@@ -133,7 +161,7 @@ export function bindInputs(surface: HTMLElement): () => void {
     // A sideways swipe flips through the projects (swipe left = next, like turning a page).
     const sx = e.clientX - start.x
     const sy = e.clientY - start.y
-    if (single && Math.abs(sx) > 70 && Math.abs(sx) > Math.abs(sy) * 1.5)
+    if (single && dragAxis === 'x' && Math.abs(sx) > 60 && Math.abs(sx) > Math.abs(sy))
       browseProjects(sx < 0 ? 1 : -1)
     if (pts.size === 0) {
       zoom.holding = false
@@ -143,6 +171,26 @@ export function bindInputs(surface: HTMLElement): () => void {
     }
   }
   on(window, 'pointerup', release)
+
+  // Touch swipes that start on top of the world (the demo window, the card) browse too; drags
+  // on the 3D surface are handled above. Demos with their own drags stop the event first.
+  // Mouse drags on overlays are left alone so text can still be selected.
+  let touchStart: { id: number; x: number; y: number } | null = null
+  on(window, 'pointerdown', (e) => {
+    const t = e.target
+    touchStart =
+      e.pointerType !== 'mouse' && t instanceof Element && !surface.contains(t) && !isTyping(t)
+        ? { id: e.pointerId, x: e.clientX, y: e.clientY }
+        : null
+  })
+  on(window, 'pointerup', (e) => {
+    if (!touchStart || touchStart.id !== e.pointerId) return
+    const sx = e.clientX - touchStart.x
+    const sy = e.clientY - touchStart.y
+    touchStart = null
+    if (Math.abs(sx) > 60 && Math.abs(sx) > Math.abs(sy) * 1.2 && !useDemos.getState().expanded)
+      browseProjects(sx < 0 ? 1 : -1)
+  })
   on(document.documentElement, 'pointerleave', () => (pointerNdc.active = false))
   on(window, 'pointercancel', release)
 
