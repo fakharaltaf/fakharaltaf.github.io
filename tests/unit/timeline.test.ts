@@ -9,13 +9,16 @@ describe('timeline', () => {
     const f = frameAt(0)
     expect(f.typed).toBe(0)
     expect(f.caret).toBe(1)
-    expect(f.particles).toBe(0)
+    expect(f.lineMode).toBe(1) // particles exist, but only the typed line shows: none yet
+    expect(f.universe).toBe(0)
   })
   it('has the whole line typed at Level 1', () => {
     expect(frameAt(CENTERS.line).typed).toBe(LINE.length)
   })
   it('hands the script to particles, and the particles to the DOM caret at the end', () => {
     expect(frameAt(CENTERS.script).particles).toBe(1) // the script is drawn in particles
+    expect(frameAt(CENTERS.script).lineMode).toBe(0) // fully gathered
+    expect(frameAt(CENTERS.line).lineMode).toBe(1)
     expect(frameAt(CENTERS.script).universe).toBe(0)
     expect(frameAt(CENTERS.project).particles).toBe(1)
     expect(frameAt(1).particles).toBe(0)

@@ -16,12 +16,13 @@ import {
   WebGPURenderer,
 } from 'three/webgpu'
 import { brand, palette } from '../styles/tokens.ts'
-import { type Drawn, type Region, filesCanvas, lineCanvas } from './canvases.ts'
+import { type Drawn, type Region, filesCanvas, lineCanvas, scriptCanvas } from './canvases.ts'
 import { CARET_H, CARET_W, blendCam, cameraAt, caretX, fit, restCams, screenFor } from './layout.ts'
 import { pointerNdc } from './input.ts'
 import { levelAt } from './levels.ts'
 import { Particles, REPEL_PX, makeUniforms } from './Particles.tsx'
 import { Dust, makeDustUniforms } from './Dust.tsx'
+import { ALL_PARTICLES } from './version.ts'
 import { SHAPE_SIZE } from './shapes.ts'
 import { useWorld } from './store.ts'
 import { frameAt } from './timeline.ts'
@@ -72,6 +73,7 @@ function Scene({ particleCount }: { particleCount: number }) {
   const parts = useMemo(() => {
     const line = lineCanvas()
     const files = filesCanvas()
+    const script = ALL_PARTICLES ? null : scriptCanvas() // version a only: crisp script text
     const lineTex = texOf(line)
     const filesTex = texOf(files)
     return {
@@ -80,6 +82,8 @@ function Scene({ particleCount }: { particleCount: number }) {
       lineTex,
       filesTex,
       lineMesh: plane(line.region, lineTex),
+      // Created first so the files panel (same depth) draws on top of it.
+      scriptMesh: script ? plane(script.region, texOf(script)) : null,
       filesMesh: plane(files.region, filesTex),
       caret: plane({ left: 0, top: CARET_H / 2, w: CARET_W, h: CARET_H }, null, brand.anchor),
     }
@@ -87,7 +91,8 @@ function Scene({ particleCount }: { particleCount: number }) {
 
   useEffect(
     () => () => {
-      for (const m of [parts.lineMesh, parts.filesMesh, parts.caret]) {
+      for (const m of [parts.lineMesh, parts.filesMesh, parts.caret, parts.scriptMesh]) {
+        if (!m) continue
         m.geometry.dispose()
         m.material.map?.dispose()
         m.material.dispose()
@@ -141,7 +146,7 @@ function Scene({ particleCount }: { particleCount: number }) {
     camera.lookAt(0, 0, 0)
 
     // Level 0–1: the caret types the line.
-    const { line, lineTex, lineMesh, filesMesh, caret } = parts
+    const { line, lineTex, lineMesh, filesMesh, caret, scriptMesh } = parts
     if (f.typed !== typed.current) {
       line.draw(f.typed)
       lineTex.needsUpdate = true
@@ -153,6 +158,10 @@ function Scene({ particleCount }: { particleCount: number }) {
     caret.visible = f.caret > 0
     lineMesh.material.opacity = f.line
     lineMesh.visible = f.line > 0 && f.typed > 0
+    if (scriptMesh) {
+      scriptMesh.material.opacity = f.script
+      scriptMesh.visible = f.script > 0
+    }
     filesMesh.material.opacity = f.files
     filesMesh.visible = f.files > 0
     if (filesMesh.visible && parts.files.draw(state.clock.elapsedTime))
@@ -180,6 +189,8 @@ function Scene({ particleCount }: { particleCount: number }) {
     u.t.value = f.segT
     u.scatter.value = rm ? 0 : Math.sin(Math.PI * f.segT) * SHAPE_SIZE[f.seg + 1]! * 0.05
     u.shimmer.value = rm ? 0 : unitsPerPx * 1.5
+    u.lineMode.value = f.lineMode
+    u.typedX.value = ALL_PARTICLES ? caretX(f.typed) : 1e9
     u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * REPEL_PX
     u.pointer.value.set(pointer.x, pointer.y, 0) // compared on screen, in the shader
     u.halfPx.value.set(size.width / 2, size.height / 2, 0)
@@ -223,6 +234,7 @@ function Scene({ particleCount }: { particleCount: number }) {
       {/* Outside the universe root: dust is pinned to the screen, not to any level. */}
       <Dust count={Math.round(particleCount * 0.1)} u={u} d={d} />
       <group ref={root}>
+        {parts.scriptMesh && <primitive object={parts.scriptMesh} />}
         <primitive object={parts.filesMesh} />
         <primitive object={parts.lineMesh} />
         <primitive object={parts.caret} />
