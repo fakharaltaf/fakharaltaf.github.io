@@ -55,7 +55,6 @@ export function makeUniforms() {
     pointer: uniform(new Vector3(1e9, 1e9, 0)), // NDC (x, y)
     halfPx: uniform(new Vector3(1, 1, 0)), // half the canvas in CSS px (x, y)
     radius: uniform(0), // repulsion radius, universe units
-    lineMode: uniform(0), // version b: 1 = only the typed line exists, 0 = the script has gathered
     typedX: uniform(1e9), // version b: universe x of the caret; line particles past it are hidden
     sizeScale: uniform(1),
     /** Physics: per-star offsets and per-letter (dx, dy, angle). Written every frame. */
@@ -116,8 +115,8 @@ export function Particles({
       vec3(seed.mul(97.1), hash(instanceIndex.add(7)).mul(53.3), time.mul(0.25)),
     )
     // How much of this particle is in the constellation (S2) or the person (S3) right now.
-    const w2 = mix(u.from[2]!, u.to[2]!, ti)
-    const w3 = mix(u.from[3]!, u.to[3]!, ti)
+    const w2 = mix(u.from[3]!, u.to[3]!, ti)
+    const w3 = mix(u.from[4]!, u.to[4]!, ti)
     let base = mix(a.xyz, b.xyz, ti)
     // Stars and threads follow the physics; inside the pin they move at the pin's scale.
     // Uniform-array elements are untyped in the typings; every array here is vec4.
@@ -155,21 +154,10 @@ export function Particles({
     })
     m.sizeAttenuation = false
     m.positionNode = p
-    // Version b, the opening: the typed line is made of particles (only up to the caret, and
-    // bigger, since it's seen close up); the rest of the script gathers around it, each particle
-    // on its own schedule; the line's extra density fades once the script has formed.
-    const slug = B1.y
-    const isSlug = step(0.5, slug)
-    const isExtra = step(1.5, slug)
-    const untyped = isSlug.mul(step(u.typedX, P[0]!.x))
-    const gather = smoothstep(seed.mul(0.6), seed.mul(0.6).add(0.4), float(1).sub(u.lineMode))
-    const extraFade = mix(float(1), mix(u.lineMode, float(1), ti), u.from[0]!)
-    const opening = mix(gather, float(1).sub(untyped), isSlug).mul(
-      mix(float(1), extraFade, isExtra),
-    )
-    m.sizeNode = mix(a.w, b.w, ti)
-      .mul(u.sizeScale)
-      .mul(mix(float(1), float(2.4), isSlug.mul(u.lineMode)))
+    // Version b, the opening: every particle is on the line, and only the typed part shows.
+    // (P[0] is the line shape; past the caret, a particle waits unseen.)
+    const opening = float(1).sub(step(u.typedX, P[0]!.x).mul(u.from[0]!).mul(float(1).sub(ti)))
+    m.sizeNode = mix(a.w, b.w, ti).mul(u.sizeScale)
     const round = smoothstep(0.5, 0.15, length(uv().sub(vec2(0.5))))
     const c = mix(ca, cb, ti)
     m.colorNode = vec4(c.rgb, 1)

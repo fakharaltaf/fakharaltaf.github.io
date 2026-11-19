@@ -189,7 +189,6 @@ function Scene({ particleCount }: { particleCount: number }) {
     u.t.value = f.segT
     u.scatter.value = rm ? 0 : Math.sin(Math.PI * f.segT) * SHAPE_SIZE[f.seg + 1]! * 0.05
     u.shimmer.value = rm ? 0 : unitsPerPx * 1.5
-    u.lineMode.value = f.lineMode
     u.typedX.value = ALL_PARTICLES ? caretX(f.typed) : 1e9
     u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * REPEL_PX
     u.pointer.value.set(pointer.x, pointer.y, 0) // compared on screen, in the shader

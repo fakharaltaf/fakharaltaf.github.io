@@ -28,11 +28,18 @@ import {
   rowY,
 } from './layout.ts'
 
-export const SHAPES = 5 // script, project, constellation, person, outro
+export const SHAPES = 6 // line, script, project, constellation, person, outro
 export const STRIDE = SHAPES * 4
 
 /** Visual size of each shape, used to scale the mid-flight scatter. */
-export const SHAPE_SIZE = [SCRIPT_BOX.w, FRAME.w, FRAME.w * 5, PIN_R * 4, PIN_R * 4]
+export const SHAPE_SIZE = [
+  SCRIPT_BOX.w * 0.6,
+  SCRIPT_BOX.w,
+  FRAME.w,
+  FRAME.w * 5,
+  PIN_R * 4,
+  PIN_R * 4,
+]
 
 type P = {
   x: number
@@ -47,8 +54,6 @@ type P = {
   st?: number
   /** Index of the name letter this particle belongs to (person level). */
   letter?: number
-  /** Version b: 1 = part of the typed line, 2 = extra line density for the line level only. */
-  slug?: number
 }
 const col = (hex: string) => new Color(hex) // sRGB hex → linear working colour space
 
@@ -106,22 +111,15 @@ export function buildShapes(n: number, portrait: boolean) {
     return out
   }
 
-  // 0: the script's own glyphs.
+  // Line (version b) and 0: the script's own glyphs.
   const code = opaquePixels(scriptCanvas(32, true), 1)
   let s0: P[]
+  let sL: P[]
   if (!ALL_PARTICLES) {
     s0 = mix([[1, () => fromPixels(code, 1.5)]])
+    sL = s0 // version a never shows the line in particles
   } else {
-    // The typed line is one row of the script. It comes first, alone and close up, so it gets
-    // extra particles to read at that size; they fade out as the rest of the script gathers.
-    const slugY = rowY(SLUG_ROW)
-    const inSlug = (q: Pt) => Math.abs(q.y - slugY) < LH / 2
-    const slugPts = code.filter(inSlug)
-    const codeP = (): P => {
-      const q = pick(code)
-      return { ...fromPixels([q], 1.5), slug: inSlug(q) ? 1 : 0 }
-    }
-    // The panel around it, in particles too: outline, header rule, the code | files divider, titles.
+    // The panel around the code, in particles too: outline, header rule, divider, titles.
     const SB = SCRIPT_BOX
     const barY = SCRIPT_TITLE_Y - 1.3
     const divX = FILES_X0 - 2.5
@@ -138,13 +136,17 @@ export function buildShapes(n: number, portrait: boolean) {
       ...textPixels('~/Downloads', { ...head, x: FILES_X0 }),
     ]
     s0 = mix([
-      [24, codeP],
-      [9, () => ({ ...fromPixels(slugPts, 1.5), slug: 2 })],
+      [26, () => fromPixels(code, 1.5)],
       [3, () => onRect(SB, 1.2, muted, 0.7)],
       [1, () => onSegment(SB.x - SB.w / 2, barY, SB.x + SB.w / 2, barY, 1.1, muted, 0.5)],
       [0.6, () => onSegment(divX, barY, divX, SB.y - SB.h / 2, 1.1, muted, 0.5)],
       [1.4, () => ({ ...fromPixels(titles, 1.3), c: muted })],
     ])
+    // The line: every particle starts here, on the glyphs of the one typed row (which is the
+    // script's own row, so its particles don't move). The script then flies out of it.
+    const slugY = rowY(SLUG_ROW)
+    const line = code.filter((q) => Math.abs(q.y - slugY) < LH / 2)
+    sL = s0.map(() => fromPixels(line, 1.3, 0.5))
   }
 
   // 1: the project: the live demo's screen on top, the modules that run it along the bottom,
@@ -351,7 +353,7 @@ export function buildShapes(n: number, portrait: boolean) {
 
   const pos = new Float32Array(n * STRIDE)
   const color = new Float32Array(n * STRIDE)
-  // Bindings: (starA, starB, t, inPinHead) and (letter, slug, 0, 0). -1 means unbound.
+  // Bindings: (starA, starB, t, inPinHead) and (letter, 0, 0, 0). -1 means unbound.
   const bind = new Float32Array(n * 8)
   s2.forEach((p, i) => {
     bind[i * 8] = p.sa ?? -1
@@ -359,9 +361,8 @@ export function buildShapes(n: number, portrait: boolean) {
     bind[i * 8 + 2] = p.st ?? 0
     bind[i * 8 + 3] = s3[i]!.sa !== -1 ? 1 : 0
     bind[i * 8 + 4] = s3[i]!.letter ?? -1
-    bind[i * 8 + 5] = s0[i]!.slug ?? 0
   })
-  ;[s0, s1, s2, s3, s4].forEach((shape, k) =>
+  ;[sL, s0, s1, s2, s3, s4].forEach((shape, k) =>
     shape.forEach((p, i) => {
       const o = i * STRIDE + k * 4
       pos[o] = p.x

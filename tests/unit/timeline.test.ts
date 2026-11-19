@@ -9,7 +9,6 @@ describe('timeline', () => {
     const f = frameAt(0)
     expect(f.typed).toBe(0)
     expect(f.caret).toBe(1)
-    expect(f.lineMode).toBe(1) // particles exist, but only the typed line shows: none yet
     expect(f.universe).toBe(0)
   })
   it('has the whole line typed at Level 1', () => {
@@ -17,8 +16,6 @@ describe('timeline', () => {
   })
   it('hands the script to particles, and the particles to the DOM caret at the end', () => {
     expect(frameAt(CENTERS.script).particles).toBe(1) // the script is drawn in particles
-    expect(frameAt(CENTERS.script).lineMode).toBe(0) // fully gathered
-    expect(frameAt(CENTERS.line).lineMode).toBe(1)
     expect(frameAt(CENTERS.script).universe).toBe(0)
     expect(frameAt(CENTERS.project).particles).toBe(1)
     expect(frameAt(1).particles).toBe(0)
@@ -26,10 +23,12 @@ describe('timeline', () => {
   })
   it('rests on each particle shape in order (shape = seg + segT)', () => {
     const shape = (p: number) => frameAt(p).seg + frameAt(p).segT
-    expect(shape(CENTERS.project)).toBe(1)
-    expect(shape(CENTERS.constellation)).toBe(2)
-    expect(shape(CENTERS.person)).toBe(3)
-    expect(shape(1)).toBe(4)
+    expect(shape(CENTERS.line)).toBe(0)
+    expect(shape(CENTERS.script)).toBe(1)
+    expect(shape(CENTERS.project)).toBe(2)
+    expect(shape(CENTERS.constellation)).toBe(3)
+    expect(shape(CENTERS.person)).toBe(4)
+    expect(shape(1)).toBe(5)
   })
 })
 
