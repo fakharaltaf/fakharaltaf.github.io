@@ -137,6 +137,26 @@
   max-width: 34ch;
   margin-inline: auto;
 }
+.browse {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  font: 400 0.75rem var(--mono);
+  color: var(--muted);
+}
+.browse .btn {
+  min-width: 44px;
+  justify-content: center;
+}
+.browse-count {
+  min-width: 3.5em;
+  text-align: center;
+  color: var(--ink);
+}
+.browse-hint {
+  margin-left: 0.5rem;
+}
 .outro .actions {
   justify-content: center;
 }

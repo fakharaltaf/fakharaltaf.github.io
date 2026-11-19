@@ -4,7 +4,7 @@ import { automation, github, levels, person } from '../content/copy.ts'
 import { useEggs } from './Eggs.tsx'
 import { type Sourced, getActivity } from '../systems/github.ts'
 import { projects } from '../content/projects.ts'
-import { navigate } from '../world/hash.ts'
+import { browseProjects, navigate } from '../world/hash.ts'
 import { useDemos } from '../demos/store.ts'
 import { remap } from '../world/levels.ts'
 import { frameAt } from '../world/timeline.ts'
@@ -70,6 +70,30 @@ function ProjectCard() {
         {p.links.play && <Ext href={p.links.play} label={levels.project.play} cls="btn-primary" />}
         <Ext href={p.links.code} label={levels.project.code} cls="btn-secondary" />
       </p>
+      <nav className="browse" aria-label={levels.project.browse.label}>
+        <button
+          type="button"
+          className="btn btn-quiet"
+          aria-label={levels.project.browse.prev}
+          onClick={() => browseProjects(-1)}
+        >
+          ←
+        </button>
+        <span className="browse-count">
+          {levels.project.browse.count(projects.indexOf(p) + 1, projects.length)}
+        </span>
+        <button
+          type="button"
+          className="btn btn-quiet"
+          aria-label={levels.project.browse.next}
+          onClick={() => browseProjects(1)}
+        >
+          →
+        </button>
+        <span className="browse-hint" aria-hidden="true">
+          {levels.project.browse.hint}
+        </span>
+      </nav>
     </section>
   )
 }

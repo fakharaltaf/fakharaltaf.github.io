@@ -27,9 +27,11 @@ export function frameAt(p: number) {
     typing: t[0] > 0.05 && t[0] < 0.85,
     caret: 1 - remap(t[2], 0.2, 0.45),
     line: 1 - remap(t[1], 0.15, 0.4),
-    script: remap(t[1], 0.15, 0.4) * (1 - remap(t[2], 0.2, 0.45)),
     files: remap(t[1], 0.35, 0.7) * (1 - remap(t[2], 0.1, 0.35)),
-    particles: remap(t[2], 0.15, 0.4) * (1 - remap(t[5], 0.85, 1)),
+    // The script is made of particles from the moment it appears, like everything after it.
+    particles: remap(t[1], 0.15, 0.4) * (1 - remap(t[5], 0.85, 1)),
+    /** The particle universe proper (project onward): the background dust hands over to it. */
+    universe: remap(t[2], 0.15, 0.4) * (1 - remap(t[5], 0.85, 1)),
     seg, // morph from shape seg to seg + 1
     segT,
     outroCaret: remap(t[5], 0.8, 1),

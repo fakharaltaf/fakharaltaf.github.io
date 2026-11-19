@@ -1,6 +1,6 @@
 // Particle keyframes. Every particle has a position + colour in each of five shapes; the shader
 // morphs between two of them. Shapes are built once on the CPU from the same layout as the world.
-import { person } from '../content/copy.ts'
+import { levels, person } from '../content/copy.ts'
 import { projects } from '../content/projects.ts'
 import { Color } from 'three/webgpu'
 import { brand, palette } from '../styles/tokens.ts'
@@ -16,6 +16,9 @@ import {
   PIN_TIP,
   SCREEN,
   SCRIPT_BOX,
+  SCRIPT_TITLE_Y,
+  FILES_X0,
+  LINE_X0,
   STARS,
   frameBox,
   nameAnchor,
@@ -99,7 +102,22 @@ export function buildShapes(n: number, portrait: boolean) {
 
   // 0: the script's own glyphs.
   const code = opaquePixels(scriptCanvas(32, true), 1)
-  const s0 = mix([[1, () => fromPixels(code, 1.5)]])
+  // The panel around it, in particles too: outline, header rule, the code | files divider, titles.
+  const SB = SCRIPT_BOX
+  const barY = SCRIPT_TITLE_Y - 1.3
+  const divX = FILES_X0 - 2.5
+  const head = { x: 0, y: SCRIPT_TITLE_Y, em: 0.8, align: 'left' as const, weight: 500, mono: true }
+  const titles = [
+    ...textPixels(levels.script.file, { ...head, x: LINE_X0 }),
+    ...textPixels('~/Downloads', { ...head, x: FILES_X0 }),
+  ]
+  const s0 = mix([
+    [24, () => fromPixels(code, 1.5)],
+    [3, () => onRect(SB, 1.2, muted, 0.7)],
+    [1, () => onSegment(SB.x - SB.w / 2, barY, SB.x + SB.w / 2, barY, 1.1, muted, 0.5)],
+    [0.6, () => onSegment(divX, barY, divX, SB.y - SB.h / 2, 1.1, muted, 0.5)],
+    [1.4, () => ({ ...fromPixels(titles, 1.3), c: muted })],
+  ])
 
   // 1: the project: the live demo's screen on top, the modules that run it along the bottom,
   // and the script as one of them, bottom-left, exactly where it already was.

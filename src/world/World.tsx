@@ -16,7 +16,7 @@ import {
   WebGPURenderer,
 } from 'three/webgpu'
 import { brand, palette } from '../styles/tokens.ts'
-import { type Drawn, type Region, filesCanvas, lineCanvas, scriptCanvas } from './canvases.ts'
+import { type Drawn, type Region, filesCanvas, lineCanvas } from './canvases.ts'
 import { CARET_H, CARET_W, blendCam, cameraAt, caretX, fit, restCams, screenFor } from './layout.ts'
 import { pointerNdc } from './input.ts'
 import { levelAt } from './levels.ts'
@@ -71,7 +71,6 @@ function Scene({ particleCount }: { particleCount: number }) {
 
   const parts = useMemo(() => {
     const line = lineCanvas()
-    const script = scriptCanvas()
     const files = filesCanvas()
     const lineTex = texOf(line)
     const filesTex = texOf(files)
@@ -81,7 +80,6 @@ function Scene({ particleCount }: { particleCount: number }) {
       lineTex,
       filesTex,
       lineMesh: plane(line.region, lineTex),
-      scriptMesh: plane(script.region, texOf(script)),
       filesMesh: plane(files.region, filesTex),
       caret: plane({ left: 0, top: CARET_H / 2, w: CARET_W, h: CARET_H }, null, brand.anchor),
     }
@@ -89,7 +87,7 @@ function Scene({ particleCount }: { particleCount: number }) {
 
   useEffect(
     () => () => {
-      for (const m of [parts.lineMesh, parts.scriptMesh, parts.filesMesh, parts.caret]) {
+      for (const m of [parts.lineMesh, parts.filesMesh, parts.caret]) {
         m.geometry.dispose()
         m.material.map?.dispose()
         m.material.dispose()
@@ -109,7 +107,13 @@ function Scene({ particleCount }: { particleCount: number }) {
     const f = frameAt(p)
     let cam = cameraAt(p, rest)
     if (dive.id && dive.value > 0) {
-      cam = blendCam(cam, fit(screenFor(dive.id), viewInfo, true, 1.06), dive.value)
+      let inside = fit(screenFor(dive.id), viewInfo, true, 1.06)
+      if (dive.from) {
+        // Browsing sideways: glide from the last project's screen, eased at both ends.
+        const e = dive.swap * dive.swap * (3 - 2 * dive.swap)
+        inside = blendCam(fit(screenFor(dive.from), viewInfo, true, 1.06), inside, e)
+      }
+      cam = blendCam(cam, inside, dive.value)
     }
     const s = VIEW_H / cam.height
     view.focus = cam.focus
@@ -137,7 +141,7 @@ function Scene({ particleCount }: { particleCount: number }) {
     camera.lookAt(0, 0, 0)
 
     // Level 0–1: the caret types the line.
-    const { line, lineTex, lineMesh, scriptMesh, filesMesh, caret } = parts
+    const { line, lineTex, lineMesh, filesMesh, caret } = parts
     if (f.typed !== typed.current) {
       line.draw(f.typed)
       lineTex.needsUpdate = true
@@ -149,8 +153,6 @@ function Scene({ particleCount }: { particleCount: number }) {
     caret.visible = f.caret > 0
     lineMesh.material.opacity = f.line
     lineMesh.visible = f.line > 0 && f.typed > 0
-    scriptMesh.material.opacity = f.script
-    scriptMesh.visible = f.script > 0
     filesMesh.material.opacity = f.files
     filesMesh.visible = f.files > 0
     if (filesMesh.visible && parts.files.draw(state.clock.elapsedTime))
@@ -183,7 +185,7 @@ function Scene({ particleCount }: { particleCount: number }) {
     u.halfPx.value.set(size.width / 2, size.height / 2, 0)
     // Dust: screen-filling before the universe forms, gone once the real particles take over.
     const planePerPx = VIEW_H / size.height
-    d.opacity.value = (1 - f.particles) * (1 - dive.value)
+    d.opacity.value = (1 - f.universe) * (1 - dive.value)
     d.flow.value = p * 5
     d.half.value.set((VIEW_H / 2) * (size.width / size.height), VIEW_H / 2, 0)
     d.push.value = rm || !pointer.active || grab.active ? 0 : planePerPx * REPEL_PX
@@ -221,7 +223,6 @@ function Scene({ particleCount }: { particleCount: number }) {
       {/* Outside the universe root: dust is pinned to the screen, not to any level. */}
       <Dust count={Math.round(particleCount * 0.1)} u={u} d={d} />
       <group ref={root}>
-        <primitive object={parts.scriptMesh} />
         <primitive object={parts.filesMesh} />
         <primitive object={parts.lineMesh} />
         <primitive object={parts.caret} />

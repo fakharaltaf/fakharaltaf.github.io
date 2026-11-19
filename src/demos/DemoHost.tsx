@@ -36,7 +36,11 @@ const DEMOS: Record<string, LazyExoticComponent<ComponentType<DemoProps>>> = {
 
 /** Opacity of the hosted demo for the current frame, and which project it is. */
 export function demoFade(p: number): { id: string | null; fade: number } {
-  if (dive.id) return { id: dive.value > 0.05 ? dive.id : null, fade: remap(dive.value, 0.55, 1) }
+  if (dive.id) {
+    // Browsing sideways, the next demo fades in as the camera arrives.
+    const arrive = dive.from ? remap(dive.swap, 0.6, 1) : 1
+    return { id: dive.value > 0.05 ? dive.id : null, fade: remap(dive.value, 0.55, 1) * arrive }
+  }
   const f = frameAt(p)
   // Mount a little early (from the script level) so RareMind is ready when it arrives.
   const id = f.chain > 2.3 && f.chain < 3.7 ? 'raremind' : null

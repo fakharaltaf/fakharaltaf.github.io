@@ -109,6 +109,13 @@ export const levels = {
     openStar: (title: string) => `Open ${title}`,
     noDemo: 'No live demo for this one yet. The code is the demo for now.',
     viewLabel: 'What runs in this window',
+    browse: {
+      label: 'Browse projects',
+      prev: 'Previous project',
+      next: 'Next project',
+      count: (i: number, n: number) => `${i} / ${n}`,
+      hint: '← → or swipe',
+    },
     demoBadge: 'Demo · not the real app',
     viewDemo: 'Demo',
     viewLive: 'Real site',

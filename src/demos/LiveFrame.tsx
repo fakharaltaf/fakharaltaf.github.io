@@ -45,6 +45,24 @@ export default function LiveFrame({ project, url, expanded, onOpen }: Props) {
     return () => ro.disconnect()
   }, [expanded])
 
+  // A game that focuses itself on load would swallow the arrow keys that browse projects, and
+  // `inert` doesn't stop a page focusing itself. As a preview, take focus straight back.
+  useEffect(() => {
+    if (expanded) return
+    const reclaim = () => {
+      if (document.activeElement !== frame.current) return
+      frame.current?.blur()
+      window.focus()
+    }
+    reclaim()
+    addEventListener('blur', reclaim)
+    const iv = setInterval(reclaim, 500) // blur doesn't always fire for a focus() inside the frame
+    return () => {
+      removeEventListener('blur', reclaim)
+      clearInterval(iv)
+    }
+  }, [expanded])
+
   const onLoad = () => {
     // Same origin (production): a blocked or failed page can't be read, so check. Cross-origin
     // (local dev) gives no signal either way, so a load counts as loaded.
@@ -70,6 +88,7 @@ export default function LiveFrame({ project, url, expanded, onOpen }: Props) {
             // Same origin, so this is a seatbelt, not a wall: it mainly stops top-level navigation.
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
             onLoad={onLoad}
+          inert={!expanded}
           />
         )}
       </div>

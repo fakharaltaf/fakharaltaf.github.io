@@ -30,6 +30,21 @@ export function openProject(id: string) {
   follow(`#${id}`)
 }
 
+/**
+ * The catalogue: from any project, step to the next or previous one (wrapping). Returns false
+ * when no project is open, so the caller can let the input do whatever it normally does.
+ */
+export function browseProjects(dir: 1 | -1): boolean {
+  const current =
+    dive.id && dive.target === 1 ? dive.id : levelAt(zoom.target) === 'project' ? 'raremind' : null
+  if (!current) return false
+  const i = projects.findIndex((p) => p.id === current)
+  const next = projects[(i + dir + projects.length) % projects.length]!
+  history.replaceState(null, '', `#${next.id}`) // browsing isn't a trail of history entries
+  follow(`#${next.id}`)
+  return true
+}
+
 const hashFor = (l: LevelId) => (l === 'cursor' ? location.pathname + location.search : `#${l}`)
 
 /** Deliberate navigation (HUD, terminal): fly and add a history entry. */
