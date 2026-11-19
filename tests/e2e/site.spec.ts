@@ -107,7 +107,11 @@ test('stars are buttons: Enter on one dives into that project', async ({ page })
   await ready(page, '/#constellation')
   const star = page.locator('button[aria-label="Open Svype"]')
   await expect(star).toBeVisible({ timeout: 20_000 })
-  await star.focus()
+  // Stars only take focus once they've faded in past half (inert before that); keep trying.
+  await expect(async () => {
+    await star.focus()
+    await expect(star).toBeFocused({ timeout: 500 })
+  }).toPass({ timeout: 20_000 })
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#svype$/)
   await expect(page.locator('.demo-host')).toHaveAttribute('data-fade', '1', { timeout: 15_000 })
