@@ -135,7 +135,12 @@ export function Particles({
     // Cursor repulsion in the XY plane.
     const d = p.xy.sub(u.pointer.xy)
     const dist = length(d).max(1e-6)
-    const push = max(float(0), u.radius.sub(dist)).div(u.radius.max(1e-6))
+    // Star bodies (bound to the same star at both ends) hold their shape: pushing them apart
+    // turned a star into a ring around the cursor, right where you reach to grab it.
+    const isStar = step(0, B0.x).mul(float(1).sub(step(0.5, B0.x.sub(B0.y).abs())))
+    const push = max(float(0), u.radius.sub(dist))
+      .div(u.radius.max(1e-6))
+      .mul(float(1).sub(isStar.mul(w2.add(w3).min(1))))
     p = vec3(p.xy.add(d.div(dist).mul(push.mul(push).mul(u.radius).mul(0.55))), p.z)
 
     const m = new PointsNodeMaterial({
