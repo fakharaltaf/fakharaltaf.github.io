@@ -177,11 +177,6 @@ function Scene({ particleCount }: { particleCount: number }) {
     u.scatter.value = rm ? 0 : Math.sin(Math.PI * f.segT) * SHAPE_SIZE[f.seg + 1]! * 0.05
     u.shimmer.value = rm ? 0 : unitsPerPx * 1.5
     u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * 70
-    u.pointer.value.set(
-      cam.focus[0] + pointer.x * cam.height * (size.width / size.height) * 0.5,
-      cam.focus[1] + pointer.y * cam.height * 0.5,
-      0,
-    )
 
     const level = levelAt(p)
     if (level !== lastLevel.current) {
@@ -203,6 +198,13 @@ function Scene({ particleCount }: { particleCount: number }) {
       const wy = camera.position.y + dir.y * k
       return [(wx - g.position.x) / s, (wy - g.position.y) / s]
     }
+    // The same projection as the labels and the cursor, so the hole sits right under the pointer
+    // everywhere (a flat approximation drifted further off toward the edges).
+    const [px, py] = view.unproject(
+      ((pointer.x + 1) / 2) * size.width,
+      ((1 - pointer.y) / 2) * size.height,
+    )
+    u.pointer.value.set(px, py, 0)
     if (zoom.fade !== lastFade.current) {
       lastFade.current = zoom.fade
       document.documentElement.style.setProperty('--world-fade', zoom.fade.toFixed(3))
