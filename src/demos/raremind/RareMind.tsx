@@ -1,6 +1,7 @@
 // RareMind, playable: one question, 25 seconds, rarer answers send the submarine deeper.
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
-import { demos } from '../../content/copy.ts'
+import { demos, levels } from '../../content/copy.ts'
+import { projects } from '../../content/projects.ts'
 import { registerAction } from '../../automation/runner.ts'
 import { sfx } from '../../systems/audio.ts'
 import { track } from '../../automation/store.ts'
@@ -15,6 +16,7 @@ import { ROUND_SECONDS, TRENCH_M, useRound } from './store.ts'
 import './raremind.css'
 
 const t = demos.raremind
+const REAL = projects.find((p) => p.id === 'raremind')?.links.play
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 function resultText(s: Scored | null): string {
@@ -149,9 +151,16 @@ export default function RareMind({ host }: DemoProps) {
           {over ? t.timeUp : resultText(round.last)}
         </p>
         {over ? (
-          <button type="button" className="btn btn-primary" onClick={() => round.start()}>
-            {t.again}
-          </button>
+          <p className="rm-over">
+            <button type="button" className="btn btn-primary" onClick={() => round.start()}>
+              {t.again}
+            </button>
+            {REAL && (
+              <a className="btn btn-secondary" href={REAL} target="_blank" rel="noopener">
+                {levels.project.seeReal('RareMind')} ↗
+              </a>
+            )}
+          </p>
         ) : (
           <form
             className="rm-form"

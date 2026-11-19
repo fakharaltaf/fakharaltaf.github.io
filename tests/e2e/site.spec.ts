@@ -2,15 +2,22 @@ import { type Page, expect, test } from '@playwright/test'
 
 const LEVELS = ['Cursor', 'Line', 'Script', 'Project', 'Constellation', 'Person', 'Outro']
 const PROJECTS = [
-  ['raremind', 'RareMind', '#raremind-answer'],
-  ['agrarian', 'Agrarian', '.ag-plot'],
+  ['raremind', 'RareMind', 'iframe'], // the real sites, served by the stand-in below
+  ['agrarian', 'Agrarian', 'iframe'],
   ['claude-trace', 'Claude Trace', '.ct'],
   ['monitoring', 'Multi-person facial and behavioural monitoring', '.mo-room'],
   ['svype', 'Svype', '.sv-card.top'],
   ['lna-bot', 'LNA Bot', '.lna-engine'],
 ] as const
 
+const STAND_IN = '<h1>stand-in farm</h1>'
+
 async function ready(page: Page, path = '/') {
+  // Never depend on the real live sites in tests: serve a stand-in (a test may override this).
+  for (const id of ['agrarian', 'raremind'])
+    await page.route(`https://fakharaltaf.github.io/${id}/**`, (r) =>
+      r.fulfill({ contentType: 'text/html', body: STAND_IN }),
+    )
   // Behaviour, not looks: the lowest quality tier keeps CI's software renderer responsive.
   await page.addInitScript(() => localStorage.setItem('zo:quality:v1', '0'))
   await page.goto(path)
@@ -60,11 +67,51 @@ for (const [id, title, inside] of PROJECTS) {
   })
 }
 
+test('Agrarian shows the real game: a preview in the world, playable full screen', async ({
+  page,
+}) => {
+  await ready(page, '/#agrarian')
+  const host = page.locator('.demo-host')
+  await expect(host).toHaveAttribute('data-fade', '1', { timeout: 15_000 })
+  const frame = page.locator('iframe[title="Agrarian, the real site"]')
+  await expect(frame).toHaveAttribute('sandbox', /allow-scripts/)
+  await expect(page.frameLocator('iframe').getByText('stand-in farm')).toBeAttached()
+  await expect(page.getByRole('button', { name: 'Demo' })).toHaveCount(0)
+  // In the world, a click opens it full screen (on phones the Full screen button does).
+  if (await host.evaluate((el) => el.classList.contains('compact')))
+    await page.click('.demo-expand')
+  else await page.getByRole('button', { name: 'Play Agrarian full screen' }).click()
+  await expect(host).toHaveClass(/expanded/)
+  await expect(page.frameLocator('iframe').getByText('stand-in farm')).toBeVisible()
+  await expect(page.getByRole('link', { name: /Open the real site/ })).toBeVisible()
+  await page.getByRole('button', { name: 'Back to the world' }).click()
+  await expect(host).not.toHaveClass(/expanded/)
+})
+
+test('a live site that never answers falls back to a link', async ({ page }) => {
+  await ready(page, '/#agrarian')
+  await page.unroute('https://fakharaltaf.github.io/agrarian/**')
+  await page.route('https://fakharaltaf.github.io/agrarian/**', () => {}) // hang forever
+  await page.reload()
+  await page.waitForFunction(() => document.documentElement.classList.contains('world-ready'))
+  await expect(page.getByRole('status').filter({ hasText: 'won’t open in here' })).toBeVisible({
+    timeout: 20_000,
+  })
+  await expect(page.locator('iframe')).toHaveCount(0)
+  // Leaving the project drops it entirely.
+  await page.click('button[aria-label="Fly to Person"]')
+  await expect(page.locator('.live')).toHaveCount(0, { timeout: 15_000 })
+})
+
 test('stars are buttons: Enter on one dives into that project', async ({ page }) => {
   await ready(page, '/#constellation')
   const star = page.locator('button[aria-label="Open Svype"]')
   await expect(star).toBeVisible({ timeout: 20_000 })
-  await star.focus()
+  // Stars only take focus once they've faded in past half (inert before that); keep trying.
+  await expect(async () => {
+    await star.focus()
+    await expect(star).toBeFocused({ timeout: 500 })
+  }).toPass({ timeout: 20_000 })
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#svype$/)
   await expect(page.locator('.demo-host')).toHaveAttribute('data-fade', '1', { timeout: 15_000 })

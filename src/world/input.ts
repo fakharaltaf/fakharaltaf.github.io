@@ -2,6 +2,7 @@
 // mouse drag, keys. Returns an unbind function.
 import { CENTERS, stepCenter } from './levels.ts'
 import { useDemos } from '../demos/store.ts'
+import { browseProjects } from './hash.ts'
 import { dive, flyTo, nudge, undive, zoom } from './zoom.ts'
 
 /** Pointer in normalised device coords (-1..1), for parallax and particle repulsion. */
@@ -34,6 +35,9 @@ export function bindInputs(surface: HTMLElement): () => void {
 
   // Wheel + trackpad (pinch arrives as ctrl+wheel). One discrete step per gesture when reduced.
   let wheelLock = 0
+  let sideAccum = 0
+  let sideLock = 0
+  let lastSide = 0
   on(
     window,
     'wheel',
@@ -45,6 +49,19 @@ export function bindInputs(surface: HTMLElement): () => void {
       e.preventDefault()
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1
       const dy = e.deltaY * unit
+      // A sideways swipe on a trackpad flips through the projects, one per gesture.
+      const dx = e.deltaX * unit
+      if (Math.abs(dx) > Math.abs(dy) * 1.5) {
+        const now = performance.now()
+        if (now - lastSide > 250) sideAccum = 0
+        lastSide = now
+        sideAccum += dx
+        if (now > sideLock && Math.abs(sideAccum) > 60 && !useDemos.getState().expanded) {
+          if (browseProjects(sideAccum > 0 ? 1 : -1)) sideLock = now + 700
+          sideAccum = 0
+        }
+        return
+      }
       if (zoom.discrete) {
         const now = performance.now()
         if (now < wheelLock || Math.abs(dy) < 4) return
@@ -64,9 +81,11 @@ export function bindInputs(surface: HTMLElement): () => void {
   let lastT = 0
   let dragAccum = 0
   let stepped = false
+  let start = { x: 0, y: 0 }
   on(surface, 'pointerdown', (e) => {
     surface.setPointerCapture(e.pointerId)
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    if (pts.size === 1) start = { x: e.clientX, y: e.clientY }
     zoom.holding = true
     vel = 0
     dragAccum = 0
@@ -108,8 +127,14 @@ export function bindInputs(surface: HTMLElement): () => void {
     }
   }
   const release = (e: PointerEvent) => {
+    const single = pts.size === 1
     if (!pts.delete(e.pointerId)) return
     if (pts.size < 2) lastDist = 0
+    // A sideways swipe flips through the projects (swipe left = next, like turning a page).
+    const sx = e.clientX - start.x
+    const sy = e.clientY - start.y
+    if (single && Math.abs(sx) > 70 && Math.abs(sx) > Math.abs(sy) * 1.5)
+      browseProjects(sx < 0 ? 1 : -1)
     if (pts.size === 0) {
       zoom.holding = false
       if (e.pointerType !== 'mouse') pointerNdc.active = false // a lifted finger stops repelling
@@ -135,6 +160,11 @@ export function bindInputs(surface: HTMLElement): () => void {
       case 'w':
       case 'W':
         stepOrNudge(-KEY_STEP)
+        break
+      case 'ArrowRight':
+      case 'ArrowLeft':
+        if (onControl || useDemos.getState().expanded) return
+        if (!browseProjects(e.key === 'ArrowRight' ? 1 : -1)) return
         break
       case 'PageDown':
         flyTo(stepCenter(zoom.target, 1))

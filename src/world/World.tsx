@@ -20,13 +20,15 @@ import { type Drawn, type Region, filesCanvas, lineCanvas, scriptCanvas } from '
 import { CARET_H, CARET_W, blendCam, cameraAt, caretX, fit, restCams, screenFor } from './layout.ts'
 import { pointerNdc } from './input.ts'
 import { levelAt } from './levels.ts'
-import { Particles, makeUniforms } from './Particles.tsx'
+import { Particles, REPEL_PX, makeUniforms } from './Particles.tsx'
+import { Dust, makeDustUniforms } from './Dust.tsx'
+import { ALL_PARTICLES } from './version.ts'
 import { SHAPE_SIZE } from './shapes.ts'
 import { useWorld } from './store.ts'
 import { frameAt } from './timeline.ts'
 import { MAX_LETTERS, grab, letterXforms, letters, starOffsets } from './physicsState.ts'
 import { Render } from './Render.tsx'
-import { TIERS, decideTier, useQuality } from '../systems/quality.ts'
+import { TIERS, decideTier, qualityHeld, useQuality } from '../systems/quality.ts'
 import { stats } from '../systems/stats.ts'
 import { dive, emitFrame, tick, view, zoom } from './zoom.ts'
 
@@ -56,6 +58,7 @@ function Scene({ particleCount }: { particleCount: number }) {
   const pointer = pointerNdc
   const portrait = size.width < size.height
   const u = useMemo(() => makeUniforms(), [])
+  const d = useMemo(() => makeDustUniforms(), [])
 
   const viewInfo = useMemo(
     () => ({
@@ -69,8 +72,8 @@ function Scene({ particleCount }: { particleCount: number }) {
 
   const parts = useMemo(() => {
     const line = lineCanvas()
-    const script = scriptCanvas()
     const files = filesCanvas()
+    const script = ALL_PARTICLES ? null : scriptCanvas() // version a only: crisp script text
     const lineTex = texOf(line)
     const filesTex = texOf(files)
     return {
@@ -79,7 +82,8 @@ function Scene({ particleCount }: { particleCount: number }) {
       lineTex,
       filesTex,
       lineMesh: plane(line.region, lineTex),
-      scriptMesh: plane(script.region, texOf(script)),
+      // Created first so the files panel (same depth) draws on top of it.
+      scriptMesh: script ? plane(script.region, texOf(script)) : null,
       filesMesh: plane(files.region, filesTex),
       caret: plane({ left: 0, top: CARET_H / 2, w: CARET_W, h: CARET_H }, null, brand.anchor),
     }
@@ -87,7 +91,8 @@ function Scene({ particleCount }: { particleCount: number }) {
 
   useEffect(
     () => () => {
-      for (const m of [parts.lineMesh, parts.scriptMesh, parts.filesMesh, parts.caret]) {
+      for (const m of [parts.lineMesh, parts.filesMesh, parts.caret, parts.scriptMesh]) {
+        if (!m) continue
         m.geometry.dispose()
         m.material.map?.dispose()
         m.material.dispose()
@@ -107,7 +112,13 @@ function Scene({ particleCount }: { particleCount: number }) {
     const f = frameAt(p)
     let cam = cameraAt(p, rest)
     if (dive.id && dive.value > 0) {
-      cam = blendCam(cam, fit(screenFor(dive.id), viewInfo, true, 1.06), dive.value)
+      let inside = fit(screenFor(dive.id), viewInfo, true, 1.06)
+      if (dive.from) {
+        // Browsing sideways: glide from the last project's screen, eased at both ends.
+        const e = dive.swap * dive.swap * (3 - 2 * dive.swap)
+        inside = blendCam(fit(screenFor(dive.from), viewInfo, true, 1.06), inside, e)
+      }
+      cam = blendCam(cam, inside, dive.value)
     }
     const s = VIEW_H / cam.height
     view.focus = cam.focus
@@ -135,7 +146,7 @@ function Scene({ particleCount }: { particleCount: number }) {
     camera.lookAt(0, 0, 0)
 
     // Level 0–1: the caret types the line.
-    const { line, lineTex, lineMesh, scriptMesh, filesMesh, caret } = parts
+    const { line, lineTex, lineMesh, filesMesh, caret, scriptMesh } = parts
     if (f.typed !== typed.current) {
       line.draw(f.typed)
       lineTex.needsUpdate = true
@@ -147,8 +158,10 @@ function Scene({ particleCount }: { particleCount: number }) {
     caret.visible = f.caret > 0
     lineMesh.material.opacity = f.line
     lineMesh.visible = f.line > 0 && f.typed > 0
-    scriptMesh.material.opacity = f.script
-    scriptMesh.visible = f.script > 0
+    if (scriptMesh) {
+      scriptMesh.material.opacity = f.script
+      scriptMesh.visible = f.script > 0
+    }
     filesMesh.material.opacity = f.files
     filesMesh.visible = f.files > 0
     if (filesMesh.visible && parts.files.draw(state.clock.elapsedTime))
@@ -174,14 +187,20 @@ function Scene({ particleCount }: { particleCount: number }) {
     u.from.forEach((w, k) => (w.value = k === f.seg ? 1 : 0))
     u.to.forEach((w, k) => (w.value = k === f.seg + 1 ? 1 : 0))
     u.t.value = f.segT
-    u.scatter.value = rm ? 0 : Math.sin(Math.PI * f.segT) * SHAPE_SIZE[f.seg + 1]! * 0.05
+    // A slight drift mid-flight, not a cloud: each particle visibly travels to its new place.
+    u.scatter.value = rm ? 0 : Math.sin(Math.PI * f.segT) * SHAPE_SIZE[f.seg + 1]! * 0.012
     u.shimmer.value = rm ? 0 : unitsPerPx * 1.5
-    u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * 70
-    u.pointer.value.set(
-      cam.focus[0] + pointer.x * cam.height * (size.width / size.height) * 0.5,
-      cam.focus[1] + pointer.y * cam.height * 0.5,
-      0,
-    )
+    u.typedX.value = ALL_PARTICLES ? caretX(f.typed) : 1e9
+    u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * REPEL_PX
+    u.pointer.value.set(pointer.x, pointer.y, 0) // compared on screen, in the shader
+    u.halfPx.value.set(size.width / 2, size.height / 2, 0)
+    // Dust: screen-filling before the universe forms, gone once the real particles take over.
+    const planePerPx = VIEW_H / size.height
+    d.opacity.value = (1 - f.universe) * (1 - dive.value)
+    d.flow.value = p * 5
+    d.half.value.set((VIEW_H / 2) * (size.width / size.height), VIEW_H / 2, 0)
+    d.push.value = rm || !pointer.active || grab.active ? 0 : planePerPx * REPEL_PX
+    d.wander.value = rm ? 0 : planePerPx * 3
 
     const level = levelAt(p)
     if (level !== lastLevel.current) {
@@ -211,13 +230,17 @@ function Scene({ particleCount }: { particleCount: number }) {
   }, -1)
 
   return (
-    <group ref={root}>
-      <primitive object={parts.scriptMesh} />
-      <primitive object={parts.filesMesh} />
-      <primitive object={parts.lineMesh} />
-      <primitive object={parts.caret} />
-      <Particles count={particleCount} portrait={portrait} u={u} />
-    </group>
+    <>
+      {/* Outside the universe root: dust is pinned to the screen, not to any level. */}
+      <Dust count={Math.round(particleCount * 0.1)} u={u} d={d} />
+      <group ref={root}>
+        {parts.scriptMesh && <primitive object={parts.scriptMesh} />}
+        <primitive object={parts.filesMesh} />
+        <primitive object={parts.lineMesh} />
+        <primitive object={parts.caret} />
+        <Particles count={particleCount} portrait={portrait} u={u} />
+      </group>
+    </>
   )
 }
 
@@ -235,6 +258,11 @@ function QualityGovernor() {
     if (!started.current) started.current = now
     // Skip the first second (shader compiles, font loads), then judge 3-second windows.
     if (now - started.current < 1000 || document.hidden) return
+    if (qualityHeld()) {
+      frames.current = []
+      windowStart.current = 0
+      return
+    }
     frames.current.push(dt * 1000)
     // Judge every 3 seconds of real time (not N frames: a slow device would wait forever).
     if (!windowStart.current) windowStart.current = now

@@ -21,7 +21,17 @@ export const zoom = {
  * Diving into a star: a second, independent camera move layered on the constellation level.
  * value 0 = constellation, 1 = inside that project's frame.
  */
-export const dive = { id: null as string | null, target: 0, value: 0, velocity: 0 }
+export const dive = {
+  id: null as string | null,
+  target: 0,
+  value: 0,
+  velocity: 0,
+  /** Browsing from one project to the next while inside: the camera glides from `from`. */
+  from: null as string | null,
+  swap: 1,
+}
+
+const SWAP_S = 0.75 // seconds to glide sideways between two projects
 
 /** Camera state of the current frame, for projecting world boxes onto DOM overlays. */
 export const view = {
@@ -39,6 +49,10 @@ export const view = {
 const SNAP_AFTER_MS = 900
 
 export function diveInto(id: string) {
+  if (dive.id && dive.id !== id && dive.target === 1 && dive.value > 0.5) {
+    dive.from = dive.id
+    dive.swap = 0
+  }
   dive.id = id
   dive.target = 1
   flyTo(CENTERS.constellation)
@@ -94,6 +108,8 @@ export function tick(dt: number, now = performance.now()) {
   if (dive.id) {
     if (zoom.discrete) dive.value = dive.target
     else stepSpring(dive, dive.target, dt, spring.gentle)
+    if (dive.swap < 1) dive.swap = zoom.discrete ? 1 : Math.min(1, dive.swap + dt / SWAP_S)
+    if (dive.swap >= 1) dive.from = null
     if (dive.target === 0 && dive.value < 0.002) {
       dive.id = null
       dive.value = 0

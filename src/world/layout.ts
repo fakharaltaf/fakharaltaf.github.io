@@ -187,15 +187,21 @@ export function cameraAt(p: number, rest: Record<LevelId, Cam>): Cam {
   const b = rest[LEVELS[i + 1]!]
   const t = transition(i, p)
   const logH = Math.log(a.height) + (Math.log(b.height) - Math.log(a.height)) * t
-  // Focus leads slightly early on the way out so the new context centres before it lands.
-  const tf = Math.min(1, t * 1.15)
-  const focus: Vec2 = [
-    a.focus[0] + (b.focus[0] - a.focus[0]) * tf,
-    a.focus[1] + (b.focus[1] - a.focus[1]) * tf,
-  ]
+  const h = Math.exp(logH)
+  // A true zoom: scale about the one point that sits at the same place on screen in both views,
+  // so whatever you're looking at shrinks straight into its place in the next level instead of
+  // sliding off while the camera pans. (Equal heights would make that a plain pan.)
+  const ratio = b.height / a.height
+  const focus: Vec2 =
+    Math.abs(ratio - 1) < 0.05
+      ? [a.focus[0] + (b.focus[0] - a.focus[0]) * t, a.focus[1] + (b.focus[1] - a.focus[1]) * t]
+      : ([0, 1].map((k) => {
+          const fixed = (a.focus[k]! * b.height - b.focus[k]! * a.height) / (b.height - a.height)
+          return fixed + (a.focus[k]! - fixed) * (h / a.height)
+        }) as Vec2)
   // While the line types itself, the camera follows the caret, then settles on the whole line.
   if (i === 0) focus[0] = caretX(typedChars(t)) + (b.focus[0] - caretX(typedChars(t))) * ease(t)
-  return { focus, height: Math.exp(logH) }
+  return { focus, height: h }
 }
 
 /** A curved flight between two cameras: focus along a bent path, zoom in log space. */

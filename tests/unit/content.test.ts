@@ -55,3 +55,10 @@ describe('plain mode', () => {
     }
   })
 })
+
+describe('live sites', () => {
+  it('only embeds my own https sites, on this origin', () => {
+    for (const p of projects)
+      if (p.live) expect(new URL(p.live.url).origin).toBe('https://fakharaltaf.github.io')
+  })
+})

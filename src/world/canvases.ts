@@ -112,12 +112,15 @@ export const FILES_REGION: Region = {
   h: SCRIPT.length * LH,
 }
 
-const STEP = 0.7 // seconds per rename in fast-forward
+const STEP = 0.6 // seconds per rename in fast-forward
+const HOLD = 1.1 // the finished list rests before it fades back
+const FADE = 0.5 // cross-fade from the renamed list back to the originals
 
 export function filesCanvas(ppu = 32) {
   const c = make(FILES_REGION, ppu)
   const files = levels.script.files
-  const cycle = files.length * STEP + 1.8
+  const typing = files.length * STEP
+  const cycle = typing + HOLD + FADE * 2
   let lastKey = ''
   return {
     canvas: c.canvas,
@@ -126,9 +129,16 @@ export function filesCanvas(ppu = 32) {
     /** Returns true if pixels changed (so the texture needs an upload). */
     draw(seconds: number): boolean {
       const t = seconds % cycle
-      const active = Math.floor(t / STEP)
-      const frac = (t % STEP) / STEP
-      const key = `${active}:${Math.floor(frac * 12)}`
+      const active = Math.min(files.length, Math.floor(t / STEP))
+      const frac = active < files.length ? (t % STEP) / STEP : 1
+      // Ease the typing so each name starts briskly and settles, and redraw on every letter.
+      const typed = 1 - (1 - Math.min(1, frac / 0.8)) ** 2
+      // After the hold: renamed list fades out, then the originals fade back in.
+      const tail = t - typing - HOLD
+      const out = tail > 0 ? Math.min(1, tail / FADE) : 0
+      const back = tail > FADE ? Math.min(1, (tail - FADE) / FADE) : 0
+      const name = files[Math.min(active, files.length - 1)]![1]
+      const key = `${active}:${Math.round(name.length * typed)}:${frac > 0.85}:${Math.round(out * 12)}:${Math.round(back * 12)}`
       if (key === lastKey) return false
       lastKey = key
       const { ctx } = c
@@ -138,13 +148,18 @@ export function filesCanvas(ppu = 32) {
       files.forEach(([from, to], i) => {
         const y = c.Y(rowY(i + 1))
         const x = c.X(FILES_X0)
-        if (i < active || (i === active && frac > 0.85)) {
+        if (tail > FADE) {
+          ctx.globalAlpha = back
+          ctx.fillStyle = palette.dark.muted
+          ctx.fillText(from, x + ppu * 1.4, y)
+        } else if (i < active || (i === active && frac > 0.85)) {
+          ctx.globalAlpha = 1 - out
           ctx.fillStyle = palette.dark.anchorInk
           ctx.fillText('✓', x, y)
           ctx.fillStyle = palette.dark.ink
           ctx.fillText(to, x + ppu * 1.4, y)
         } else if (i === active) {
-          const n = Math.round(to.length * Math.min(1, frac / 0.8))
+          const n = Math.round(to.length * typed)
           ctx.fillStyle = palette.dark.ink
           ctx.fillText(to.slice(0, n), x + ppu * 1.4, y)
           ctx.fillStyle = palette.dark.anchorInk
@@ -153,6 +168,7 @@ export function filesCanvas(ppu = 32) {
           ctx.fillStyle = palette.dark.muted
           ctx.fillText(from, x + ppu * 1.4, y)
         }
+        ctx.globalAlpha = 1
       })
       return true
     },

@@ -12,8 +12,10 @@ import {
   Vector4,
 } from 'three/webgpu'
 import {
+  cameraProjectionMatrix,
   float,
   hash,
+  modelViewMatrix,
   instanceIndex,
   cos,
   instancedBufferAttribute,
@@ -37,6 +39,9 @@ import { PIN_SHRINK, STARS } from './layout.ts'
 import { MAX_LETTERS, letters } from './physicsState.ts'
 import { SHAPES, STRIDE, buildShapes } from './shapes.ts'
 
+/** Radius of the cursor's hole in the particles, in CSS px. */
+export const REPEL_PX = 70
+
 export type ParticleUniforms = ReturnType<typeof makeUniforms>
 
 export function makeUniforms() {
@@ -47,8 +52,10 @@ export function makeUniforms() {
     opacity: uniform(0),
     scatter: uniform(0), // universe units of mid-flight drift
     shimmer: uniform(0), // universe units of idle drift
-    pointer: uniform(new Vector3(1e9, 1e9, 0)),
+    pointer: uniform(new Vector3(1e9, 1e9, 0)), // NDC (x, y)
+    halfPx: uniform(new Vector3(1, 1, 0)), // half the canvas in CSS px (x, y)
     radius: uniform(0), // repulsion radius, universe units
+    typedX: uniform(1e9), // version b: universe x of the caret; line particles past it are hidden
     sizeScale: uniform(1),
     /** Physics: per-star offsets and per-letter (dx, dy, angle). Written every frame. */
     stars: uniformArray(
@@ -108,8 +115,8 @@ export function Particles({
       vec3(seed.mul(97.1), hash(instanceIndex.add(7)).mul(53.3), time.mul(0.25)),
     )
     // How much of this particle is in the constellation (S2) or the person (S3) right now.
-    const w2 = mix(u.from[2]!, u.to[2]!, ti)
-    const w3 = mix(u.from[3]!, u.to[3]!, ti)
+    const w2 = mix(u.from[3]!, u.to[3]!, ti)
+    const w3 = mix(u.from[4]!, u.to[4]!, ti)
     let base = mix(a.xyz, b.xyz, ti)
     // Stars and threads follow the physics; inside the pin they move at the pin's scale.
     // Uniform-array elements are untyped in the typings; every array here is vec4.
@@ -132,10 +139,12 @@ export function Particles({
     )
     base = vec3(mix(base.xy, ctr.add(rot).add(xf.xy), w3.mul(step(0, B1.x))), base.z)
     let p = base.add(wander.mul(arc.mul(u.scatter))).add(wander.mul(u.shimmer))
-    // Cursor repulsion in the XY plane.
-    const d = p.xy.sub(u.pointer.xy)
+    // Cursor repulsion, measured on screen where the cursor is. Particles sit at different
+    // depths, so measuring on one world plane drifted off the cursor toward the edges.
+    const clip = cameraProjectionMatrix.mul(modelViewMatrix).mul(vec4(p, 1))
+    const d = clip.xy.div(clip.w.max(1e-6)).sub(u.pointer.xy).mul(u.halfPx.xy)
     const dist = length(d).max(1e-6)
-    const push = max(float(0), u.radius.sub(dist)).div(u.radius.max(1e-6))
+    const push = max(float(0), float(REPEL_PX).sub(dist)).div(REPEL_PX)
     p = vec3(p.xy.add(d.div(dist).mul(push.mul(push).mul(u.radius).mul(0.55))), p.z)
 
     const m = new PointsNodeMaterial({
@@ -145,11 +154,14 @@ export function Particles({
     })
     m.sizeAttenuation = false
     m.positionNode = p
+    // Version b, the opening: every particle is on the line, and only the typed part shows.
+    // (P[0] is the line shape; past the caret, a particle waits unseen.)
+    const opening = float(1).sub(step(u.typedX, P[0]!.x).mul(u.from[0]!).mul(float(1).sub(ti)))
     m.sizeNode = mix(a.w, b.w, ti).mul(u.sizeScale)
     const round = smoothstep(0.5, 0.15, length(uv().sub(vec2(0.5))))
     const c = mix(ca, cb, ti)
     m.colorNode = vec4(c.rgb, 1)
-    m.opacityNode = c.a.mul(round).mul(u.opacity)
+    m.opacityNode = c.a.mul(round).mul(u.opacity).mul(opening)
 
     const s = new Sprite(m)
     s.count = count

@@ -1,11 +1,12 @@
 // Particle keyframes. Every particle has a position + colour in each of five shapes; the shader
 // morphs between two of them. Shapes are built once on the CPU from the same layout as the world.
-import { person } from '../content/copy.ts'
+import { levels, person } from '../content/copy.ts'
 import { projects } from '../content/projects.ts'
 import { Color } from 'three/webgpu'
 import { brand, palette } from '../styles/tokens.ts'
 import { mulberry32 } from '../systems/random.ts'
 import { letters } from './physicsState.ts'
+import { ALL_PARTICLES } from './version.ts'
 import { type Pt, opaquePixels, scriptCanvas, textPixels } from './canvases.ts'
 import {
   type Box,
@@ -16,16 +17,29 @@ import {
   PIN_TIP,
   SCREEN,
   SCRIPT_BOX,
+  SCRIPT_TITLE_Y,
+  FILES_X0,
+  LH,
+  LINE_X0,
+  SLUG_ROW,
   STARS,
   frameBox,
   nameAnchor,
+  rowY,
 } from './layout.ts'
 
-export const SHAPES = 5 // script, project, constellation, person, outro
+export const SHAPES = 6 // line, script, project, constellation, person, outro
 export const STRIDE = SHAPES * 4
 
 /** Visual size of each shape, used to scale the mid-flight scatter. */
-export const SHAPE_SIZE = [SCRIPT_BOX.w, FRAME.w, FRAME.w * 5, PIN_R * 4, PIN_R * 4]
+export const SHAPE_SIZE = [
+  SCRIPT_BOX.w * 0.6,
+  SCRIPT_BOX.w,
+  FRAME.w,
+  FRAME.w * 5,
+  PIN_R * 4,
+  PIN_R * 4,
+]
 
 type P = {
   x: number
@@ -97,9 +111,43 @@ export function buildShapes(n: number, portrait: boolean) {
     return out
   }
 
-  // 0: the script's own glyphs.
+  // Line (version b) and 0: the script's own glyphs.
   const code = opaquePixels(scriptCanvas(32, true), 1)
-  const s0 = mix([[1, () => fromPixels(code, 1.5)]])
+  let s0: P[]
+  let sL: P[]
+  if (!ALL_PARTICLES) {
+    s0 = mix([[1, () => fromPixels(code, 1.5)]])
+    sL = s0 // version a never shows the line in particles
+  } else {
+    // The panel around the code, in particles too: outline, header rule, divider, titles.
+    const SB = SCRIPT_BOX
+    const barY = SCRIPT_TITLE_Y - 1.3
+    const divX = FILES_X0 - 2.5
+    const head = {
+      x: 0,
+      y: SCRIPT_TITLE_Y,
+      em: 0.8,
+      align: 'left' as const,
+      weight: 500,
+      mono: true,
+    }
+    const titles = [
+      ...textPixels(levels.script.file, { ...head, x: LINE_X0 }),
+      ...textPixels('~/Downloads', { ...head, x: FILES_X0 }),
+    ]
+    s0 = mix([
+      [26, () => fromPixels(code, 1.5)],
+      [3, () => onRect(SB, 1.2, muted, 0.7)],
+      [1, () => onSegment(SB.x - SB.w / 2, barY, SB.x + SB.w / 2, barY, 1.1, muted, 0.5)],
+      [0.6, () => onSegment(divX, barY, divX, SB.y - SB.h / 2, 1.1, muted, 0.5)],
+      [1.4, () => ({ ...fromPixels(titles, 1.3), c: muted })],
+    ])
+    // The line: every particle starts here, on the glyphs of the one typed row (which is the
+    // script's own row, so its particles don't move). The script then flies out of it.
+    const slugY = rowY(SLUG_ROW)
+    const line = code.filter((q) => Math.abs(q.y - slugY) < LH / 2)
+    sL = s0.map(() => fromPixels(line, 1.3, 0.5))
+  }
 
   // 1: the project: the live demo's screen on top, the modules that run it along the bottom,
   // and the script as one of them, bottom-left, exactly where it already was.
@@ -314,7 +362,7 @@ export function buildShapes(n: number, portrait: boolean) {
     bind[i * 8 + 3] = s3[i]!.sa !== -1 ? 1 : 0
     bind[i * 8 + 4] = s3[i]!.letter ?? -1
   })
-  ;[s0, s1, s2, s3, s4].forEach((shape, k) =>
+  ;[sL, s0, s1, s2, s3, s4].forEach((shape, k) =>
     shape.forEach((p, i) => {
       const o = i * STRIDE + k * 4
       pos[o] = p.x
