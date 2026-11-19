@@ -78,10 +78,7 @@ export function ThreadTips() {
   return (
     <div
       className="thread-tip"
-      style={{
-        // Keep it on screen: flip to the pointer's left near the right edge, above near the bottom.
-        transform: `translate(${tip.x + (tip.x > innerWidth * 0.6 ? -14 : 14)}px, ${tip.y + (tip.y > innerHeight * 0.75 ? -14 : 14)}px) translate(${tip.x > innerWidth * 0.6 ? '-100%' : '0'}, ${tip.y > innerHeight * 0.75 ? '-100%' : '0'})`,
-      }}
+      style={{ transform: `translate(${tip.x + 14}px, ${tip.y + 14}px)` }}
       role="tooltip"
     >
       {tip.lines.map((l) => (
