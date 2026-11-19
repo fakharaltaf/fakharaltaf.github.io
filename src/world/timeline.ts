@@ -20,7 +20,8 @@ export function frameAt(p: number) {
   // Particles: which two shapes, and how far between them.
   // Shapes: 0 line, 1 script, 2 project, 3 constellation, 4 person, 5 outro.
   const seg = Math.min(4, Math.max(0, Math.floor(chain) - 1))
-  const segT = [t[1], remap(t[2], 0.35, 1), t[3], t[4], remap(t[5], 0, 0.8)][seg]!
+  // Every morph runs with its camera move, from the start, so you watch the particles travel.
+  const segT = [t[1], t[2], t[3], t[4], remap(t[5], 0, 0.8)][seg]!
 
   return {
     t,

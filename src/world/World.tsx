@@ -187,7 +187,8 @@ function Scene({ particleCount }: { particleCount: number }) {
     u.from.forEach((w, k) => (w.value = k === f.seg ? 1 : 0))
     u.to.forEach((w, k) => (w.value = k === f.seg + 1 ? 1 : 0))
     u.t.value = f.segT
-    u.scatter.value = rm ? 0 : Math.sin(Math.PI * f.segT) * SHAPE_SIZE[f.seg + 1]! * 0.05
+    // A slight drift mid-flight, not a cloud: each particle visibly travels to its new place.
+    u.scatter.value = rm ? 0 : Math.sin(Math.PI * f.segT) * SHAPE_SIZE[f.seg + 1]! * 0.012
     u.shimmer.value = rm ? 0 : unitsPerPx * 1.5
     u.typedX.value = ALL_PARTICLES ? caretX(f.typed) : 1e9
     u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * REPEL_PX
