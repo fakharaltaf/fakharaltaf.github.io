@@ -21,6 +21,7 @@ import { CARET_H, CARET_W, blendCam, cameraAt, caretX, fit, restCams, screenFor 
 import { pointerNdc } from './input.ts'
 import { levelAt } from './levels.ts'
 import { Particles, REPEL_PX, makeUniforms } from './Particles.tsx'
+import { Dust, makeDustUniforms } from './Dust.tsx'
 import { SHAPE_SIZE } from './shapes.ts'
 import { useWorld } from './store.ts'
 import { frameAt } from './timeline.ts'
@@ -56,6 +57,7 @@ function Scene({ particleCount }: { particleCount: number }) {
   const pointer = pointerNdc
   const portrait = size.width < size.height
   const u = useMemo(() => makeUniforms(), [])
+  const d = useMemo(() => makeDustUniforms(), [])
 
   const viewInfo = useMemo(
     () => ({
@@ -179,6 +181,13 @@ function Scene({ particleCount }: { particleCount: number }) {
     u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * REPEL_PX
     u.pointer.value.set(pointer.x, pointer.y, 0) // compared on screen, in the shader
     u.halfPx.value.set(size.width / 2, size.height / 2, 0)
+    // Dust: screen-filling before the universe forms, gone once the real particles take over.
+    const planePerPx = VIEW_H / size.height
+    d.opacity.value = (1 - f.particles) * (1 - dive.value)
+    d.flow.value = p * 5
+    d.half.value.set((VIEW_H / 2) * (size.width / size.height), VIEW_H / 2, 0)
+    d.push.value = rm || !pointer.active || grab.active ? 0 : planePerPx * REPEL_PX
+    d.wander.value = rm ? 0 : planePerPx * 3
 
     const level = levelAt(p)
     if (level !== lastLevel.current) {
@@ -208,13 +217,17 @@ function Scene({ particleCount }: { particleCount: number }) {
   }, -1)
 
   return (
-    <group ref={root}>
-      <primitive object={parts.scriptMesh} />
-      <primitive object={parts.filesMesh} />
-      <primitive object={parts.lineMesh} />
-      <primitive object={parts.caret} />
-      <Particles count={particleCount} portrait={portrait} u={u} />
-    </group>
+    <>
+      {/* Outside the universe root: dust is pinned to the screen, not to any level. */}
+      <Dust count={Math.round(particleCount * 0.1)} u={u} d={d} />
+      <group ref={root}>
+        <primitive object={parts.scriptMesh} />
+        <primitive object={parts.filesMesh} />
+        <primitive object={parts.lineMesh} />
+        <primitive object={parts.caret} />
+        <Particles count={particleCount} portrait={portrait} u={u} />
+      </group>
+    </>
   )
 }
 
