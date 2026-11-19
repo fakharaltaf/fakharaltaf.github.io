@@ -15,11 +15,9 @@ export default function LiveFrame({ project, url }: { project: Project; url: str
   useEffect(() => {
     holdQuality(4000) // a whole app booting next door isn't the 3D world being slow
     const timer = setTimeout(() => send({ type: 'timeout' }), LIVE_TIMEOUT_MS)
-    const el = frame.current
-    return () => {
-      clearTimeout(timer)
-      if (el) el.src = 'about:blank' // free the page now, not whenever GC gets to it
-    }
+    // Unmounting removes the iframe, which unloads the page. Don't blank src here: React's dev
+    // double-mount runs this cleanup and then keeps the same element, leaving it empty.
+    return () => clearTimeout(timer)
   }, [])
 
   const onLoad = () => {

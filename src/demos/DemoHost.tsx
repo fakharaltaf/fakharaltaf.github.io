@@ -19,6 +19,8 @@ import { dive, onFrame, view } from '../world/zoom.ts'
 import { type DemoProps, useDemos } from './store.ts'
 
 const LiveFrame = lazy(() => import('./LiveFrame.tsx'))
+/** The Demo button is hidden for now; flip this to bring the Demo | Real game toggle back. */
+const SHOW_DEMO_BUTTON = false
 
 const DEMOS: Record<string, LazyExoticComponent<ComponentType<DemoProps>>> = {
   raremind: lazy(() => import('./raremind/RareMind.tsx')),
@@ -82,6 +84,12 @@ export function DemoHost() {
     if (!present && expanded) useDemos.setState({ expanded: false })
   }, [present, expanded])
 
+  // Without a Demo button, leaving full screen is the way back from the real game.
+  useEffect(() => {
+    if (!SHOW_DEMO_BUTTON && !expanded && present && useDemos.getState().live[present])
+      useDemos.setState((s) => ({ live: { ...s.live, [present]: false } }))
+  }, [present, expanded])
+
   const project = projects.find((p) => p.id === present)
   const Demo = present ? DEMOS[present] : undefined
   const live = project?.live && liveOn ? project.live : undefined
@@ -116,9 +124,9 @@ export function DemoHost() {
               <p>{levels.project.noDemo}</p>
             </div>
           )}
-          {project.live && (
+          {project.live && (SHOW_DEMO_BUTTON || !live) && (
             <div className="demo-views" role="group" aria-label={levels.project.viewLabel}>
-              {[false, true].map((on) => (
+              {(SHOW_DEMO_BUTTON ? [false, true] : [true]).map((on) => (
                 <button
                   key={String(on)}
                   type="button"

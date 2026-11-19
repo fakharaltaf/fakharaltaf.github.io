@@ -128,7 +128,7 @@ else c.mode = 'spring' // k = 620, damping = 42`,
     file: 'src/demos/LiveFrame.tsx',
     code: `<iframe src={url} onLoad={onLoad} />
 // Same origin as this site, so the farm you save in here is the farm
-// the real site opens. Back to Demo unmounts it: src = 'about:blank'.
+// the real site opens. Leaving full screen unmounts it, and the page with it.
 holdQuality(4000) // a whole app booting next door isn't the 3D world being slow`,
   },
   automation: {

@@ -78,7 +78,9 @@ test('Agrarian runs the real game in its window, only when asked', async ({ page
   await expect(page.frameLocator('iframe').getByText('stand-in farm')).toBeVisible()
   await expect(page.locator('.live[data-state="loaded"]')).toBeVisible()
   await expect(page.getByRole('link', { name: /Keep playing on the real site/ })).toBeVisible()
-  await page.getByRole('button', { name: 'Demo' }).click()
+  // No Demo button for now: leaving full screen is the way back.
+  await expect(page.getByRole('button', { name: 'Demo' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Back to the world' }).click()
   await expect(page.locator('iframe')).toHaveCount(0)
   await expect(page.locator('.ag-plot').first()).toBeVisible()
 })
