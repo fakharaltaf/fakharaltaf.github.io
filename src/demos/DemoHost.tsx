@@ -21,7 +21,7 @@ import { type DemoProps, useDemos } from './store.ts'
 const LiveFrame = lazy(() => import('./LiveFrame.tsx'))
 /**
  * Projects with a live site show it instead of the built-in demo. Flip this to bring back the
- * Demo | Real game toggle (built-in demo by default; the real game opens full screen).
+ * Demo | Real site toggle (built-in demo by default; the real site opens full screen).
  */
 const SHOW_DEMO_BUTTON = false
 

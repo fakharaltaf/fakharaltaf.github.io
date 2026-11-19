@@ -11,7 +11,7 @@ export type Project = {
   skills: readonly SkillId[]
   links: { play?: string; code: string }
   /** A deployed site that can run inside the demo window. Same origin, so its saves carry over. */
-  live?: { url: string }
+  live?: { url: string; note: string }
 }
 
 // Order matters: the camera lands on the first project at Level 3.
@@ -27,6 +27,11 @@ export const projects: readonly Project[] = [
       play: 'https://fakharaltaf.github.io/raremind/',
       code: 'https://github.com/fakharaltaf/raremind',
     },
+    live: {
+      url: 'https://fakharaltaf.github.io/raremind/',
+      // TODO(fakhar): update once the API is deployed and dives are open.
+      note: 'The real site. Daily dives open once its server is up.',
+    },
   },
   {
     id: 'agrarian',
@@ -39,7 +44,10 @@ export const projects: readonly Project[] = [
       play: 'https://fakharaltaf.github.io/agrarian/',
       code: 'https://github.com/fakharaltaf/agrarian',
     },
-    live: { url: 'https://fakharaltaf.github.io/agrarian/' },
+    live: {
+      url: 'https://fakharaltaf.github.io/agrarian/',
+      note: 'Your farm saves here and is waiting on the real site.',
+    },
   },
   {
     id: 'claude-trace',

@@ -85,7 +85,7 @@ export default function LiveFrame({ project, url, expanded, onOpen }: Props) {
         </p>
       )}
       <p className="live-bar">
-        <span>{t.liveCarry}</span>
+        <span>{project.live?.note}</span>
         <a className="btn btn-primary" href={url} target="_blank" rel="noopener">
           {t.liveOpen} ↗
         </a>

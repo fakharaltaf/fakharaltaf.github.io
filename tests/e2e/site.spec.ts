@@ -2,8 +2,8 @@ import { type Page, expect, test } from '@playwright/test'
 
 const LEVELS = ['Cursor', 'Line', 'Script', 'Project', 'Constellation', 'Person', 'Outro']
 const PROJECTS = [
-  ['raremind', 'RareMind', '#raremind-answer'],
-  ['agrarian', 'Agrarian', 'iframe'], // the real game, served by the stand-in below
+  ['raremind', 'RareMind', 'iframe'], // the real sites, served by the stand-in below
+  ['agrarian', 'Agrarian', 'iframe'],
   ['claude-trace', 'Claude Trace', '.ct'],
   ['monitoring', 'Multi-person facial and behavioural monitoring', '.mo-room'],
   ['svype', 'Svype', '.sv-card.top'],
@@ -14,9 +14,10 @@ const STAND_IN = '<h1>stand-in farm</h1>'
 
 async function ready(page: Page, path = '/') {
   // Never depend on the real live sites in tests: serve a stand-in (a test may override this).
-  await page.route('https://fakharaltaf.github.io/agrarian/**', (r) =>
-    r.fulfill({ contentType: 'text/html', body: STAND_IN }),
-  )
+  for (const id of ['agrarian', 'raremind'])
+    await page.route(`https://fakharaltaf.github.io/${id}/**`, (r) =>
+      r.fulfill({ contentType: 'text/html', body: STAND_IN }),
+    )
   // Behaviour, not looks: the lowest quality tier keeps CI's software renderer responsive.
   await page.addInitScript(() => localStorage.setItem('zo:quality:v1', '0'))
   await page.goto(path)
@@ -72,7 +73,7 @@ test('Agrarian shows the real game: a preview in the world, playable full screen
   await ready(page, '/#agrarian')
   const host = page.locator('.demo-host')
   await expect(host).toHaveAttribute('data-fade', '1', { timeout: 15_000 })
-  const frame = page.locator('iframe[title="Agrarian, the real game"]')
+  const frame = page.locator('iframe[title="Agrarian, the real site"]')
   await expect(frame).toHaveAttribute('sandbox', /allow-scripts/)
   await expect(page.frameLocator('iframe').getByText('stand-in farm')).toBeAttached()
   await expect(page.getByRole('button', { name: 'Demo' })).toHaveCount(0)
@@ -82,7 +83,7 @@ test('Agrarian shows the real game: a preview in the world, playable full screen
   else await page.getByRole('button', { name: 'Play Agrarian full screen' }).click()
   await expect(host).toHaveClass(/expanded/)
   await expect(page.frameLocator('iframe').getByText('stand-in farm')).toBeVisible()
-  await expect(page.getByRole('link', { name: /Keep playing on the real site/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Open the real site/ })).toBeVisible()
   await page.getByRole('button', { name: 'Back to the world' }).click()
   await expect(host).not.toHaveClass(/expanded/)
 })

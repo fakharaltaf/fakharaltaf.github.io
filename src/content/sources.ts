@@ -124,7 +124,7 @@ else c.mode = 'spring' // k = 620, damping = 42`,
     code: `export const classify = (row: Row) => RULES.findIndex((rule) => rule.when(row))`,
   },
   live: {
-    title: 'The real game, in the same window',
+    title: 'The real site, in the same window',
     file: 'src/demos/LiveFrame.tsx',
     code: `<iframe src={url} onLoad={onLoad} />
 // Same origin as this site, so the farm you save in here is the farm
