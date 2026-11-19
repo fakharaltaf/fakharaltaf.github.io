@@ -20,7 +20,7 @@ import { type Drawn, type Region, filesCanvas, lineCanvas, scriptCanvas } from '
 import { CARET_H, CARET_W, blendCam, cameraAt, caretX, fit, restCams, screenFor } from './layout.ts'
 import { pointerNdc } from './input.ts'
 import { levelAt } from './levels.ts'
-import { Particles, makeUniforms } from './Particles.tsx'
+import { Particles, REPEL_PX, makeUniforms } from './Particles.tsx'
 import { SHAPE_SIZE } from './shapes.ts'
 import { useWorld } from './store.ts'
 import { frameAt } from './timeline.ts'
@@ -176,12 +176,9 @@ function Scene({ particleCount }: { particleCount: number }) {
     u.t.value = f.segT
     u.scatter.value = rm ? 0 : Math.sin(Math.PI * f.segT) * SHAPE_SIZE[f.seg + 1]! * 0.05
     u.shimmer.value = rm ? 0 : unitsPerPx * 1.5
-    u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * 70
-    u.pointer.value.set(
-      cam.focus[0] + pointer.x * cam.height * (size.width / size.height) * 0.5,
-      cam.focus[1] + pointer.y * cam.height * 0.5,
-      0,
-    )
+    u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * REPEL_PX
+    u.pointer.value.set(pointer.x, pointer.y, 0) // compared on screen, in the shader
+    u.halfPx.value.set(size.width / 2, size.height / 2, 0)
 
     const level = levelAt(p)
     if (level !== lastLevel.current) {
