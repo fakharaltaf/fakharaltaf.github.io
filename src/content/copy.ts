@@ -109,6 +109,7 @@ export const levels = {
     openStar: (title: string) => `Open ${title}`,
     noDemo: 'No live demo for this one yet. The code is the demo for now.',
     viewLabel: 'What runs in this window',
+    demoBadge: 'Demo · not the real app',
     viewDemo: 'Demo',
     viewLive: 'Real site',
     liveTitle: (title: string) => `${title}, the real site`,

@@ -609,6 +609,27 @@
   translate: calc(-100% + 44px) 0;
 }
 
+/* Built-in demos say what they are: a rebuild, not the deployed thing. */
+.demo-badge {
+  position: absolute;
+  bottom: 0.6rem;
+  right: 8.4rem; /* beside Full screen, a corner every demo already keeps clear */
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  margin: 0;
+  padding: 0 0.7em;
+  font: 500 0.6875rem/1.3 var(--mono);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  pointer-events: none;
+}
+.demo-host.expanded .demo-badge {
+  right: 10.2rem; /* "Back to the world" is wider than "Full screen" */
+}
+
 /* The real site, in the same window. */
 .demo-views {
   position: absolute;
