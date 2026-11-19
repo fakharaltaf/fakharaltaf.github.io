@@ -19,7 +19,10 @@ import { dive, onFrame, view } from '../world/zoom.ts'
 import { type DemoProps, useDemos } from './store.ts'
 
 const LiveFrame = lazy(() => import('./LiveFrame.tsx'))
-/** The Demo button is hidden for now; flip this to bring the Demo | Real game toggle back. */
+/**
+ * Projects with a live site show it instead of the built-in demo. Flip this to bring back the
+ * Demo | Real game toggle (built-in demo by default; the real game opens full screen).
+ */
 const SHOW_DEMO_BUTTON = false
 
 const DEMOS: Record<string, LazyExoticComponent<ComponentType<DemoProps>>> = {
@@ -84,15 +87,9 @@ export function DemoHost() {
     if (!present && expanded) useDemos.setState({ expanded: false })
   }, [present, expanded])
 
-  // Without a Demo button, leaving full screen is the way back from the real game.
-  useEffect(() => {
-    if (!SHOW_DEMO_BUTTON && !expanded && present && useDemos.getState().live[present])
-      useDemos.setState((s) => ({ live: { ...s.live, [present]: false } }))
-  }, [present, expanded])
-
   const project = projects.find((p) => p.id === present)
   const Demo = present ? DEMOS[present] : undefined
-  const live = project?.live && liveOn ? project.live : undefined
+  const live = project?.live && (liveOn || !SHOW_DEMO_BUTTON) ? project.live : undefined
   const setLive = (on: boolean) => {
     if (!present) return
     useDemos.setState((s) => ({ live: { ...s.live, [present]: on } }))
@@ -113,7 +110,13 @@ export function DemoHost() {
         <>
           {live ? (
             <Suspense fallback={<p className="demo-loading">{levels.project.liveLoading}</p>}>
-              <LiveFrame key={project.id} project={project} url={live.url} />
+              <LiveFrame
+                key={project.id}
+                project={project}
+                url={live.url}
+                expanded={expanded}
+                onOpen={() => setExpanded(true)}
+              />
             </Suspense>
           ) : Demo ? (
             <Suspense fallback={<p className="demo-loading">{levels.project.loadingDemo}</p>}>
@@ -124,9 +127,9 @@ export function DemoHost() {
               <p>{levels.project.noDemo}</p>
             </div>
           )}
-          {project.live && (SHOW_DEMO_BUTTON || !live) && (
+          {project.live && SHOW_DEMO_BUTTON && (
             <div className="demo-views" role="group" aria-label={levels.project.viewLabel}>
-              {(SHOW_DEMO_BUTTON ? [false, true] : [true]).map((on) => (
+              {[false, true].map((on) => (
                 <button
                   key={String(on)}
                   type="button"

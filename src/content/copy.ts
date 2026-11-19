@@ -113,6 +113,7 @@ export const levels = {
     viewLive: 'Real game',
     liveTitle: (title: string) => `${title}, the real game`,
     liveLoading: 'Loading the real game…',
+    livePlay: (title: string) => `Play ${title} full screen`,
     liveFailed: 'It won’t open in here. The link below still works.',
     liveCarry: 'Your farm saves here and is waiting on the real site.',
     liveOpen: 'Keep playing on the real site',

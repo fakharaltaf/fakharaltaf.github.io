@@ -541,6 +541,7 @@
 }
 .demo-expand {
   position: absolute;
+  z-index: 2;
   right: 0.6rem;
   bottom: 0.6rem;
   min-height: 36px !important;
@@ -630,10 +631,35 @@
   background: var(--canvas);
 }
 .live iframe {
-  flex: 1;
+  display: block;
   width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
   border: 0;
   background: var(--canvas);
+}
+.live-open {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: transparent;
+  border: 0;
+}
+.live-open:focus-visible {
+  outline: 2px solid var(--anchor);
+  outline-offset: -2px;
+}
+.demo-host:not(.expanded) .live-bar {
+  display: none;
+}
+.live iframe[style*='scale'] {
+  position: absolute; /* sized and scaled by LiveFrame */
+  inset: 0 auto auto 0;
+}
+.live-view {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
 }
 .live[data-state='loading'] iframe {
   visibility: hidden;

@@ -3,14 +3,20 @@ import { type Page, expect, test } from '@playwright/test'
 const LEVELS = ['Cursor', 'Line', 'Script', 'Project', 'Constellation', 'Person', 'Outro']
 const PROJECTS = [
   ['raremind', 'RareMind', '#raremind-answer'],
-  ['agrarian', 'Agrarian', '.ag-plot'],
+  ['agrarian', 'Agrarian', 'iframe'], // the real game, served by the stand-in below
   ['claude-trace', 'Claude Trace', '.ct'],
   ['monitoring', 'Multi-person facial and behavioural monitoring', '.mo-room'],
   ['svype', 'Svype', '.sv-card.top'],
   ['lna-bot', 'LNA Bot', '.lna-engine'],
 ] as const
 
+const STAND_IN = '<h1>stand-in farm</h1>'
+
 async function ready(page: Page, path = '/') {
+  // Never depend on the real live sites in tests: serve a stand-in (a test may override this).
+  await page.route('https://fakharaltaf.github.io/agrarian/**', (r) =>
+    r.fulfill({ contentType: 'text/html', body: STAND_IN }),
+  )
   // Behaviour, not looks: the lowest quality tier keeps CI's software renderer responsive.
   await page.addInitScript(() => localStorage.setItem('zo:quality:v1', '0'))
   await page.goto(path)
@@ -60,45 +66,38 @@ for (const [id, title, inside] of PROJECTS) {
   })
 }
 
-test('Agrarian runs the real game in its window, only when asked', async ({ page }) => {
-  // Never depend on the real site in tests: serve a stand-in for it.
-  await page.route('https://fakharaltaf.github.io/agrarian/**', (r) =>
-    r.fulfill({ contentType: 'text/html', body: '<h1>stand-in farm</h1>' }),
-  )
+test('Agrarian shows the real game: a preview in the world, playable full screen', async ({
+  page,
+}) => {
   await ready(page, '/#agrarian')
   const host = page.locator('.demo-host')
   await expect(host).toHaveAttribute('data-fade', '1', { timeout: 15_000 })
-  if (await host.evaluate((el) => el.classList.contains('compact')))
-    await page.click('.demo-expand')
-  await expect(page.locator('.ag-plot').first()).toBeVisible({ timeout: 15_000 })
-  await expect(page.locator('iframe')).toHaveCount(0)
-  await page.getByRole('button', { name: 'Real game' }).click()
   const frame = page.locator('iframe[title="Agrarian, the real game"]')
   await expect(frame).toHaveAttribute('sandbox', /allow-scripts/)
-  await expect(page.frameLocator('iframe').getByText('stand-in farm')).toBeVisible()
-  await expect(page.locator('.live[data-state="loaded"]')).toBeVisible()
-  await expect(page.getByRole('link', { name: /Keep playing on the real site/ })).toBeVisible()
-  // No Demo button for now: leaving full screen is the way back.
+  await expect(page.frameLocator('iframe').getByText('stand-in farm')).toBeAttached()
   await expect(page.getByRole('button', { name: 'Demo' })).toHaveCount(0)
+  // In the world, a click opens it full screen (on phones the Full screen button does).
+  if (await host.evaluate((el) => el.classList.contains('compact')))
+    await page.click('.demo-expand')
+  else await page.getByRole('button', { name: 'Play Agrarian full screen' }).click()
+  await expect(host).toHaveClass(/expanded/)
+  await expect(page.frameLocator('iframe').getByText('stand-in farm')).toBeVisible()
+  await expect(page.getByRole('link', { name: /Keep playing on the real site/ })).toBeVisible()
   await page.getByRole('button', { name: 'Back to the world' }).click()
-  await expect(page.locator('iframe')).toHaveCount(0)
-  await expect(page.locator('.ag-plot').first()).toBeVisible()
+  await expect(host).not.toHaveClass(/expanded/)
 })
 
 test('a live site that never answers falls back to a link', async ({ page }) => {
-  await page.route('https://fakharaltaf.github.io/agrarian/**', () => {}) // hang forever
   await ready(page, '/#agrarian')
-  const host = page.locator('.demo-host')
-  await expect(host).toHaveAttribute('data-fade', '1', { timeout: 15_000 })
-  if (await host.evaluate((el) => el.classList.contains('compact')))
-    await page.click('.demo-expand')
-  await page.getByRole('button', { name: 'Real game' }).click()
+  await page.unroute('https://fakharaltaf.github.io/agrarian/**')
+  await page.route('https://fakharaltaf.github.io/agrarian/**', () => {}) // hang forever
+  await page.reload()
+  await page.waitForFunction(() => document.documentElement.classList.contains('world-ready'))
   await expect(page.getByRole('status').filter({ hasText: 'won’t open in here' })).toBeVisible({
-    timeout: 15_000,
+    timeout: 20_000,
   })
   await expect(page.locator('iframe')).toHaveCount(0)
-  // Leaving the project drops the frame entirely.
-  await page.keyboard.press('Escape')
+  // Leaving the project drops it entirely.
   await page.click('button[aria-label="Fly to Person"]')
   await expect(page.locator('.live')).toHaveCount(0, { timeout: 15_000 })
 })
