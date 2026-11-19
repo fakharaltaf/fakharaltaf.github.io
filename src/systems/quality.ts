@@ -35,6 +35,13 @@ export function setQualityMode(mode: Tier | 'auto') {
   useQuality.setState((s) => ({ mode, tier: mode === 'auto' ? s.tier : mode }))
 }
 
+let quietUntil = 0
+/** Ignore frame times for a while (e.g. a whole site loading in an iframe). */
+export function holdQuality(ms: number) {
+  quietUntil = Math.max(quietUntil, performance.now() + ms)
+}
+export const qualityHeld = () => performance.now() < quietUntil
+
 /**
  * Pure decision: given recent frame times (ms) and the current tier, which tier next?
  * Down a tier if the median frame misses 30 fps-ish budgets for this device class;

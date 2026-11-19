@@ -139,10 +139,13 @@ function StatsPanel() {
 function SourcePanel() {
   const level = useWorld((s) => s.level)
   const present = useDemos((s) => s.present)
+  const live = useDemos((s) => (s.present ? !!s.live[s.present] : false))
   const scripting = useAutomation((s) => s.panel !== null)
   const key = scripting
     ? 'automation'
-    : present && (level === 'project' || level === 'constellation')
+    : live && level === 'project'
+      ? 'live'
+      : present && (level === 'project' || level === 'constellation')
       ? present
       : level
   const src = sources[key] ?? sources[level]!

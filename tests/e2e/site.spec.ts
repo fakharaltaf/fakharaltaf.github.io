@@ -60,6 +60,47 @@ for (const [id, title, inside] of PROJECTS) {
   })
 }
 
+test('Agrarian runs the real game in its window, only when asked', async ({ page }) => {
+  // Never depend on the real site in tests: serve a stand-in for it.
+  await page.route('https://fakharaltaf.github.io/agrarian/**', (r) =>
+    r.fulfill({ contentType: 'text/html', body: '<h1>stand-in farm</h1>' }),
+  )
+  await ready(page, '/#agrarian')
+  const host = page.locator('.demo-host')
+  await expect(host).toHaveAttribute('data-fade', '1', { timeout: 15_000 })
+  if (await host.evaluate((el) => el.classList.contains('compact')))
+    await page.click('.demo-expand')
+  await expect(page.locator('.ag-plot').first()).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('iframe')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Real game' }).click()
+  const frame = page.locator('iframe[title="Agrarian, the real game"]')
+  await expect(frame).toHaveAttribute('sandbox', /allow-scripts/)
+  await expect(page.frameLocator('iframe').getByText('stand-in farm')).toBeVisible()
+  await expect(page.locator('.live[data-state="loaded"]')).toBeVisible()
+  await expect(page.getByRole('link', { name: /Keep playing on the real site/ })).toBeVisible()
+  await page.getByRole('button', { name: 'Demo' }).click()
+  await expect(page.locator('iframe')).toHaveCount(0)
+  await expect(page.locator('.ag-plot').first()).toBeVisible()
+})
+
+test('a live site that never answers falls back to a link', async ({ page }) => {
+  await page.route('https://fakharaltaf.github.io/agrarian/**', () => {}) // hang forever
+  await ready(page, '/#agrarian')
+  const host = page.locator('.demo-host')
+  await expect(host).toHaveAttribute('data-fade', '1', { timeout: 15_000 })
+  if (await host.evaluate((el) => el.classList.contains('compact')))
+    await page.click('.demo-expand')
+  await page.getByRole('button', { name: 'Real game' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'won’t open in here' })).toBeVisible({
+    timeout: 15_000,
+  })
+  await expect(page.locator('iframe')).toHaveCount(0)
+  // Leaving the project drops the frame entirely.
+  await page.keyboard.press('Escape')
+  await page.click('button[aria-label="Fly to Person"]')
+  await expect(page.locator('.live')).toHaveCount(0, { timeout: 15_000 })
+})
+
 test('stars are buttons: Enter on one dives into that project', async ({ page }) => {
   await ready(page, '/#constellation')
   const star = page.locator('button[aria-label="Open Svype"]')

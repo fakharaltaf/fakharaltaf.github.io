@@ -29,3 +29,14 @@ describe('lna rules', () => {
     expect(classify({ competency: 'd', trainees: 10, level: 'Basic' })).toBe(RULES.length - 1)
   })
 })
+
+describe('live frame', () => {
+  it('loads, fails on an unreadable page or a timeout, and stays settled', async () => {
+    const { liveStep } = await import('../../src/demos/live')
+    expect(liveStep('loading', { type: 'load', readable: true })).toBe('loaded')
+    expect(liveStep('loading', { type: 'load', readable: false })).toBe('failed')
+    expect(liveStep('loading', { type: 'timeout' })).toBe('failed')
+    expect(liveStep('loaded', { type: 'timeout' })).toBe('loaded')
+    expect(liveStep('failed', { type: 'load', readable: true })).toBe('failed')
+  })
+})

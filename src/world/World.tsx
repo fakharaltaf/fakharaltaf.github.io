@@ -26,7 +26,7 @@ import { useWorld } from './store.ts'
 import { frameAt } from './timeline.ts'
 import { MAX_LETTERS, grab, letterXforms, letters, starOffsets } from './physicsState.ts'
 import { Render } from './Render.tsx'
-import { TIERS, decideTier, useQuality } from '../systems/quality.ts'
+import { TIERS, decideTier, qualityHeld, useQuality } from '../systems/quality.ts'
 import { stats } from '../systems/stats.ts'
 import { dive, emitFrame, tick, view, zoom } from './zoom.ts'
 
@@ -235,6 +235,11 @@ function QualityGovernor() {
     if (!started.current) started.current = now
     // Skip the first second (shader compiles, font loads), then judge 3-second windows.
     if (now - started.current < 1000 || document.hidden) return
+    if (qualityHeld()) {
+      frames.current = []
+      windowStart.current = 0
+      return
+    }
     frames.current.push(dt * 1000)
     // Judge every 3 seconds of real time (not N frames: a slow device would wait forever).
     if (!windowStart.current) windowStart.current = now

@@ -18,6 +18,8 @@ import { frameAt } from '../world/timeline.ts'
 import { dive, onFrame, view } from '../world/zoom.ts'
 import { type DemoProps, useDemos } from './store.ts'
 
+const LiveFrame = lazy(() => import('./LiveFrame.tsx'))
+
 const DEMOS: Record<string, LazyExoticComponent<ComponentType<DemoProps>>> = {
   raremind: lazy(() => import('./raremind/RareMind.tsx')),
   agrarian: lazy(() => import('./agrarian/Agrarian.tsx')),
@@ -46,6 +48,7 @@ export function setExpanded(expanded: boolean) {
 export function DemoHost() {
   const present = useDemos((s) => s.present)
   const expanded = useDemos((s) => s.expanded)
+  const liveOn = useDemos((s) => (s.present ? !!s.live[s.present] : false))
   const [host, setHost] = useState<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -81,6 +84,13 @@ export function DemoHost() {
 
   const project = projects.find((p) => p.id === present)
   const Demo = present ? DEMOS[present] : undefined
+  const live = project?.live && liveOn ? project.live : undefined
+  const setLive = (on: boolean) => {
+    if (!present) return
+    useDemos.setState((s) => ({ live: { ...s.live, [present]: on } }))
+    // A whole game needs the room; the window in the world is a preview size.
+    if (on && !expanded) setExpanded(true)
+  }
   return (
     <div
       ref={setHost}
@@ -93,13 +103,32 @@ export function DemoHost() {
     >
       {host && project && (
         <>
-          {Demo ? (
+          {live ? (
+            <Suspense fallback={<p className="demo-loading">{levels.project.liveLoading}</p>}>
+              <LiveFrame key={project.id} project={project} url={live.url} />
+            </Suspense>
+          ) : Demo ? (
             <Suspense fallback={<p className="demo-loading">{levels.project.loadingDemo}</p>}>
               <Demo host={host} expanded={expanded} />
             </Suspense>
           ) : (
             <div className="demo-poster">
               <p>{levels.project.noDemo}</p>
+            </div>
+          )}
+          {project.live && (
+            <div className="demo-views" role="group" aria-label={levels.project.viewLabel}>
+              {[false, true].map((on) => (
+                <button
+                  key={String(on)}
+                  type="button"
+                  className={`btn ${!!live === on ? 'btn-primary' : 'btn-secondary'}`}
+                  aria-pressed={!!live === on}
+                  onClick={() => setLive(on)}
+                >
+                  {on ? levels.project.viewLive : levels.project.viewDemo}
+                </button>
+              ))}
             </div>
           )}
           {Demo && (

@@ -608,6 +608,69 @@
   translate: calc(-100% + 44px) 0;
 }
 
+/* The real site, in the same window. */
+.demo-views {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+  display: flex;
+  gap: 2px;
+}
+.demo-views .btn {
+  min-height: 36px;
+  padding: 0.4em 0.8em;
+  font-size: 0.75rem;
+}
+.live {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--canvas);
+}
+.live iframe {
+  flex: 1;
+  width: 100%;
+  border: 0;
+  background: var(--canvas);
+}
+.live[data-state='loading'] iframe {
+  visibility: hidden;
+}
+.live-status {
+  position: absolute;
+  inset: 0 0 3.5rem;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 1rem;
+  text-align: center;
+  font: 400 0.8125rem var(--mono);
+  color: var(--muted);
+}
+.live-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  margin: 0;
+  padding: 0.6rem 9.5rem 0.6rem 0.9rem;
+  border-top: 1px solid var(--line);
+  font: 400 0.75rem var(--mono);
+  color: var(--muted);
+}
+.live-bar .btn {
+  min-height: 36px;
+  padding: 0.4em 0.8em;
+  font-size: 0.75rem;
+}
+@container (max-width: 560px) {
+  .live-bar span {
+    display: none;
+  }
+}
+
 /* A demo too small to play in place is a preview with one obvious way in. */
 .demo-host.compact:not(.expanded) > :not(.demo-expand) {
   visibility: hidden;

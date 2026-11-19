@@ -123,6 +123,14 @@ else c.mode = 'spring' // k = 620, damping = 42`,
     file: 'src/demos/lna-bot/LnaBot.tsx',
     code: `export const classify = (row: Row) => RULES.findIndex((rule) => rule.when(row))`,
   },
+  live: {
+    title: 'The real game, in the same window',
+    file: 'src/demos/LiveFrame.tsx',
+    code: `<iframe src={url} onLoad={onLoad} />
+// Same origin as this site, so the farm you save in here is the farm
+// the real site opens. Back to Demo unmounts it: src = 'about:blank'.
+holdQuality(4000) // a whole app booting next door isn't the 3D world being slow`,
+  },
   automation: {
     title: 'Done twice: one tiny state machine per action',
     file: 'src/automation/machine.ts',

@@ -28,6 +28,8 @@ export function Cursor() {
     const up = () => (ptr.down = false)
     const leave = () => (ptr.target = null)
     addEventListener('pointermove', move, { passive: true })
+    addEventListener('pointerover', move, { passive: true }) // the last event before an iframe
+
     addEventListener('pointerdown', down)
     addEventListener('pointerup', up)
     document.documentElement.addEventListener('pointerleave', leave)
@@ -50,7 +52,9 @@ export function Cursor() {
           const [sx, sy] = view.project(...starPos(i))
           return Math.hypot(sx - ptr.x, sy - ptr.y) < 24
         })
-      if (t && onStar) mode = ptr.down ? 'fling' : 'drag'
+      // Over an iframe the page inside owns the pointer (and its own cursor); stay out of the way.
+      if (t?.tagName === 'IFRAME') mode = 'none'
+      else if (t && onStar) mode = ptr.down ? 'fling' : 'drag'
       else if (t) {
         const tagged = t.closest('[data-cursor]')
         const interactive = t.closest(INTERACTIVE)
@@ -88,6 +92,7 @@ export function Cursor() {
     return () => {
       unsub()
       removeEventListener('pointermove', move)
+      removeEventListener('pointerover', move)
       removeEventListener('pointerdown', down)
       removeEventListener('pointerup', up)
       document.documentElement.removeEventListener('pointerleave', leave)

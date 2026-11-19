@@ -10,6 +10,8 @@ export type Project = {
   // Constellation threads. Only skills implied by the stated stack, never guessed.
   skills: readonly SkillId[]
   links: { play?: string; code: string }
+  /** A deployed site that can run inside the demo window. Same origin, so its saves carry over. */
+  live?: { url: string }
 }
 
 // Order matters: the camera lands on the first project at Level 3.
@@ -37,6 +39,7 @@ export const projects: readonly Project[] = [
       play: 'https://fakharaltaf.github.io/agrarian/',
       code: 'https://github.com/fakharaltaf/agrarian',
     },
+    live: { url: 'https://fakharaltaf.github.io/agrarian/' },
   },
   {
     id: 'claude-trace',
