@@ -57,8 +57,6 @@ export function makeUniforms() {
     pointer: uniform(new Vector3(1e9, 1e9, 0)), // NDC (x, y)
     halfPx: uniform(new Vector3(1, 1, 0)), // half the canvas in CSS px (x, y)
     radius: uniform(0), // repulsion radius, universe units
-    typedX: uniform(1e9), // version b: universe x of the caret; line particles past it are hidden
-    field: uniform(0), // version c: 1 = particles start as the background field
     sweepX: uniform(1e9), // version c: universe x the typing has swept to (runs a little past the end)
     sizeScale: uniform(1),
     /** Physics: per-star offsets and per-letter (dx, dy, angle). Written every frame. */
@@ -121,9 +119,9 @@ export function Particles({
     // How much of this particle is in the constellation (S2) or the person (S3) right now.
     const w2 = mix(u.from[3]!, u.to[3]!, ti)
     const w3 = mix(u.from[4]!, u.to[4]!, ti)
-    // Version c: before its character is typed, each particle waits in the background field; as
-    // the typing sweeps past its x it flies into the line (with a slight curve on the way).
-    const fieldW = u.field.mul(u.from[0]!)
+    // The opening: before its character is typed, each particle waits in the background field;
+    // as the typing sweeps past its x it flies into the line (with a slight curve on the way).
+    const fieldW = u.from[0]!
     const sx = P[0]!.x.add(seed.mul(0.6))
     const arrive = smoothstep(sx.sub(2.5), sx, u.sweepX) // lands as the caret reaches it
     const inFlight = sin(arrive.mul(Math.PI)).mul(fieldW)
@@ -174,17 +172,11 @@ export function Particles({
     })
     m.sizeAttenuation = false
     m.positionNode = p
-    // Version b, the opening: every particle is on the line, and only the typed part shows.
-    // (P[0] is the line shape; past the caret, a particle waits unseen.)
-    // (Version b instead: untyped particles stay hidden.)
-    const opening = float(1).sub(
-      step(u.typedX, P[0]!.x).mul(u.from[0]!).mul(float(1).sub(ti)).mul(float(1).sub(u.field)),
-    )
     m.sizeNode = mix(fromSize, b.w, ti).mul(u.sizeScale)
     const round = smoothstep(0.5, 0.15, length(uv().sub(vec2(0.5))))
     const c = mix(fromCol, cb, ti)
     m.colorNode = vec4(c.rgb, 1)
-    m.opacityNode = c.a.mul(round).mul(u.opacity).mul(opening)
+    m.opacityNode = c.a.mul(round).mul(u.opacity)
 
     const s = new Sprite(m)
     s.count = count

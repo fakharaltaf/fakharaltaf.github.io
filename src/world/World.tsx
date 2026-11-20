@@ -33,7 +33,6 @@ import { pointerNdc } from './input.ts'
 import { levelAt, remap } from './levels.ts'
 import { Particles, REPEL_PX, makeUniforms } from './Particles.tsx'
 import { Dust, makeDustUniforms } from './Dust.tsx'
-import { FIELD_START } from './version.ts'
 import { SHAPE_SIZE } from './shapes.ts'
 import { useWorld } from './store.ts'
 import { frameAt } from './timeline.ts'
@@ -180,8 +179,6 @@ function Scene({ particleCount }: { particleCount: number }) {
     // A slight drift mid-flight, not a cloud: each particle visibly travels to its new place.
     u.scatter.value = rm ? 0 : Math.sin(Math.PI * f.segT) * SHAPE_SIZE[f.seg + 1]! * 0.012
     u.shimmer.value = rm ? 0 : unitsPerPx * 1.5
-    u.typedX.value = caretX(f.typed)
-    u.field.value = FIELD_START ? 1 : 0
     // Where the caret is, continuously (not per character), so the flight is smooth.
     u.sweepX.value = LINE_X0 + (LINE_W + 1) * remap(f.t[0], 0.05, 0.85)
     u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * REPEL_PX
@@ -189,8 +186,8 @@ function Scene({ particleCount }: { particleCount: number }) {
     u.halfPx.value.set(size.width / 2, size.height / 2, 0)
     // Dust: screen-filling before the universe forms, gone once the real particles take over.
     const planePerPx = VIEW_H / size.height
-    // In c the particles themselves are the opening background; the dust only returns at the end.
-    d.opacity.value = (FIELD_START ? remap(f.t[5], 0.85, 1) : 1 - f.universe) * (1 - dive.value)
+    // The particles themselves are the opening background; the dust only returns at the end.
+    d.opacity.value = remap(f.t[5], 0.85, 1) * (1 - dive.value)
     d.flow.value = p * 5
     d.half.value.set((VIEW_H / 2) * (size.width / size.height), VIEW_H / 2, 0)
     d.push.value = rm || !pointer.active || grab.active ? 0 : planePerPx * REPEL_PX
