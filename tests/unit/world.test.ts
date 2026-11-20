@@ -103,3 +103,14 @@ describe('highlighter', () => {
     expect(highlightLine('a / b / c').every((t) => t.kind !== 'string')).toBe(true)
   })
 })
+
+describe('settling', () => {
+  it('stays on a level for a nudge, carries on for a clear move, either way', async () => {
+    const { settle, zoom } = await import('../../src/world/zoom')
+    zoom.anchor = CENTERS.project
+    expect(settle(CENTERS.project + 0.02)).toBe(CENTERS.project) // a nudge
+    expect(settle(CENTERS.project + 0.06)).toBe(CENTERS.constellation) // half a swipe out
+    expect(zoom.anchor).toBe(CENTERS.constellation)
+    expect(settle(CENTERS.constellation - 0.06)).toBe(CENTERS.project) // and back in
+  })
+})

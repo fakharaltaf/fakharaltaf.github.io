@@ -103,18 +103,30 @@ test('a live site that never answers falls back to a link', async ({ page }) => 
   await expect(page.locator('.live')).toHaveCount(0, { timeout: 15_000 })
 })
 
-test('a sideways trackpad swipe browses one project and stays inside', async ({ page }) => {
-  test.setTimeout(150_000)
+test('a trackpad swipe browses exactly one project; swiping down then zooms out', async ({
+  page,
+}) => {
   await ready(page, '/#claude-trace')
   await expect(page.locator('.demo-host')).toHaveAttribute('data-fade', '1', { timeout: 15_000 })
-  await page.mouse.move(20, 300)
-  // A real swipe: a strong start, momentum tailing off, and a little vertical wobble. Kept
-  // short: each event waits for a frame, and CI renders in software.
-  const dx = [40, 34, 28, 22, 17, 13, 10, 7, 5, 3, 2, 1]
-  for (const [i, x] of dx.entries()) await page.mouse.wheel(x, i % 2 ? 3 : -3)
+  // A Mac swipe as Chrome delivers it: a slow start, batched jumps (and a dip), then momentum,
+  // with a little vertical wobble. Sent in one burst so CI's slow frames can't space it out.
+  const swipe = (vertical: boolean, deltas: number[]) =>
+    page.evaluate(
+      ({ vertical, deltas }) =>
+        deltas.forEach((d, i) => {
+          const w = i % 2 ? 1.5 : -1.5
+          const init = { deltaX: vertical ? w : d, deltaY: vertical ? d : w, bubbles: true }
+          window.dispatchEvent(new WheelEvent('wheel', { ...init, cancelable: true }))
+        }),
+      { vertical, deltas },
+    )
+  const momentum = Array.from({ length: 30 }, (_, i) => 24 * Math.exp(-(i + 1) / 10))
+  await swipe(false, [2, 3, 3, 18, 30, 26, 6, 31, 28, 24, ...momentum])
   await expect(page).toHaveURL(/#monitoring$/, { timeout: 15_000 })
   await page.waitForTimeout(1500)
   await expect(page).toHaveURL(/#monitoring$/) // not two projects, not back out to the galaxy
+  await swipe(true, [4, 9, 16, 24, 30, 32, ...momentum.map((d) => d * 1.3)])
+  await expect(page).toHaveURL(/#constellation$/, { timeout: 20_000 })
 })
 
 test('stars are buttons: Enter on one dives into that project', async ({ page }) => {

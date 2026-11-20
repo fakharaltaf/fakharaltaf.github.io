@@ -35,17 +35,21 @@ export function bindInputs(surface: HTMLElement): () => void {
 
   // Wheel + trackpad (pinch arrives as ctrl+wheel). One discrete step per gesture when reduced.
   let wheelLock = 0
-  // A trackpad gesture (including its momentum) is one run of wheel events with no gap over
-  // GAP ms. Each gesture picks an axis once: sideways browses projects (exactly once), up/down
-  // zooms. Momentum only ever fades, so a sideways delta that jumps up is a new swipe even
-  // without a gap. Times come from the events themselves: on a busy device they're handled
-  // late, and that lag must not split one swipe into several.
+  // A trackpad gesture (finger phase + momentum) is one run of wheel events. Each picks an axis
+  // once: sideways browses exactly one project, up/down zooms. A new gesture starts when:
+  //  - the events stop for GAP ms (event timestamps, so a busy page doesn't split one swipe),
+  //  - the motion has stayed under a quarter of its peak for a few events and then picks up again
+  //    (a second swipe during the first one's momentum), or
+  //  - a clearly vertical event arrives (so you can zoom right after browsing).
+  // Batched events jump around mid-swipe, so a jump alone never counts as a new swipe.
   const GAP = 250
   let wheelAt = -Infinity
   let wheelAxis: 'x' | 'y' | null = null
   let wheelX = 0
   let wheelY = 0
   let lastAbsX = 0
+  let peakX = 0
+  let lowRun = 0 // consecutive events below a quarter of the peak: the swipe has died down
   let browsed = false
   on(
     window,
@@ -60,26 +64,29 @@ export function bindInputs(surface: HTMLElement): () => void {
       const dy = e.deltaY * unit
       const dx = e.deltaX * unit
       const now = e.timeStamp
-      const push = wheelAxis === 'x' && Math.abs(dx) > Math.max(8, lastAbsX * 1.6)
-      // Still fading after a browse: the same swipe's momentum, even if it arrived late.
-      // (A new swipe always opens with a push, so the tail can be generous.)
-      const tail = browsed && !push && now - wheelAt < 3000
-      if ((now - wheelAt > GAP && !tail) || push) {
+      const ax = Math.abs(dx)
+      const push = wheelAxis === 'x' && lowRun >= 3 && ax > Math.max(10, lastAbsX * 1.5)
+      const vertical = wheelAxis === 'x' && Math.abs(dy) >= 4 && Math.abs(dy) > ax * 2
+      if (now - wheelAt > GAP || push || vertical) {
         wheelAxis = push ? 'x' : null
         wheelX = wheelY = 0
+        peakX = 0
+        lowRun = 0
         browsed = false
       }
       wheelAt = now
-      lastAbsX = Math.abs(dx)
+      lastAbsX = ax
+      peakX = Math.max(peakX, ax)
+      lowRun = ax < peakX * 0.25 ? lowRun + 1 : 0
       if (!e.ctrlKey && wheelAxis === null) {
         wheelX += dx
         wheelY += dy
         if (Math.abs(wheelX) + Math.abs(wheelY) < 8) return // too little to tell yet
-        wheelAxis = Math.abs(wheelX) > Math.abs(wheelY) ? 'x' : 'y'
+        wheelAxis = Math.abs(wheelX) > Math.abs(wheelY) * 2 ? 'x' : 'y'
       }
       if (wheelAxis === 'x' && !e.ctrlKey) {
         wheelX += dx
-        if (!browsed && Math.abs(wheelX) > 60 && !useDemos.getState().expanded) {
+        if (!browsed && Math.abs(wheelX) > 80 && !useDemos.getState().expanded) {
           browsed = true // one project per gesture, however long its momentum runs
           browseProjects(wheelX > 0 ? 1 : -1)
         }

@@ -1,7 +1,7 @@
 // The single zoom value. Every input writes `target`; the render loop springs `value` toward it.
 // Plain mutable state on purpose: it changes every frame and must never trigger React renders.
 import { spring } from '../styles/tokens.ts'
-import { CENTERS, clamp01, nearestCenter } from './levels.ts'
+import { CENTERS, clamp01, nearestCenter, stepCenter } from './levels.ts'
 
 export const zoom = {
   target: 0,
@@ -15,6 +15,8 @@ export const zoom = {
   discrete: false,
   /** 1 = world fully shown. Dips to 0 and back during a discrete step. */
   fade: 1,
+  /** The level centre it last came to rest on, so settling can favour the way you moved. */
+  anchor: 0,
 }
 
 /**
@@ -103,6 +105,18 @@ export function stepSpring(
   }
 }
 
+/**
+ * Where to come to rest: the nearest level, except that a clear move away from the level you
+ * were resting on carries on to the next one (one trackpad swipe covers about half the gap, and
+ * snapping back made it feel like nothing happened).
+ */
+export function settle(p: number): number {
+  let c = nearestCenter(p)
+  if (c === zoom.anchor && Math.abs(p - c) > 0.035) c = stepCenter(c, p > c ? 1 : -1)
+  zoom.anchor = c
+  return c
+}
+
 /** One frame of zoom: snap-to-rest when idle, then spring (or jump, in discrete mode). */
 export function tick(dt: number, now = performance.now()) {
   if (dive.id) {
@@ -116,9 +130,7 @@ export function tick(dt: number, now = performance.now()) {
       dive.velocity = 0
     }
   }
-  if (!zoom.holding && now - zoom.lastInput > SNAP_AFTER_MS) {
-    zoom.target = nearestCenter(zoom.target)
-  }
+  if (!zoom.holding && now - zoom.lastInput > SNAP_AFTER_MS) zoom.target = settle(zoom.target)
   if (zoom.discrete) {
     zoom.velocity = 0
     if (zoom.value !== zoom.target) {
