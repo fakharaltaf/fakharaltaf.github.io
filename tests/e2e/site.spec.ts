@@ -104,14 +104,14 @@ test('a live site that never answers falls back to a link', async ({ page }) => 
 })
 
 test('a sideways trackpad swipe browses one project and stays inside', async ({ page }) => {
+  test.setTimeout(150_000)
   await ready(page, '/#claude-trace')
   await expect(page.locator('.demo-host')).toHaveAttribute('data-fade', '1', { timeout: 15_000 })
   await page.mouse.move(20, 300)
-  // A real swipe: a strong start, momentum tailing off, and a little vertical wobble.
-  for (let i = 0; i < 60; i++) {
-    await page.mouse.wheel(Math.max(1, 40 * Math.exp(-i / 14)), Math.sin(i * 0.7) * 3)
-    await page.waitForTimeout(16)
-  }
+  // A real swipe: a strong start, momentum tailing off, and a little vertical wobble. Kept
+  // short: each event waits for a frame, and CI renders in software.
+  const dx = [40, 34, 28, 22, 17, 13, 10, 7, 5, 3, 2, 1]
+  for (const [i, x] of dx.entries()) await page.mouse.wheel(x, i % 2 ? 3 : -3)
   await expect(page).toHaveURL(/#monitoring$/, { timeout: 15_000 })
   await page.waitForTimeout(1500)
   await expect(page).toHaveURL(/#monitoring$/) // not two projects, not back out to the galaxy

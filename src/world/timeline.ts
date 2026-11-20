@@ -2,7 +2,6 @@
 // scrubbing backwards plays every transition backwards.
 import { typedChars } from './layout.ts'
 import { chainPosition, remap, transition } from './levels.ts'
-import { ALL_PARTICLES } from './version.ts'
 
 export type Frame = ReturnType<typeof frameAt>
 
@@ -29,11 +28,8 @@ export function frameAt(p: number) {
     typed: typedChars(t[0]),
     typing: t[0] > 0.05 && t[0] < 0.85,
     caret: 1 - remap(t[2], 0.2, 0.45),
-    // Crisp text layers (version a only; in b the line and script are particles).
-    line: ALL_PARTICLES ? 0 : 1 - remap(t[1], 0.15, 0.4),
-    script: ALL_PARTICLES ? 0 : remap(t[1], 0.15, 0.4) * (1 - remap(t[2], 0.2, 0.45)),
     files: remap(t[1], 0.35, 0.7) * (1 - remap(t[2], 0.1, 0.35)),
-    particles: (ALL_PARTICLES ? 1 : remap(t[2], 0.15, 0.4)) * (1 - remap(t[5], 0.85, 1)),
+    particles: 1 - remap(t[5], 0.85, 1),
     /** The particle universe proper (project onward): the background dust hands over to it. */
     universe: remap(t[2], 0.15, 0.4) * (1 - remap(t[5], 0.85, 1)),
     seg, // morph from shape seg to seg + 1

@@ -6,7 +6,6 @@ import { Color } from 'three/webgpu'
 import { brand, palette } from '../styles/tokens.ts'
 import { mulberry32 } from '../systems/random.ts'
 import { letters } from './physicsState.ts'
-import { ALL_PARTICLES } from './version.ts'
 import { type Pt, opaquePixels, scriptCanvas, textPixels } from './canvases.ts'
 import {
   type Box,
@@ -113,41 +112,34 @@ export function buildShapes(n: number, portrait: boolean) {
 
   // Line (version b) and 0: the script's own glyphs.
   const code = opaquePixels(scriptCanvas(32, true), 1)
-  let s0: P[]
-  let sL: P[]
-  if (!ALL_PARTICLES) {
-    s0 = mix([[1, () => fromPixels(code, 1.5)]])
-    sL = s0 // version a never shows the line in particles
-  } else {
-    // The panel around the code, in particles too: outline, header rule, divider, titles.
-    const SB = SCRIPT_BOX
-    const barY = SCRIPT_TITLE_Y - 1.3
-    const divX = FILES_X0 - 2.5
-    const head = {
-      x: 0,
-      y: SCRIPT_TITLE_Y,
-      em: 0.8,
-      align: 'left' as const,
-      weight: 500,
-      mono: true,
-    }
-    const titles = [
-      ...textPixels(levels.script.file, { ...head, x: LINE_X0 }),
-      ...textPixels('~/Downloads', { ...head, x: FILES_X0 }),
-    ]
-    s0 = mix([
-      [26, () => fromPixels(code, 1.5)],
-      [3, () => onRect(SB, 1.2, muted, 0.7)],
-      [1, () => onSegment(SB.x - SB.w / 2, barY, SB.x + SB.w / 2, barY, 1.1, muted, 0.5)],
-      [0.6, () => onSegment(divX, barY, divX, SB.y - SB.h / 2, 1.1, muted, 0.5)],
-      [1.4, () => ({ ...fromPixels(titles, 1.3), c: muted })],
-    ])
-    // The line: every particle starts here, on the glyphs of the one typed row (which is the
-    // script's own row, so its particles don't move). The script then flies out of it.
-    const slugY = rowY(SLUG_ROW)
-    const line = code.filter((q) => Math.abs(q.y - slugY) < LH / 2)
-    sL = s0.map(() => fromPixels(line, 1.3, 0.5))
+  // The panel around the code, in particles too: outline, header rule, divider, titles.
+  const SB = SCRIPT_BOX
+  const barY = SCRIPT_TITLE_Y - 1.3
+  const divX = FILES_X0 - 2.5
+  const head = {
+    x: 0,
+    y: SCRIPT_TITLE_Y,
+    em: 0.8,
+    align: 'left' as const,
+    weight: 500,
+    mono: true,
   }
+  const titles = [
+    ...textPixels(levels.script.file, { ...head, x: LINE_X0 }),
+    ...textPixels('~/Downloads', { ...head, x: FILES_X0 }),
+  ]
+  const s0 = mix([
+    [26, () => fromPixels(code, 1.5)],
+    [3, () => onRect(SB, 1.2, muted, 0.7)],
+    [1, () => onSegment(SB.x - SB.w / 2, barY, SB.x + SB.w / 2, barY, 1.1, muted, 0.5)],
+    [0.6, () => onSegment(divX, barY, divX, SB.y - SB.h / 2, 1.1, muted, 0.5)],
+    [1.4, () => ({ ...fromPixels(titles, 1.3), c: muted })],
+  ])
+  // The line: every particle starts here, on the glyphs of the one typed row (which is the
+  // script's own row, so its particles don't move). The script then flies out of it.
+  const slugY = rowY(SLUG_ROW)
+  const line = code.filter((q) => Math.abs(q.y - slugY) < LH / 2)
+  const sL = s0.map(() => fromPixels(line, 1.3, 0.5))
 
   // 1: the project: the live demo's screen on top, the modules that run it along the bottom,
   // and the script as one of them, bottom-left, exactly where it already was.
