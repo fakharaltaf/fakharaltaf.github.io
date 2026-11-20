@@ -19,6 +19,7 @@ import {
   SCRIPT_TITLE_Y,
   FILES_X0,
   LH,
+  LINE_W,
   LINE_X0,
   SLUG_ROW,
   STARS,
@@ -345,7 +346,7 @@ export function buildShapes(n: number, portrait: boolean) {
 
   const pos = new Float32Array(n * STRIDE)
   const color = new Float32Array(n * STRIDE)
-  // Bindings: (starA, starB, t, inPinHead) and (letter, 0, 0, 0). -1 means unbound.
+  // Bindings: (starA, starB, t, inPinHead) and (letter, fieldX, fieldY, 0). -1 means unbound.
   const bind = new Float32Array(n * 8)
   s2.forEach((p, i) => {
     bind[i * 8] = p.sa ?? -1
@@ -353,6 +354,9 @@ export function buildShapes(n: number, portrait: boolean) {
     bind[i * 8 + 2] = p.st ?? 0
     bind[i * 8 + 3] = s3[i]!.sa !== -1 ? 1 : 0
     bind[i * 8 + 4] = s3[i]!.letter ?? -1
+    // Version c: where this particle waits, as background, until its character is typed.
+    bind[i * 8 + 5] = LINE_X0 - 24 + rnd() * (LINE_W + 48)
+    bind[i * 8 + 6] = (rnd() * 2 - 1) * 20
   })
   ;[sL, s0, s1, s2, s3, s4].forEach((shape, k) =>
     shape.forEach((p, i) => {

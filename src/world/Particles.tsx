@@ -4,6 +4,7 @@
 import { useEffect, useMemo } from 'react'
 import {
   AdditiveBlending,
+  Color,
   InstancedInterleavedBuffer,
   type Node,
   PointsNodeMaterial,
@@ -35,6 +36,7 @@ import {
   vec3,
   vec4,
 } from 'three/tsl'
+import { brand } from '../styles/tokens.ts'
 import { PIN_SHRINK, STARS } from './layout.ts'
 import { MAX_LETTERS, letters } from './physicsState.ts'
 import { SHAPES, STRIDE, buildShapes } from './shapes.ts'
@@ -56,6 +58,8 @@ export function makeUniforms() {
     halfPx: uniform(new Vector3(1, 1, 0)), // half the canvas in CSS px (x, y)
     radius: uniform(0), // repulsion radius, universe units
     typedX: uniform(1e9), // version b: universe x of the caret; line particles past it are hidden
+    field: uniform(0), // version c: 1 = particles start as the background field
+    sweepX: uniform(1e9), // version c: universe x the typing has swept to (runs a little past the end)
     sizeScale: uniform(1),
     /** Physics: per-star offsets and per-letter (dx, dy, angle). Written every frame. */
     stars: uniformArray(
@@ -117,7 +121,23 @@ export function Particles({
     // How much of this particle is in the constellation (S2) or the person (S3) right now.
     const w2 = mix(u.from[3]!, u.to[3]!, ti)
     const w3 = mix(u.from[4]!, u.to[4]!, ti)
-    let base = mix(a.xyz, b.xyz, ti)
+    // Version c: before its character is typed, each particle waits in the background field; as
+    // the typing sweeps past its x it flies into the line (with a slight curve on the way).
+    const fieldW = u.field.mul(u.from[0]!)
+    const sx = P[0]!.x.add(seed.mul(0.6))
+    const arrive = smoothstep(sx.sub(2.5), sx, u.sweepX) // lands as the caret reaches it
+    const inFlight = sin(arrive.mul(Math.PI)).mul(fieldW)
+    // Field position rides in the bind buffer (vertex inputs are capped at 16); brightness and
+    // size come from the seed.
+    const fieldA = hash(instanceIndex.add(11)).mul(0.45).add(0.35)
+    const fieldS = hash(instanceIndex.add(13)).mul(1.1).add(1)
+    const fromPos = mix(a.xyz, mix(vec3(B1.y, B1.z, 0), a.xyz, arrive), fieldW).add(
+      wander.mul(inFlight).mul(1.5),
+    )
+    const tint = new Color(brand.anchor)
+    const fromCol = mix(ca, mix(vec4(tint.r, tint.g, tint.b, fieldA), ca, arrive), fieldW)
+    const fromSize = mix(a.w, mix(fieldS, a.w, arrive), fieldW)
+    let base = mix(fromPos, b.xyz, ti)
     // Stars and threads follow the physics; inside the pin they move at the pin's scale.
     // Uniform-array elements are untyped in the typings; every array here is vec4.
     const at = (arr: typeof u.stars, i: Node<'int'>) => arr.element(i) as unknown as Node<'vec4'>
@@ -156,10 +176,13 @@ export function Particles({
     m.positionNode = p
     // Version b, the opening: every particle is on the line, and only the typed part shows.
     // (P[0] is the line shape; past the caret, a particle waits unseen.)
-    const opening = float(1).sub(step(u.typedX, P[0]!.x).mul(u.from[0]!).mul(float(1).sub(ti)))
-    m.sizeNode = mix(a.w, b.w, ti).mul(u.sizeScale)
+    // (Version b instead: untyped particles stay hidden.)
+    const opening = float(1).sub(
+      step(u.typedX, P[0]!.x).mul(u.from[0]!).mul(float(1).sub(ti)).mul(float(1).sub(u.field)),
+    )
+    m.sizeNode = mix(fromSize, b.w, ti).mul(u.sizeScale)
     const round = smoothstep(0.5, 0.15, length(uv().sub(vec2(0.5))))
-    const c = mix(ca, cb, ti)
+    const c = mix(fromCol, cb, ti)
     m.colorNode = vec4(c.rgb, 1)
     m.opacityNode = c.a.mul(round).mul(u.opacity).mul(opening)
 
