@@ -37,13 +37,15 @@ export function bindInputs(surface: HTMLElement): () => void {
   let wheelLock = 0
   // A trackpad gesture (including its momentum) is one run of wheel events with no gap over
   // GAP ms. Each gesture picks an axis once: sideways browses projects (exactly once), up/down
-  // zooms. Without this, a swipe's vertical wobble backed out of the project, and its momentum
-  // outlasted any timer and flipped twice.
+  // zooms. Momentum only ever fades, so a sideways delta that jumps up is a new swipe even
+  // without a gap. Times come from the events themselves: on a busy device they're handled
+  // late, and that lag must not split one swipe into several.
   const GAP = 250
-  let wheelAt = 0
+  let wheelAt = -Infinity
   let wheelAxis: 'x' | 'y' | null = null
   let wheelX = 0
   let wheelY = 0
+  let lastAbsX = 0
   let browsed = false
   on(
     window,
@@ -57,13 +59,17 @@ export function bindInputs(surface: HTMLElement): () => void {
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1
       const dy = e.deltaY * unit
       const dx = e.deltaX * unit
-      const now = performance.now()
-      if (now - wheelAt > GAP) {
-        wheelAxis = null
+      const now = e.timeStamp
+      const push = wheelAxis === 'x' && Math.abs(dx) > Math.max(8, lastAbsX * 1.6)
+      // Still fading after a browse: the same swipe's momentum, even if it arrived late.
+      const tail = browsed && !push && now - wheelAt < 1000
+      if ((now - wheelAt > GAP && !tail) || push) {
+        wheelAxis = push ? 'x' : null
         wheelX = wheelY = 0
         browsed = false
       }
       wheelAt = now
+      lastAbsX = Math.abs(dx)
       if (!e.ctrlKey && wheelAxis === null) {
         wheelX += dx
         wheelY += dy
