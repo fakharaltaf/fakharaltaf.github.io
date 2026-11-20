@@ -62,7 +62,8 @@ export function bindInputs(surface: HTMLElement): () => void {
       const now = e.timeStamp
       const push = wheelAxis === 'x' && Math.abs(dx) > Math.max(8, lastAbsX * 1.6)
       // Still fading after a browse: the same swipe's momentum, even if it arrived late.
-      const tail = browsed && !push && now - wheelAt < 1000
+      // (A new swipe always opens with a push, so the tail can be generous.)
+      const tail = browsed && !push && now - wheelAt < 3000
       if ((now - wheelAt > GAP && !tail) || push) {
         wheelAxis = push ? 'x' : null
         wheelX = wheelY = 0
