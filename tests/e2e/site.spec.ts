@@ -156,8 +156,6 @@ test('doing something twice writes a script, automates it, and remembers', async
   await expect(page.locator('.script-panel .file')).toHaveText('open-terminal.ts')
   await expect(page.locator('.script-panel .state-done')).toBeVisible({ timeout: 30_000 })
   await expect(page.locator('.tray-toggle')).toHaveAccessibleName('Automated · 1')
-  await page.click('.tray-toggle')
-  await expect(page.locator('.tray .counter')).toHaveText('You’ve automated 1 thing.')
   await page.reload()
   await expect(page.locator('.tray .note')).toHaveText('Welcome back. Your scripts kept running.')
   await page.click('.tray-toggle')

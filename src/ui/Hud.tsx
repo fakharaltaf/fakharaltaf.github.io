@@ -44,6 +44,8 @@ export function Hud() {
         ))}
       </ol>
       <div className="hud-foot">
+        {/* First, so its list opens upward over the rail, not over Sound. */}
+        <Tray />
         <button
           type="button"
           className="btn btn-quiet sound-toggle"
@@ -60,7 +62,6 @@ export function Hud() {
           </span>
           <span aria-hidden="true"> · {sound ? hud.sound.onShort : hud.sound.offShort}</span>
         </button>
-        <Tray />
         {backend && <p className="hud-backend">{hud.backend[backend]}</p>}
       </div>
     </nav>

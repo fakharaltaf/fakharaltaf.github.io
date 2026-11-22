@@ -219,6 +219,8 @@ export const automation = {
   counter: (n: number) => `You’ve automated ${n} ${n === 1 ? 'thing' : 'things'}.`,
   toggle: (n: number) => `Automated · ${n}`,
   toggleShort: (n: number) => `Auto · ${n}`,
+  switchOn: 'auto',
+  switchOff: 'off',
   milestones: { 1: 'There it is.', 3: 'You’re getting it.', 5: 'I’d hire you.' } as Record<
     number,
     string
