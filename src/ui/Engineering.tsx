@@ -146,8 +146,8 @@ function SourcePanel() {
     : live && level === 'project'
       ? 'live'
       : present && (level === 'project' || level === 'constellation')
-      ? present
-      : level
+        ? present
+        : level
   const src = sources[key] ?? sources[level]!
   return (
     <section className="eng-source" aria-label={hud.viewSourceLong}>

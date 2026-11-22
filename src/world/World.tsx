@@ -40,7 +40,7 @@ import { MAX_LETTERS, grab, letterXforms, letters, starOffsets } from './physics
 import { Render } from './Render.tsx'
 import { TIERS, decideTier, qualityHeld, useQuality } from '../systems/quality.ts'
 import { stats } from '../systems/stats.ts'
-import { dive, emitFrame, swapLift, tick, view, zoom } from './zoom.ts'
+import { dive, emitFrame, land, swapLift, tick, view, zoom } from './zoom.ts'
 
 const CAM_Z = 10
 const FOV = 50
@@ -113,10 +113,13 @@ function Scene({ particleCount }: { particleCount: number }) {
     const f = frameAt(p)
     let cam = cameraAt(p, rest)
     if (dive.id && dive.value > 0) {
-      let inside = fit(screenFor(dive.id), viewInfo, true, 1.06)
+      // RareMind's "inside" is its own level's view, so browsing there and zooming in match.
+      const insideOf = (id: string) =>
+        id === 'raremind' ? rest.project : fit(screenFor(id), viewInfo, true, 1.06)
+      let inside = insideOf(dive.id)
       if (dive.from) {
         // Browsing: pull back until both projects are in view, travel, settle in on the new one.
-        const a = fit(screenFor(dive.from), viewInfo, true, 1.06)
+        const a = insideOf(dive.from)
         const t = dive.swap
         const e = t * t * t * (t * (6 * t - 15) + 10) // most of the travel happens mid-flight
         // Mid-flight the view is wide enough to hold both stars, with room around them.
@@ -138,6 +141,7 @@ function Scene({ particleCount }: { particleCount: number }) {
       }
       cam = blendCam(cam, inside, dive.value)
     }
+    if (land.active) cam = rest.project
     const s = VIEW_H / cam.height
     view.focus = cam.focus
     view.height = cam.height

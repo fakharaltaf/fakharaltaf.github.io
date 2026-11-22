@@ -15,7 +15,7 @@ import { projects } from '../content/projects.ts'
 import { SCREEN, projectBox, screenFor } from '../world/layout.ts'
 import { remap } from '../world/levels.ts'
 import { frameAt } from '../world/timeline.ts'
-import { dive, onFrame, swapView, view } from '../world/zoom.ts'
+import { dive, land, onFrame, swapView, view } from '../world/zoom.ts'
 import { type DemoProps, useDemos } from './store.ts'
 
 const LiveFrame = lazy(() => import('./LiveFrame.tsx'))
@@ -36,6 +36,7 @@ const DEMOS: Record<string, LazyExoticComponent<ComponentType<DemoProps>>> = {
 
 /** Opacity of the hosted demo for the current frame, and which project it is. */
 export function demoFade(p: number): { id: string | null; fade: number } {
+  if (land.active) return { id: 'raremind', fade: 1 }
   if (dive.id) {
     // Browsing: the old demo fades as the camera pulls back, the new one as it settles in.
     const swap = swapView()

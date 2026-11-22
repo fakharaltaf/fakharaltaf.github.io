@@ -33,6 +33,9 @@ export const dive = {
   swap: 1,
 }
 
+/** Arriving at RareMind by browsing: the camera holds on its level while its star becomes its frame. */
+export const land = { active: false }
+
 const SWAP_S = 1.3 // seconds for the flight from one project to the next
 
 /** Camera state of the current frame, for projecting world boxes onto DOM overlays. */

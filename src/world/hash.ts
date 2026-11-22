@@ -3,7 +3,7 @@
 import { projects } from '../content/projects.ts'
 import { CENTERS, type LevelId, isLevelId, levelAt } from './levels.ts'
 import { TOUR } from './layout.ts'
-import { dive, diveInto, flyTo, onFrame, undive, zoom } from './zoom.ts'
+import { dive, diveInto, flyTo, land, onFrame, undive, zoom } from './zoom.ts'
 
 export function targetForHash(hash: string): number | null {
   const id = decodeURIComponent(hash.replace(/^#/, ''))
@@ -44,7 +44,7 @@ export function browseProjects(dir: 1 | -1): boolean {
   const next = TOUR[(i + dir + TOUR.length) % TOUR.length]!
   history.replaceState(null, '', `#${next}`) // browsing isn't a trail of history entries
   // Browsing is always a flight between stars, RareMind's included.
-  if (dive.id) return (diveInto(next), true)
+  if (dive.id) return (diveInto(next), next === 'raremind' && landOnRareMind(), true)
   // On the RareMind level itself: first let its frame dissolve into its star (zoom out with
   // the camera held on RareMind's screen), then fly from there.
   leaving = true
@@ -60,6 +60,29 @@ export function browseProjects(dir: 1 | -1): boolean {
   return true
 }
 let leaving = false
+
+/**
+ * After the flight to RareMind's star, become the RareMind level itself (the same screen you
+ * get by zooming in): the camera stays put while the star's particles grow into its frame.
+ */
+function landOnRareMind() {
+  leaving = true // no browsing until it's landed
+  const wait = onFrame(() => {
+    if (dive.from || dive.id !== 'raremind' || dive.value < 0.98) return
+    wait()
+    land.active = true
+    dive.id = null
+    dive.value = dive.target = dive.velocity = 0
+    zoom.target = CENTERS.project
+    zoom.lastInput = performance.now()
+    const done = onFrame(() => {
+      if (Math.abs(zoom.value - CENTERS.project) > 0.004) return
+      done()
+      land.active = false
+      leaving = false
+    })
+  })
+}
 
 const hashFor = (l: LevelId) => (l === 'cursor' ? location.pathname + location.search : `#${l}`)
 

@@ -5,7 +5,7 @@ import { projects } from '../content/projects.ts'
 import { skills } from '../content/skills.ts'
 import { starPos } from '../world/physicsState.ts'
 import { frameAt } from '../world/timeline.ts'
-import { dive, onFrame, view } from '../world/zoom.ts'
+import { dive, land, onFrame, view } from '../world/zoom.ts'
 
 const PAIRS = projects.flatMap((a, i) =>
   projects.flatMap((b, j) => {
@@ -46,7 +46,7 @@ export function ThreadTips() {
     let lastKey = ''
     const unsub = onFrame((p) => {
       const f = frameAt(p)
-      const live = f.chain > 3.85 && f.chain < 4.15 && !dive.id
+      const live = f.chain > 3.85 && f.chain < 4.15 && !dive.id && !land.active
       const { x, y } = pointer.current
       let best: (typeof PAIRS)[number] | null = null
       let bestD = 10

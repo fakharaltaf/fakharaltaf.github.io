@@ -73,7 +73,16 @@ describe('project catalogue', () => {
     const { TOUR } = await import('../../src/world/layout')
     expect(seen).toEqual([...TOUR, 'raremind'])
     expect(new Set(TOUR)).toEqual(new Set(projects.map((p) => p.id)))
+    // Back at RareMind: it lands on its own level (camera held while the star becomes its frame).
+    emitFrame(zoom.value) // the flight has arrived: landing starts
+    expect(dive.id).toBe(null)
+    expect(zoom.target).toBe(CENTERS.project)
+    zoom.value = CENTERS.project
+    emitFrame(zoom.value) // landed
     expect(browseProjects(-1)).toBe(true)
+    dive.value = 1
+    zoom.value = CENTERS.constellation
+    emitFrame(zoom.value) // RareMind's frame has dissolved into its star: off it goes
     expect(at()).toBe(TOUR.at(-1)!)
     // Mid-flight, another step is swallowed until the trip finishes.
     dive.from = TOUR.at(-2)!
