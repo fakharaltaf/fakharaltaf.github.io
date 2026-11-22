@@ -15,6 +15,7 @@ import {
 import {
   cameraProjectionMatrix,
   float,
+  fract,
   hash,
   modelViewMatrix,
   instanceIndex,
@@ -36,7 +37,8 @@ import {
   vec3,
   vec4,
 } from 'three/tsl'
-import { brand } from '../styles/tokens.ts'
+import { brand, palette } from '../styles/tokens.ts'
+import { FX } from './browse-version.ts'
 import { LINE_W, LINE_X0, PIN_SHRINK, STARS } from './layout.ts'
 import { FRAME_PIECES, framePieces } from './frames.ts'
 import { MAX_LETTERS, letters } from './physicsState.ts'
@@ -168,13 +170,25 @@ export function Particles({
     base = base.add(starOff.mul(starW))
     // Version c: inside a project, nearly all of its star's particles fly out to its frame.
     const ownStar = step(0, B0.x).mul(float(1).sub(step(0.5, B0.x.sub(B0.y).abs())))
+    const isFrameStar = float(1).sub(step(0.5, B0.x.sub(u.frameStar).abs()))
+    // RareMind's half of the particles (B1.w = 0) waits in the galaxy as a faint copy of its
+    // star; some of it is lent to the other frames, so their lines are as fine and full as its own.
+    const lent = float(1)
+      .sub(B1.w)
+      .mul(float(1).sub(step(0.5, B0.x.sub(RM_STAR).abs())))
+      .mul(step(hash(instanceIndex.add(47)), float(0.45)))
+      .mul(step(0, u.frameStar))
     const mine = ownStar
-      .mul(float(1).sub(step(0.5, B0.x.sub(u.frameStar).abs())))
+      .mul(isFrameStar)
       .mul(step(hash(instanceIndex.add(31)), float(0.92))) // the star itself is behind the window
+      .add(lent)
+      .min(1)
     const piece = at(u.framePieces, int(hash(instanceIndex.add(37)).mul(FRAME_PIECES).floor()))
-    const along = hash(instanceIndex.add(41))
+    // The frame's dots drift slowly along its lines, round the window (off with ?fx=off).
+    const along = fract(hash(instanceIndex.add(41)).add(time.mul(FX ? 0.06 : 0)))
     const home = at(u.starHome, int(max(u.frameStar, 0))).xy
-    const onFrame = home.add(mix(piece.xy, piece.zw, along)).add(starOff.xy)
+    const homeOff = at(u.stars, int(max(u.frameStar, 0))).xy
+    const onFrame = home.add(mix(piece.xy, piece.zw, along)).add(homeOff)
     // Each particle leaves on its own schedule, like every other morph.
     const go = smoothstep(seed.mul(0.4), seed.mul(0.4).add(0.6), u.frameW).mul(mine).mul(w2)
     base = vec3(mix(base.xy, onFrame, go), base.z.mul(float(1).sub(go)))
@@ -204,9 +218,18 @@ export function Particles({
     })
     m.sizeAttenuation = false
     m.positionNode = p
-    m.sizeNode = mix(fromSize, b.w, ti).mul(u.sizeScale).mul(go.mul(0.5).add(1))
+    // On the frame, a star's particles become a thin dotted line, like RareMind's frame; a few
+    // become a faint wide glow along it (off with ?fx=off).
+    const glow = step(hash(instanceIndex.add(43)), float(FX ? 0.12 : 0))
+    m.sizeNode = mix(mix(fromSize, b.w, ti), mix(float(1.2), float(7), glow), go).mul(u.sizeScale)
     const round = smoothstep(0.5, 0.15, length(uv().sub(vec2(0.5))))
-    const c = mix(fromCol, cb, ti)
+    const muted = new Color(palette.dark.muted)
+    const frameCol = mix(
+      vec4(muted.r, muted.g, muted.b, sin(along.mul(Math.PI)).mul(0.35).add(0.55)),
+      vec4(tint.r, tint.g, tint.b, 0.06),
+      glow,
+    )
+    const c = mix(mix(fromCol, cb, ti), frameCol, go)
     m.colorNode = vec4(c.rgb, 1)
     // RareMind's frame shrinking into its star (or growing out of it): its particles dim while
     // they travel, so the dense script module reads as a haze, not a bright streak.
@@ -216,7 +239,9 @@ export function Particles({
     const projGalaxy = u.from[2]!.mul(u.to[3]!).add(u.from[3]!.mul(u.to[2]!))
     const moving = smoothstep(0, 0.08, ti).mul(float(1).sub(smoothstep(0.93, 1, ti)))
     const travelDim = float(1).sub(moving.mul(0.85).mul(rmStar).mul(projGalaxy))
-    m.opacityNode = c.a.mul(round).mul(u.opacity).mul(travelDim)
+    // Lent particles cross the galaxy to get there: faint on the way, not a streak.
+    const enRoute = float(1).sub(lent.mul(go).mul(float(1).sub(go)).mul(3.6))
+    m.opacityNode = c.a.mul(round).mul(u.opacity).mul(travelDim).mul(enRoute)
 
     const s = new Sprite(m)
     s.count = count

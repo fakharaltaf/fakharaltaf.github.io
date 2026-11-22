@@ -8,3 +8,8 @@ export const BROWSE: 'a' | 'b' | 'c' = (() => {
     typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('browse')
   return v === 'b' || v === 'c' ? v : 'a'
 })()
+
+/** Version c's frame effect (drifting dots, glow); ?fx=off to compare without it. */
+// shortcut: a URL switch for comparing; delete once decided.
+export const FX =
+  typeof location === 'undefined' || new URLSearchParams(location.search).get('fx') !== 'off'
