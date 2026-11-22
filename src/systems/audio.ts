@@ -130,8 +130,8 @@ export function setHum(p: number) {
 // The zoom shapes it: muffled, as if through a wall, while you read the opening; opening up
 // to fully clear by the galaxy; at its fullest at the person level ("face to face with the man");
 // fading out with the collapse at the end.
-// shortcut: the recording isn't in the repo until we have permission (public/music is gitignored).
-// Without the file there's no song and the hum plays as before.
+// Used with the rights holders' permission (public/music/). If the file fails to load, the hum
+// plays as before.
 const SONG = `${import.meta.env.BASE_URL}music/the-man-who-sold-the-world.mp3`
 let song: { el: HTMLAudioElement; filter: BiquadFilterNode; gain: GainNode } | null = null
 let songMissing = false
