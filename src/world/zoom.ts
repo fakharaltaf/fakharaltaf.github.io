@@ -37,6 +37,8 @@ export const dive = {
 export const rmForm = { v: 0 }
 
 const SWAP_S = 1.3 // seconds for the flight from one project to the next
+// Zooming from a project into the script goes ten times deeper: it gets longer.
+const SCRIPT_S = 2
 
 /** Camera state of the current frame, for projecting world boxes onto DOM overlays. */
 export const view = {
@@ -75,6 +77,9 @@ export function swapView(): { id: string | null; fade: number } {
 
 /** 0 at rest, 1 at the top of the flight: the galaxy shows through while you travel. */
 export const swapLift = () => (dive.from ? Math.sin(Math.PI * dive.swap) : 0)
+
+/** A browse flight whose destination is the script level, not a project (zooming in). */
+export const SCRIPT_TRIP = '@script'
 
 /** Set by hash.ts (which imports this module): zooming in from inside a project. */
 export const diveHooks = { zoomIn: () => {} }
@@ -142,7 +147,10 @@ export function tick(dt: number, now = performance.now()) {
   if (dive.id) {
     if (zoom.discrete) dive.value = dive.target
     else stepSpring(dive, dive.target, dt, spring.gentle)
-    if (dive.swap < 1) dive.swap = zoom.discrete ? 1 : Math.min(1, dive.swap + dt / SWAP_S)
+    if (dive.swap < 1)
+      dive.swap = zoom.discrete
+        ? 1
+        : Math.min(1, dive.swap + dt / (dive.id === SCRIPT_TRIP ? SCRIPT_S : SWAP_S))
     if (dive.swap >= 1) dive.from = null
     if (dive.target === 0 && dive.value < 0.002) {
       dive.id = null

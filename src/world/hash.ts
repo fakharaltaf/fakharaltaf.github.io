@@ -4,7 +4,17 @@ import { projects } from '../content/projects.ts'
 import { CENTERS, HOLD, type LevelId, isLevelId, levelAt } from './levels.ts'
 import { TOUR } from './layout.ts'
 import { BROWSE } from './browse-version.ts'
-import { dive, diveHooks, diveInto, flyTo, onFrame, rmForm, undive, zoom } from './zoom.ts'
+import {
+  SCRIPT_TRIP,
+  dive,
+  diveHooks,
+  diveInto,
+  flyTo,
+  onFrame,
+  rmForm,
+  undive,
+  zoom,
+} from './zoom.ts'
 
 export function targetForHash(hash: string): number | null {
   const id = decodeURIComponent(hash.replace(/^#/, ''))
@@ -62,20 +72,18 @@ export function browseProjects(dir: 1 | -1): boolean {
 let forming = false
 
 /**
- * Zooming in from any project carries on down the same chain as RareMind's: fly to RareMind (the
- * browse flight), then straight on into its script. Ignored mid-flight.
+ * Zooming in from any project: the browse flight (pull back, travel, settle), landing straight on
+ * the script level, its particles forming as the flight arrives. Ignored mid-flight.
  */
 diveHooks.zoomIn = () => {
   if (!dive.id || dive.target !== 1 || dive.from || forming) return
-  if (dive.id === 'raremind' || BROWSE === 'b') {
-    // Already at RareMind's star: just carry on in.
+  if (BROWSE === 'b' && dive.id === 'raremind') {
     undive()
     flyTo(CENTERS.script)
     return
   }
-  history.replaceState(null, '', '#raremind')
-  diveInto('raremind')
-  shapeRareMind('arrive', () => flyTo(CENTERS.script))
+  diveInto(SCRIPT_TRIP)
+  shapeRareMind('arrive', CENTERS.script)
 }
 
 /** The share of the flight RareMind's frame takes to dissolve (start) or form (end). */
@@ -84,22 +92,23 @@ const ARRIVE_FROM = 0.55
 
 /** Zoom position whose particle shape is that much frame (1) or star (0). The camera ignores it
  * during a flight, so it only drives the morph. Skips the level's hold so nothing pauses. */
-function formAt(k: number) {
-  if (k >= 1) return CENTERS.project
+function formAt(k: number, end: number) {
+  if (k >= 1) return end
   if (k <= 0) return CENTERS.constellation
-  const a = CENTERS.project + HOLD
+  const a = end + HOLD
   const b = CENTERS.constellation - HOLD
   return a + (b - a) * (1 - k)
 }
 
-function setForm(k: number) {
+function setForm(k: number, end: number = CENTERS.project) {
   rmForm.v = k
-  zoom.value = zoom.target = formAt(k)
+  zoom.value = zoom.target = formAt(k, end)
   zoom.velocity = 0
   zoom.lastInput = performance.now()
 }
 
-function shapeRareMind(way: 'leave' | 'arrive', then?: () => void) {
+/** `end`: the level the flight lands on (RareMind's, or the script when zooming in). */
+function shapeRareMind(way: 'leave' | 'arrive', end: number = CENTERS.project) {
   forming = true
   const target = dive.id
   const unsub = onFrame(() => {
@@ -120,17 +129,20 @@ function shapeRareMind(way: 'leave' | 'arrive', then?: () => void) {
       forming = false
       return
     }
-    setForm(Math.min(1, Math.max(0, (t - ARRIVE_FROM) / (1 - ARRIVE_FROM))))
+    // Into the script, the frame forms early (seen from afar) and becomes the script as the
+    // camera closes in, eased so the last, deepest stretch isn't a blur.
+    const from = end === CENTERS.script ? 0.3 : ARRIVE_FROM
+    const k = Math.min(1, Math.max(0, (t - from) / (1 - from)))
+    setForm(end === CENTERS.script ? k * k * (3 - 2 * k) : k, end)
     if (dive.from || dive.value < 0.98) return
     // Landed with the frame formed: become the RareMind level (identical view), so it's the same
     // screen you get by zooming in.
     unsub()
     dive.id = null
     dive.value = dive.target = dive.velocity = 0
-    setForm(1)
+    setForm(1, end)
     rmForm.v = 0
     forming = false
-    then?.()
   })
 }
 

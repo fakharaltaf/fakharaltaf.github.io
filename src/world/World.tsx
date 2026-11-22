@@ -41,7 +41,17 @@ import { MAX_LETTERS, grab, letterXforms, letters, starOffsets } from './physics
 import { Render } from './Render.tsx'
 import { TIERS, decideTier, qualityHeld, useQuality } from '../systems/quality.ts'
 import { stats } from '../systems/stats.ts'
-import { dive, emitFrame, rmForm, swapLift, swapView, tick, view, zoom } from './zoom.ts'
+import {
+  SCRIPT_TRIP,
+  dive,
+  emitFrame,
+  rmForm,
+  swapLift,
+  swapView,
+  tick,
+  view,
+  zoom,
+} from './zoom.ts'
 import { BROWSE } from './browse-version.ts'
 
 const CAM_Z = 10
@@ -117,7 +127,11 @@ function Scene({ particleCount }: { particleCount: number }) {
     if (dive.id && dive.value > 0) {
       // RareMind's "inside" is its own level's view, so browsing there and zooming in match.
       const insideOf = (id: string) =>
-        id === 'raremind' ? rest.project : fit(screenFor(id), viewInfo, true, 1.06)
+        id === SCRIPT_TRIP
+          ? rest.script
+          : id === 'raremind'
+            ? rest.project
+            : fit(screenFor(id), viewInfo, true, 1.06)
       let inside = insideOf(dive.id)
       if (dive.from) {
         // Browsing: pull back until both projects are in view, travel, settle in on the new one.

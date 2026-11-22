@@ -15,7 +15,7 @@ import { projects } from '../content/projects.ts'
 import { SCREEN, projectBox, screenFor } from '../world/layout.ts'
 import { remap } from '../world/levels.ts'
 import { frameAt } from '../world/timeline.ts'
-import { dive, onFrame, swapView, view } from '../world/zoom.ts'
+import { SCRIPT_TRIP, dive, onFrame, swapView, view } from '../world/zoom.ts'
 import { type DemoProps, useDemos } from './store.ts'
 
 const LiveFrame = lazy(() => import('./LiveFrame.tsx'))
@@ -39,7 +39,9 @@ export function demoFade(p: number): { id: string | null; fade: number } {
   if (dive.id) {
     // Browsing: the old demo fades as the camera pulls back, the new one as it settles in.
     const swap = swapView()
-    return { id: dive.value > 0.05 ? swap.id : null, fade: remap(dive.value, 0.55, 1) * swap.fade }
+    // (Flying to the script: no demo at the far end.)
+    const id = swap.id === SCRIPT_TRIP ? null : swap.id
+    return { id: dive.value > 0.05 ? id : null, fade: remap(dive.value, 0.55, 1) * swap.fade }
   }
   const f = frameAt(p)
   // Mount a little early (from the script level) so RareMind is ready when it arrives.
