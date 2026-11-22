@@ -221,6 +221,14 @@ function Scene({ particleCount }: { particleCount: number }) {
     u.from.forEach((w, k) => (w.value = k === f.seg ? 1 : 0))
     u.to.forEach((w, k) => (w.value = k === f.seg + 1 ? 1 : 0))
     u.t.value = f.segT
+    if (dive.id === SCRIPT_TRIP) {
+      // Zooming from a project into the script: the particles go from the galaxy straight to
+      // the script (shape 3 to shape 1), never through RareMind's frame in between.
+      u.from.forEach((w, k) => (w.value = k === 3 ? 1 : 0))
+      u.to.forEach((w, k) => (w.value = k === 1 ? 1 : 0))
+      u.t.value = rmForm.v
+      if (dive.from) u.tripStar.value = STARS.findIndex((st) => st.id === dive.from)
+    } else u.tripStar.value = -1
     // A slight drift mid-flight, not a cloud: each particle visibly travels to its new place.
     u.scatter.value = rm ? 0 : Math.sin(Math.PI * f.segT) * SHAPE_SIZE[f.seg + 1]! * 0.012
     u.shimmer.value = rm ? 0 : unitsPerPx * 1.5

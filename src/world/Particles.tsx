@@ -72,6 +72,8 @@ export function makeUniforms() {
     /** Version c: the frame a star's particles form when you're inside its project. */
     frameStar: uniform(-1), // which star (index), -1 = none
     frameW: uniform(0), // 0 = all star, 1 = all frame
+    /** Zooming from a project into the script: the star the script's particles set out from. */
+    tripStar: uniform(-1),
     starHome: uniformArray(
       STARS.map((st) => new Vector4(st.pos[0], st.pos[1], st.pos[2], 0)),
       'vec4',
@@ -189,6 +191,15 @@ export function Particles({
     const home = at(u.starHome, int(max(u.frameStar, 0))).xy
     const homeOff = at(u.stars, int(max(u.frameStar, 0))).xy
     const onFrame = home.add(mix(piece.xy, piece.zw, along)).add(homeOff)
+    // Into the script from another project: the script's particles (RareMind's half) set out
+    // from that project's star, not RareMind's, so the script comes out of where you were.
+    const tripHome = at(u.starHome, int(max(u.tripStar, 0))).xy.add(
+      at(u.stars, int(max(u.tripStar, 0))).xy,
+    )
+    const tripShift = tripHome
+      .sub(at(u.starHome, int(RM_STAR)).xy.add(at(u.stars, int(RM_STAR)).xy))
+      .mul(float(1).sub(B1.w).mul(step(0, u.tripStar)).mul(float(1).sub(ti)))
+    base = vec3(base.xy.add(tripShift), base.z)
     // Lent particles wait round the visited project's own star (they're faint there), so its
     // frame grows out of that star, not RareMind's.
     const rmHome = at(u.starHome, int(RM_STAR)).xy.add(at(u.stars, int(RM_STAR)).xy)
@@ -245,7 +256,11 @@ export function Particles({
     const travelDim = float(1).sub(moving.mul(0.85).mul(rmStar).mul(projGalaxy))
     // Lent particles cross the galaxy to get there: faint on the way, not a streak.
     const enRoute = float(1).sub(lent.mul(go).mul(float(1).sub(go)).mul(3.6))
-    m.opacityNode = c.a.mul(round).mul(u.opacity).mul(travelDim).mul(enRoute)
+    // ...and the script's particles, flying from a project's star into the script: a soft trail.
+    const tripDim = float(1).sub(
+      sin(ti.mul(Math.PI)).mul(0.65).mul(float(1).sub(B1.w)).mul(step(0, u.tripStar)),
+    )
+    m.opacityNode = c.a.mul(round).mul(u.opacity).mul(travelDim).mul(enRoute).mul(tripDim)
 
     const s = new Sprite(m)
     s.count = count
