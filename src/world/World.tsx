@@ -22,6 +22,7 @@ import {
   CARET_W,
   LINE_W,
   LINE_X0,
+  STARS,
   blendCam,
   cameraAt,
   caretX,
@@ -40,7 +41,8 @@ import { MAX_LETTERS, grab, letterXforms, letters, starOffsets } from './physics
 import { Render } from './Render.tsx'
 import { TIERS, decideTier, qualityHeld, useQuality } from '../systems/quality.ts'
 import { stats } from '../systems/stats.ts'
-import { dive, emitFrame, land, swapLift, tick, view, zoom } from './zoom.ts'
+import { dive, emitFrame, land, swapLift, swapView, tick, view, zoom } from './zoom.ts'
+import { BROWSE } from './browse-version.ts'
 
 const CAM_Z = 10
 const FOV = 50
@@ -207,6 +209,13 @@ function Scene({ particleCount }: { particleCount: number }) {
     u.shimmer.value = rm ? 0 : unitsPerPx * 1.5
     // Where the caret is, continuously (not per character), so the flight is smooth.
     u.sweepX.value = LINE_X0 + (LINE_W + 1) * remap(f.t[0], 0.05, 0.85)
+    // Version c: the project you're in (or flying to) assembles its frame from its star.
+    if (BROWSE === 'c') {
+      const sv = swapView()
+      const k = STARS.findIndex((st) => st.id === sv.id)
+      u.frameStar.value = sv.id && sv.id !== 'raremind' && !land.active ? k : -1
+      u.frameW.value = dive.value * sv.fade
+    }
     u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * REPEL_PX
     u.pointer.value.set(pointer.x, pointer.y, 0) // compared on screen, in the shader
     u.halfPx.value.set(size.width / 2, size.height / 2, 0)

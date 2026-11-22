@@ -3,6 +3,7 @@
 import { projects } from '../content/projects.ts'
 import { CENTERS, type LevelId, isLevelId, levelAt } from './levels.ts'
 import { TOUR } from './layout.ts'
+import { BROWSE } from './browse-version.ts'
 import { dive, diveInto, flyTo, land, onFrame, undive, zoom } from './zoom.ts'
 
 export function targetForHash(hash: string): number | null {
@@ -44,7 +45,9 @@ export function browseProjects(dir: 1 | -1): boolean {
   const next = TOUR[(i + dir + TOUR.length) % TOUR.length]!
   history.replaceState(null, '', `#${next}`) // browsing isn't a trail of history entries
   // Browsing is always a flight between stars, RareMind's included.
-  if (dive.id) return (diveInto(next), next === 'raremind' && landOnRareMind(), true)
+  // (b: RareMind is browsed like any other project: its star, no frame.)
+  if (dive.id)
+    return (diveInto(next), next === 'raremind' && BROWSE !== 'b' && landOnRareMind(), true)
   // On the RareMind level itself: first let its frame dissolve into its star (zoom out with
   // the camera held on RareMind's screen), then fly from there.
   leaving = true

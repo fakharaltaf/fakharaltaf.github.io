@@ -38,6 +38,7 @@ import {
 } from 'three/tsl'
 import { brand } from '../styles/tokens.ts'
 import { PIN_SHRINK, STARS } from './layout.ts'
+import { FRAME_PIECES, framePieces } from './frames.ts'
 import { MAX_LETTERS, letters } from './physicsState.ts'
 import { SHAPES, STRIDE, buildShapes } from './shapes.ts'
 
@@ -62,6 +63,17 @@ export function makeUniforms() {
     /** Physics: per-star offsets and per-letter (dx, dy, angle). Written every frame. */
     stars: uniformArray(
       STARS.map(() => new Vector4()),
+      'vec4',
+    ),
+    /** Version c: the frame a star's particles form when you're inside its project. */
+    frameStar: uniform(-1), // which star (index), -1 = none
+    frameW: uniform(0), // 0 = all star, 1 = all frame
+    starHome: uniformArray(
+      STARS.map((st) => new Vector4(st.pos[0], st.pos[1], st.pos[2], 0)),
+      'vec4',
+    ),
+    framePieces: uniformArray(
+      framePieces.map((q) => new Vector4(...q)),
       'vec4',
     ),
     letterXf: uniformArray(
@@ -146,6 +158,18 @@ export function Particles({
     )
     const starW = w2.add(w3.mul(B0.w).mul(PIN_SHRINK)).mul(step(0, B0.x))
     base = base.add(starOff.mul(starW))
+    // Version c: inside a project, nearly all of its star's particles fly out to its frame.
+    const ownStar = step(0, B0.x).mul(float(1).sub(step(0.5, B0.x.sub(B0.y).abs())))
+    const mine = ownStar
+      .mul(float(1).sub(step(0.5, B0.x.sub(u.frameStar).abs())))
+      .mul(step(hash(instanceIndex.add(31)), float(0.92))) // the star itself is behind the window
+    const piece = at(u.framePieces, int(hash(instanceIndex.add(37)).mul(FRAME_PIECES).floor()))
+    const along = hash(instanceIndex.add(41))
+    const home = at(u.starHome, int(max(u.frameStar, 0))).xy
+    const onFrame = home.add(mix(piece.xy, piece.zw, along)).add(starOff.xy)
+    // Each particle leaves on its own schedule, like every other morph.
+    const go = smoothstep(seed.mul(0.4), seed.mul(0.4).add(0.6), u.frameW).mul(mine).mul(w2)
+    base = vec3(mix(base.xy, onFrame, go), base.z.mul(float(1).sub(go)))
     // Name letters: rotate about the letter's centre, then translate. Only at the person level.
     const li = int(max(B1.x, 0))
     const xf = at(u.letterXf, li)
@@ -172,7 +196,7 @@ export function Particles({
     })
     m.sizeAttenuation = false
     m.positionNode = p
-    m.sizeNode = mix(fromSize, b.w, ti).mul(u.sizeScale)
+    m.sizeNode = mix(fromSize, b.w, ti).mul(u.sizeScale).mul(go.mul(0.5).add(1))
     const round = smoothstep(0.5, 0.15, length(uv().sub(vec2(0.5))))
     const c = mix(fromCol, cb, ti)
     m.colorNode = vec4(c.rgb, 1)
