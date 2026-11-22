@@ -277,6 +277,12 @@ export function Particles({
     // Zooming into the script, the project's star dots fade as they leave the frame instead of
     // piling back into the star (a bright sun in the middle of the frame).
     const ownTrip = ownStar.mul(float(1).sub(step(0.5, B0.x.sub(u.tripStar).abs()))).mul(u.tripHold)
+    // RareMind's star too: the camera passes it on the way, and it shouldn't flare there either.
+    const rmOwnTrip = ownStar
+      .mul(float(1).sub(step(0.5, B0.x.sub(RM_STAR).abs())))
+      .mul(B1.w)
+      .mul(u.tripHold)
+    const rmFade = mix(float(1), u.frameW, rmOwnTrip)
     const starFade = mix(
       float(1),
       smoothstep(seed.mul(0.4), seed.mul(0.4).add(0.6), u.frameW),
@@ -290,6 +296,7 @@ export function Particles({
       .mul(tripDim)
       .mul(float(1).sub(waiting))
       .mul(starFade)
+      .mul(rmFade)
 
     const s = new Sprite(m)
     s.count = count
