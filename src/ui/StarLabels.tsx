@@ -55,7 +55,6 @@ export function StarLabels() {
           }}
           type="button"
           className="star-label"
-          data-cursor="open"
           aria-label={levels.project.openStar(p.title)}
           onClick={() => {
             track('openProject')

@@ -225,7 +225,6 @@ export default function Svype({ host }: DemoProps) {
                   key={top + k}
                   ref={k === 0 ? el : undefined}
                   className={`sv-card${k === 0 ? ' top' : ''}`}
-                  data-cursor={k === 0 ? 'fling' : undefined}
                   style={
                     k ? { transform: `translateY(${k * 8}px) scale(${1 - k * 0.04})` } : undefined
                   }

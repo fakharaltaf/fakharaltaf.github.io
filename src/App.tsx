@@ -18,7 +18,6 @@ import { bindInputs } from './world/input.ts'
 import { useWorld } from './world/store.ts'
 import { emitFrame, tick, zoom } from './world/zoom.ts'
 import { setHum, setSong, sfx } from './systems/audio.ts'
-import { Cursor } from './systems/Cursor.tsx'
 import { useDemos } from './demos/store.ts'
 import './ui/app.css'
 
@@ -59,8 +58,6 @@ export function App() {
   const ready = useWorld((s) => s.ready)
   const reduced = useWorld((s) => s.reducedMotion)
   const surface = useRef<HTMLDivElement>(null)
-  // Custom cursor only for a real mouse; touch keeps the platform's behaviour.
-  const fine = typeof matchMedia === 'function' && matchMedia('(pointer: fine)').matches
 
   useEffect(() => {
     document.documentElement.classList.toggle('world-ready', ready)
@@ -151,7 +148,6 @@ export function App() {
       <Terminal />
       <Engineering />
       <Eggs />
-      {fine && <Cursor />}
     </>
   )
 }

@@ -82,7 +82,6 @@ export default function LnaBot() {
               <tr
                 key={r.competency}
                 className={done[i] !== undefined ? 'sent' : ''}
-                data-cursor={done[i] === undefined ? 'drag' : undefined}
                 onPointerDown={(e) => {
                   if (done[i] !== undefined || (e.target as Element).closest('button')) return
                   e.stopPropagation()

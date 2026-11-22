@@ -190,14 +190,6 @@ export const hints = {
   reducedMotion: 'Reduced motion is on, so the camera steps between levels instead of flying.',
 } as const
 
-export const cursorLabels = {
-  zoom: 'zoom',
-  drag: 'drag',
-  play: 'play',
-  open: 'open',
-  fling: 'fling',
-} as const
-
 export const eggs = {
   konami: 'Fast-forward: 6×. Like a script would.',
   endingTour: 'Running the whole site by itself.',

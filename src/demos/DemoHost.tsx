@@ -109,7 +109,6 @@ export function DemoHost() {
       className={`demo-host${expanded ? ' expanded' : ''}`}
       data-fade="0"
       role="region"
-      data-cursor="play"
       aria-label={project?.title}
       style={{ viewTransitionName: 'demo' }}
     >
