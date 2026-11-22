@@ -17,8 +17,9 @@ import { bindHash } from './world/hash.ts'
 import { bindInputs } from './world/input.ts'
 import { useWorld } from './world/store.ts'
 import { emitFrame, tick, zoom } from './world/zoom.ts'
-import { setHum, sfx } from './systems/audio.ts'
+import { setHum, setSong, sfx } from './systems/audio.ts'
 import { Cursor } from './systems/Cursor.tsx'
+import { useDemos } from './demos/store.ts'
 import './ui/app.css'
 
 // three.js and everything 3D live in their own chunk; the CSS caret covers the wait.
@@ -89,6 +90,7 @@ export function App() {
       if (now - last < 200) return
       last = now
       setHum(p)
+      setSong(frameAt(p).chain, useDemos.getState().expanded)
     })
     const click = (e: MouseEvent) => {
       if (e.isTrusted && (e.target as Element).closest?.('.btn, .notch, .star-label, button'))

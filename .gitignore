@@ -5,3 +5,5 @@ bin/
 test-results/
 playwright-report/
 *.log
+# Licensed music: not committed until we have permission to use it.
+public/music/

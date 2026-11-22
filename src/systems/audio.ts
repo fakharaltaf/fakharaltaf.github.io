@@ -123,17 +123,63 @@ export function setHum(p: number) {
   hum.a.frequency.setTargetAtTime(f, t, 0.3)
   hum.b.frequency.setTargetAtTime(f * 1.503, t, 0.3) // a slightly sour fifth
   hum.filter.frequency.setTargetAtTime(380 - 220 * p, t, 0.3)
-  hum.gain.gain.setTargetAtTime(0.22, t, 0.4)
+  hum.gain.gain.setTargetAtTime(song && !song.el.paused ? 0 : 0.22, t, 0.4) // the song replaces it
+}
+
+// ---- The song: "The Man Who Sold the World" -------------------------------------------------
+// The zoom shapes it: muffled, as if through a wall, while you read the opening; opening up
+// to fully clear by the galaxy; at its fullest at the person level ("face to face with the man");
+// fading out with the collapse at the end.
+// shortcut: the recording isn't in the repo until we have permission (public/music is gitignored).
+// Without the file there's no song and the hum plays as before.
+const SONG = `${import.meta.env.BASE_URL}music/the-man-who-sold-the-world.mp3`
+let song: { el: HTMLAudioElement; filter: BiquadFilterNode; gain: GainNode } | null = null
+let songMissing = false
+const ramp = (a: number, b: number, x: number) => Math.min(1, Math.max(0, (x - a) / (b - a)))
+
+function ensureSong() {
+  const c = ensure()
+  if (!c || songMissing) return null
+  if (!song) {
+    const el = new Audio(SONG)
+    el.loop = true
+    el.addEventListener('error', () => (songMissing = true))
+    const filter = c.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.value = 450
+    const gain = c.createGain()
+    gain.gain.value = 0
+    // Straight to the speakers: the effects' master level is far too quiet for a full mix.
+    c.createMediaElementSource(el).connect(filter).connect(gain).connect(c.destination)
+    song = { el, filter, gain }
+  }
+  if (song.el.paused) song.el.play().catch(() => {}) // retried next tick if the browser says no
+  return song
+}
+
+/** chain: 0 cursor … 6 outro. quiet: a project is full screen (real sites have their own sound). */
+export function setSong(chain: number, quiet: boolean) {
+  if (!useSettings.getState().sound || document.hidden || quiet) {
+    song?.el.pause() // resumes where it left off
+    return
+  }
+  const s = ensureSong()
+  if (!s || !ctx) return
+  const t = ctx.currentTime
+  s.filter.frequency.setTargetAtTime(450 * 40 ** ramp(1, 4, chain), t, 0.5)
+  const volume = (0.3 + 0.12 * ramp(4.3, 5, chain)) * (1 - ramp(5.6, 6, chain))
+  s.gain.gain.setTargetAtTime(volume, t, 0.5)
 }
 
 // Turning sound on happens inside a click or a typed command, so the context may start now.
 useSettings.subscribe((s, prev) => {
   if (s.sound && !prev.sound) {
     ensure()
+    ensureSong() // inside the click, so Safari lets it play
     sfx.click()
   }
   if (!s.sound && hum && ctx) hum.gain.gain.setTargetAtTime(0, ctx.currentTime, 0.1)
 })
 
 // A returning visitor with sound on: the browser needs one gesture before it may play.
-addEventListener('pointerdown', () => useSettings.getState().sound && ensure(), { once: true })
+addEventListener('pointerdown', () => useSettings.getState().sound && ensureSong(), { once: true })
