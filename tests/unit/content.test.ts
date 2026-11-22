@@ -11,7 +11,10 @@ const strings = (v: unknown): string[] => {
   if (v && typeof v === 'object') return Object.values(v).flatMap(strings)
   return []
 }
-const all = [...strings(copy), ...strings(projects)].join('\n').toLowerCase()
+// Project scripts are real code quoted from the repos, not copy: the copy rules don't apply.
+const all = [...strings(copy), ...strings(projects.map((p) => ({ ...p, script: undefined })))]
+  .join('\n')
+  .toLowerCase()
 const plain = renderPlain({ size: '1 KB', date: '2026-01-01', commit: 'abc1234' })
 
 describe('copy rules', () => {
