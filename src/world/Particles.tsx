@@ -195,17 +195,22 @@ export function Particles({
     const onFrame = home.add(mix(piece.xy, piece.zw, along)).add(homeOff)
     // Into the script from another project: the script's particles (RareMind's half) set out
     // from that project's star, not RareMind's, so the script comes out of where you were.
-    const tripHome = at(u.starHome, int(max(u.tripStar, 0))).xy.add(
-      at(u.stars, int(max(u.tripStar, 0))).xy,
-    )
-    const tripShift = tripHome
-      .sub(at(u.starHome, int(RM_STAR)).xy.add(at(u.stars, int(RM_STAR)).xy))
+    // Whole positions (depth too): the stars sit at different depths, so a sideways-only move
+    // left these dots floating in front of or behind the star as a second, offset star.
+    const starAt = (k: Node<'int'>) => at(u.starHome, k).xyz.add(at(u.stars, k).xyz)
+    const rmHome = starAt(int(RM_STAR))
+    const tripShift = starAt(int(max(u.tripStar, 0)))
+      .sub(rmHome)
       .mul(float(1).sub(B1.w).mul(step(0, u.tripStar)).mul(float(1).sub(ti)))
-    base = vec3(base.xy.add(tripShift), base.z)
+    base = base.add(tripShift)
     // Lent particles wait round the visited project's own star (they're faint there), so its
     // frame grows out of that star, not RareMind's.
-    const rmHome = at(u.starHome, int(RM_STAR)).xy.add(at(u.stars, int(RM_STAR)).xy)
-    base = vec3(base.xy.add(home.add(homeOff).sub(rmHome).mul(lent).mul(w2)), base.z)
+    base = base.add(
+      starAt(int(max(u.frameStar, 0)))
+        .sub(rmHome)
+        .mul(lent)
+        .mul(w2),
+    )
     // Each particle leaves on its own schedule, like every other morph.
     const go = max(
       smoothstep(seed.mul(0.4), seed.mul(0.4).add(0.6), u.frameW),
