@@ -189,6 +189,10 @@ export function Particles({
     const home = at(u.starHome, int(max(u.frameStar, 0))).xy
     const homeOff = at(u.stars, int(max(u.frameStar, 0))).xy
     const onFrame = home.add(mix(piece.xy, piece.zw, along)).add(homeOff)
+    // Lent particles wait round the visited project's own star (they're faint there), so its
+    // frame grows out of that star, not RareMind's.
+    const rmHome = at(u.starHome, int(RM_STAR)).xy.add(at(u.stars, int(RM_STAR)).xy)
+    base = vec3(base.xy.add(home.add(homeOff).sub(rmHome).mul(lent).mul(w2)), base.z)
     // Each particle leaves on its own schedule, like every other morph.
     const go = smoothstep(seed.mul(0.4), seed.mul(0.4).add(0.6), u.frameW).mul(mine).mul(w2)
     base = vec3(mix(base.xy, onFrame, go), base.z.mul(float(1).sub(go)))
