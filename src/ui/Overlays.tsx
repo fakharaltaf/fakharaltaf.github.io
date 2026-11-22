@@ -4,7 +4,7 @@ import { automation, github, levels, person } from '../content/copy.ts'
 import { useEggs } from './Eggs.tsx'
 import { type Sourced, getActivity } from '../systems/github.ts'
 import { projects } from '../content/projects.ts'
-import { browseProjects, navigate } from '../world/hash.ts'
+import { browseProjects, navigate, openProject } from '../world/hash.ts'
 import { useDemos } from '../demos/store.ts'
 import { remap } from '../world/levels.ts'
 import { frameAt } from '../world/timeline.ts'
@@ -52,6 +52,7 @@ function ProjectCard() {
   const ref = useFade<HTMLElement>(fades.project)
   const id = useDemos((s) => s.present) ?? 'raremind'
   const p = projects.find((x) => x.id === id) ?? projects[0]!
+  const scan = useFirstArrivalScan()
   return (
     <section ref={ref} className="fade card" aria-labelledby="pj-title">
       <p className="kicker">{levels.project.srHeading}</p>
@@ -91,9 +92,60 @@ function ProjectCard() {
         <span className="browse-hint" aria-hidden="true">
           {levels.project.browse.hint}
         </span>
+        {/* Every project, in order: shows there are more, and jumps straight to one. */}
+        <ol className={`browse-index${scan ? ' scan' : ''}`}>
+          {projects.map((q, i) => (
+            <li key={q.id} style={{ '--i': i } as React.CSSProperties}>
+              <button
+                type="button"
+                className="btn btn-quiet"
+                aria-current={q.id === p.id ? 'page' : undefined}
+                onClick={() => q.id !== p.id && openProject(q.id)}
+              >
+                {q.short ?? q.title}
+              </button>
+            </li>
+          ))}
+        </ol>
       </nav>
     </section>
   )
+}
+
+const SCANNED = 'zo:scanned'
+
+/**
+ * True for a moment the first time a visitor reaches a project (once per session, never with
+ * reduced motion): a highlight sweeps through the index, like a cursor stepping down a list.
+ */
+function useFirstArrivalScan() {
+  const [scan, setScan] = useState(false)
+  useEffect(() => {
+    let seen = false
+    try {
+      seen = sessionStorage.getItem(SCANNED) === '1'
+    } catch {
+      // storage blocked: treat as unseen
+    }
+    if (seen || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    let timer = 0
+    const unsub = onFrame((p) => {
+      if (fades.project(frameAt(p)) < 0.95) return
+      unsub()
+      try {
+        sessionStorage.setItem(SCANNED, '1')
+      } catch {
+        // fine: it may run again next visit
+      }
+      timer = window.setTimeout(() => setScan(true), 700)
+      window.setTimeout(() => setScan(false), 700 + 2600)
+    })
+    return () => {
+      unsub()
+      clearTimeout(timer)
+    }
+  }, [])
+  return scan
 }
 
 /** Live public GitHub activity, cached; falls back to the build-time snapshot quietly. */

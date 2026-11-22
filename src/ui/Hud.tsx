@@ -49,22 +49,34 @@ export function Hud() {
         </ol>
       </div>
       <div className="hud-foot">
-        <button
-          type="button"
-          className="btn btn-quiet sound-toggle"
-          aria-pressed={sound}
-          onClick={() => {
-            // Never automated: a script that toggles sound would cut the music off.
-            useSettings.setState({ sound: !sound })
-          }}
-        >
-          {/* Name stays "Sound"; aria-pressed carries the state for screen readers. */}
-          <span className="wide-only">{hud.sound.label}</span>
-          <span className="narrow-only" aria-hidden="true">
-            ♪
+        {/* Now playing: the song, its level bars, and a mute switch. */}
+        <div className={`now-playing${sound ? ' on' : ''}`}>
+          <p className="np-title">{hud.nowPlaying.title}</p>
+          <p className="np-artist">{hud.nowPlaying.artist}</p>
+          <span className="np-bars" aria-hidden="true">
+            <i />
+            <i />
+            <i />
           </span>
-          <span aria-hidden="true"> · {sound ? hud.sound.onShort : hud.sound.offShort}</span>
-        </button>
+          <button
+            type="button"
+            className="btn btn-quiet sound-toggle"
+            aria-pressed={sound}
+            aria-label={hud.sound.label}
+            title={sound ? hud.sound.mute : hud.sound.unmute}
+            // Never automated: a script that toggles sound would cut the music off.
+            onClick={() => useSettings.setState({ sound: !sound })}
+          >
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+              <path d="M2 6h3l4-3v10l-4-3H2z" fill="currentColor" />
+              {sound ? (
+                <path d="M11 5.5a3.5 3.5 0 0 1 0 5M12.5 3.5a6 6 0 0 1 0 9" />
+              ) : (
+                <path d="M11 5.5l4 5M15 5.5l-4 5" />
+              )}
+            </svg>
+          </button>
+        </div>
         {backend && <p className="hud-backend">{hud.backend[backend]}</p>}
       </div>
     </nav>

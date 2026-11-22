@@ -176,6 +176,44 @@ body {
 .browse-hint {
   margin-left: 0.5rem;
 }
+.browse {
+  flex-wrap: wrap;
+}
+.browse-index {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.9rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.browse-index .btn {
+  min-width: 0;
+  min-height: 28px;
+  padding: 0;
+  background: transparent;
+  color: var(--muted);
+  font: 400 0.75rem var(--mono);
+}
+.browse-index .btn:hover {
+  color: var(--ink);
+}
+.browse-index .btn[aria-current] {
+  color: var(--ink);
+  box-shadow: inset 0 -1px 0 var(--anchor);
+}
+/* The first-arrival sweep: each name lights up in turn, then settles back. */
+.browse-index.scan .btn {
+  animation: browse-scan 0.5s ease-out both;
+  animation-delay: calc(var(--i) * 0.28s);
+}
+@keyframes browse-scan {
+  30% {
+    color: var(--anchor-ink);
+    box-shadow: inset 0 -1px 0 var(--anchor);
+  }
+}
 .outro .actions {
   justify-content: center;
 }
@@ -280,9 +318,79 @@ body {
 .hud-foot .btn:focus-visible {
   outline-offset: -2px;
 }
+/* Now playing: the title across the column; artist, level bars and the mute switch below. */
+.now-playing {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  column-gap: 0.5rem;
+  text-align: right;
+  font: 400 0.6875rem/1.3 var(--mono);
+  color: var(--muted);
+}
+.np-title,
+.np-artist {
+  margin: 0;
+  opacity: 0.55;
+  transition: opacity 0.4s;
+}
+.np-title {
+  grid-column: 1 / -1;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.now-playing.on :is(.np-title, .np-artist) {
+  opacity: 1;
+}
+.np-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+.np-bars i {
+  width: 2px;
+  height: 2px;
+  background: var(--anchor);
+  transition: height 0.3s;
+}
+.now-playing.on .np-bars i {
+  animation: np-bar 1.1s ease-in-out infinite alternate;
+}
+.now-playing.on .np-bars i:nth-child(2) {
+  animation-duration: 0.8s;
+  animation-delay: -0.3s;
+}
+.now-playing.on .np-bars i:nth-child(3) {
+  animation-duration: 1.4s;
+  animation-delay: -0.7s;
+}
+@keyframes np-bar {
+  from {
+    height: 3px;
+  }
+  to {
+    height: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .now-playing.on .np-bars i {
+    animation: none;
+    height: 8px;
+  }
+}
 .sound-toggle.btn {
   min-height: 32px;
-  font-size: 0.6875rem;
+  min-width: 32px;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+}
+.sound-toggle svg path:last-child {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
 }
 .sound-toggle[aria-pressed='true'] {
   color: var(--anchor-ink);
@@ -1046,6 +1154,15 @@ kbd {
 
 /* Portrait overrides that must come after the base rules they change. */
 @media (max-aspect-ratio: 1/1) {
+  /* The card scrolls on phones: put the project index first, where a new visitor sees it. */
+  .card:has(.browse) {
+    display: flex;
+    flex-direction: column;
+  }
+  .card .browse {
+    order: -1;
+    margin: 0 0 0.75rem;
+  }
   /* No room for an open log beside the content: it folds into a toggle, and opens as a
      panel below it. The column sits high and short, above the card. */
   .hud {
@@ -1080,6 +1197,14 @@ kbd {
   }
   .narrow-only {
     display: inline;
+  }
+  .np-title,
+  .np-artist {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
   .wide-only {
     position: absolute;
