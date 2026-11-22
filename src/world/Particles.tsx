@@ -267,7 +267,29 @@ export function Particles({
     const tripDim = float(1).sub(
       sin(ti.mul(Math.PI)).mul(0.65).mul(float(1).sub(B1.w)).mul(step(0, u.tripStar)),
     )
-    m.opacityNode = c.a.mul(round).mul(u.opacity).mul(travelDim).mul(enRoute).mul(tripDim)
+    // The script's other particles wait at the project's star: hidden until they set off, or
+    // so many in one spot glow like a sun in the middle of the frame.
+    const waiting = float(1)
+      .sub(B1.w)
+      .mul(float(1).sub(step(hash(instanceIndex.add(47)), float(0.45))))
+      .mul(step(0, u.tripStar))
+      .mul(float(1).sub(ti))
+    // Zooming into the script, the project's star dots fade as they leave the frame instead of
+    // piling back into the star (a bright sun in the middle of the frame).
+    const ownTrip = ownStar.mul(float(1).sub(step(0.5, B0.x.sub(u.tripStar).abs()))).mul(u.tripHold)
+    const starFade = mix(
+      float(1),
+      smoothstep(seed.mul(0.4), seed.mul(0.4).add(0.6), u.frameW),
+      ownTrip,
+    )
+    m.opacityNode = c.a
+      .mul(round)
+      .mul(u.opacity)
+      .mul(travelDim)
+      .mul(enRoute)
+      .mul(tripDim)
+      .mul(float(1).sub(waiting))
+      .mul(starFade)
 
     const s = new Sprite(m)
     s.count = count
