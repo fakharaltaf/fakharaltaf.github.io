@@ -2,6 +2,7 @@
 // mouse drag, keys. Returns an unbind function.
 import { CENTERS, stepCenter } from './levels.ts'
 import { useDemos } from '../demos/store.ts'
+import { useSettings } from '../systems/settings.ts'
 import { browseProjects } from './hash.ts'
 import { dive, flyTo, nudge, undive, zoom } from './zoom.ts'
 
@@ -237,6 +238,10 @@ export function bindInputs(surface: HTMLElement): () => void {
       case ' ':
         if (onControl) return
         flyTo(stepCenter(zoom.target, e.shiftKey ? -1 : 1))
+        break
+      case 'm':
+      case 'M':
+        useSettings.setState((st) => ({ sound: !st.sound }))
         break
       case 'Home':
         flyTo(CENTERS.cursor)

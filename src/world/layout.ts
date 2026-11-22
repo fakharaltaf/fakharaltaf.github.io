@@ -64,12 +64,12 @@ export function frameBox(u0: number, v0: number, u1: number, v1: number, frame: 
 export const SCREEN_UV = [0.03, 0.3, 0.97, 0.86] as const
 export const SCREEN: Box = frameBox(...SCREEN_UV)
 /** The four module boxes along the bottom of every frame (u0, v0, u1, v1). */
-export const MODULE_UV = [
+export const MODULE_UV: readonly (readonly [number, number, number, number])[] = [
   [0.17, 0.04, 0.38, 0.22],
   [0.41, 0.04, 0.6, 0.22],
   [0.63, 0.04, 0.8, 0.22],
   [0.83, 0.04, 0.97, 0.22],
-] as const
+]
 
 // ---- Level 4: the constellation. RareMind's star sits exactly where its frame was.
 const S = FRAME.w * 1.3

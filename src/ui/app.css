@@ -853,6 +853,7 @@ body {
   display: none;
 }
 .card .kicker-demo {
+  display: block;
   color: var(--muted);
 }
 /* Each demo's small print stops short of the buttons in the bottom-right corner. */
@@ -1331,4 +1332,12 @@ kbd {
   margin-bottom: 0.3em;
   white-space: nowrap;
   font-size: 0.8em;
+}
+:is(.kicker-demo, .demo-badge) a {
+  color: var(--anchor);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.demo-badge a {
+  pointer-events: auto;
 }

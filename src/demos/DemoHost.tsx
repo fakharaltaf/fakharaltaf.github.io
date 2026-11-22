@@ -132,7 +132,14 @@ export function DemoHost() {
               <p>{levels.project.noDemo}</p>
             </div>
           )}
-          {!live && Demo && <p className="demo-badge">{levels.project.demoBadge}</p>}
+          {!live && Demo && (
+            <p className="demo-badge">
+              {levels.project.demoShowing},&nbsp;
+              <a href={project.links.code} target="_blank" rel="noreferrer">
+                {levels.project.demoReal} ↗
+              </a>
+            </p>
+          )}
           {project.live && SHOW_DEMO_BUTTON && (
             <div className="demo-views" role="group" aria-label={levels.project.viewLabel}>
               {[false, true].map((on) => (

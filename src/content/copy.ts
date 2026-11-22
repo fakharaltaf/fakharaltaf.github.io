@@ -116,8 +116,9 @@ export const levels = {
       count: (i: number, n: number) => `${i} / ${n}`,
       hint: '← → or swipe',
     },
-    demoBadge: 'Demo · not the real app',
-    demoKicker: 'a demo, not the real app',
+    demoShowing: 'Showing a demo',
+    // TODO(fakhar): links go to the code for now; point each at its deployment or download later.
+    demoReal: 'check out the real app here',
     viewDemo: 'Demo',
     viewLive: 'Real site',
     liveTitle: (title: string) => `${title}, the real site`,
@@ -163,7 +164,7 @@ export const hud = {
   quality: ['Low (it’s fine)', 'Medium', 'High', 'Ultra (fans on)'],
   qualityLabel: 'Quality',
   qualityAuto: 'Auto',
-  sound: { label: 'Sound', onShort: 'on', offShort: 'off', mute: 'Mute', unmute: 'Unmute' },
+  sound: { label: 'Sound', onShort: 'on', offShort: 'off', mute: 'Mute (M)', unmute: 'Unmute (M)' },
   nowPlaying: { title: 'The Man Who Sold the World', artist: 'David Bowie' },
   howItWorks: 'How this works',
   viewSource: 'View source',
@@ -213,6 +214,7 @@ export const shortcuts = {
     { keys: ['Tab'], label: 'Next thing you can poke' },
     { keys: ['/', '`'], label: 'Terminal' },
     { keys: ['X'], label: 'Wireframe mode' },
+    { keys: ['M'], label: 'Mute or unmute' },
     { keys: ['?'], label: 'This sheet' },
   ],
 } as const

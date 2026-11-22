@@ -61,7 +61,14 @@ function ProjectCard() {
       <p className="kicker">
         {levels.project.srHeading}
         {/* Projects without a live site run a built-in demo: say so here, not over the demo. */}
-        {!p.live && <span className="kicker-demo"> · {levels.project.demoKicker}</span>}
+        {!p.live && (
+          <span className="kicker-demo">
+            {levels.project.demoShowing},{' '}
+            <a href={p.links.code} target="_blank" rel="noreferrer">
+              {levels.project.demoReal} ↗
+            </a>
+          </span>
+        )}
       </p>
       <h2 id="pj-title" className={p.title.length > 24 ? 'long' : undefined}>
         {p.title}
