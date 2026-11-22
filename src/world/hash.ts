@@ -50,6 +50,8 @@ export function browseProjects(dir: 1 | -1): boolean {
   leaving = true
   dive.id = 'raremind'
   dive.target = 1
+  dive.value = 1 // the camera holds on this exact view from the first frame (no lurch)
+  dive.velocity = 0
   flyTo(CENTERS.constellation)
   const unsub = onFrame(() => {
     if (dive.value < 0.98 || Math.abs(zoom.value - CENTERS.constellation) > 0.01) return

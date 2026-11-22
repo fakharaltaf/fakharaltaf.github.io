@@ -152,7 +152,8 @@ function Scene({ particleCount }: { particleCount: number }) {
     if (!g) return
     // Inside a project the galaxy goes flat: zoomed right in, a star's depth would throw it far
     // from its window (the window is placed on the z = 0 plane). Out at the galaxy it's 3D.
-    const depthScale = s * (1 - dive.value)
+    // (Also flat up to the project level, whose particles now include RareMind's threads.)
+    const depthScale = s * (1 - dive.value) * Math.min(1, Math.max(0, f.chain - 3))
     g.scale.set(s, s, depthScale)
     g.position.set(-cam.focus[0] * s, -cam.focus[1] * s, 0)
 

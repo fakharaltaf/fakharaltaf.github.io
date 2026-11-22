@@ -208,7 +208,7 @@ export function buildShapes(n: number, portrait: boolean) {
     ],
   ])
   // The first 18% of particles keep their script position: the script stays put as a module.
-  const s1 = s1Pre.map((p, i) => (i < n * 0.18 ? s0[i]! : p))
+  let s1 = s1Pre.map((p, i) => (i < n * 0.18 ? s0[i]! : p))
 
   // 2: the constellation. Stars + threads for every pair of projects that share a skill.
   const S = FRAME.w * 1.3
@@ -257,6 +257,15 @@ export function buildShapes(n: number, portrait: boolean) {
       },
     ],
   ])
+
+  // The project level shows RareMind's threads too, already where they'll be in the galaxy, so
+  // it sits in the galaxy like every other project, and those particles don't move later.
+  const RM = STARS.findIndex((st) => st.id === 'raremind')
+  s1 = s1.map((p, i) => {
+    const q = s2[i]!
+    const rmThread = q.sa !== q.sb && (q.sa === RM || q.sb === RM)
+    return i >= n * 0.18 && rmThread ? { ...q, sa: undefined, sb: undefined } : p
+  })
 
   // 3: the person. The constellation shrinks into a map pin's head; the name assembles beside it.
   const d = Math.hypot(PIN_TIP[0] - PIN_HEAD[0], PIN_TIP[1] - PIN_HEAD[1])
