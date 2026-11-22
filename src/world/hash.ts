@@ -4,7 +4,7 @@ import { projects } from '../content/projects.ts'
 import { CENTERS, HOLD, type LevelId, isLevelId, levelAt } from './levels.ts'
 import { TOUR } from './layout.ts'
 import { BROWSE } from './browse-version.ts'
-import { dive, diveInto, flyTo, onFrame, rmForm, undive, zoom } from './zoom.ts'
+import { dive, diveHooks, diveInto, flyTo, onFrame, rmForm, undive, zoom } from './zoom.ts'
 
 export function targetForHash(hash: string): number | null {
   const id = decodeURIComponent(hash.replace(/^#/, ''))
@@ -61,6 +61,23 @@ export function browseProjects(dir: 1 | -1): boolean {
 }
 let forming = false
 
+/**
+ * Zooming in from any project carries on down the same chain as RareMind's: fly to RareMind (the
+ * browse flight), then straight on into its script. Ignored mid-flight.
+ */
+diveHooks.zoomIn = () => {
+  if (!dive.id || dive.target !== 1 || dive.from || forming) return
+  if (dive.id === 'raremind' || BROWSE === 'b') {
+    // Already at RareMind's star: just carry on in.
+    undive()
+    flyTo(CENTERS.script)
+    return
+  }
+  history.replaceState(null, '', '#raremind')
+  diveInto('raremind')
+  shapeRareMind('arrive', () => flyTo(CENTERS.script))
+}
+
 /** The share of the flight RareMind's frame takes to dissolve (start) or form (end). */
 const LEAVE_UNTIL = 0.4
 const ARRIVE_FROM = 0.55
@@ -82,7 +99,7 @@ function setForm(k: number) {
   zoom.lastInput = performance.now()
 }
 
-function shapeRareMind(way: 'leave' | 'arrive') {
+function shapeRareMind(way: 'leave' | 'arrive', then?: () => void) {
   forming = true
   const target = dive.id
   const unsub = onFrame(() => {
@@ -113,6 +130,7 @@ function shapeRareMind(way: 'leave' | 'arrive') {
     setForm(1)
     rmForm.v = 0
     forming = false
+    then?.()
   })
 }
 

@@ -76,14 +76,18 @@ export function swapView(): { id: string | null; fade: number } {
 /** 0 at rest, 1 at the top of the flight: the galaxy shows through while you travel. */
 export const swapLift = () => (dive.from ? Math.sin(Math.PI * dive.swap) : 0)
 
+/** Set by hash.ts (which imports this module): zooming in from inside a project. */
+export const diveHooks = { zoomIn: () => {} }
+
 export function undive() {
   dive.target = 0
 }
 
 export function nudge(dp: number, now = performance.now()) {
-  // Inside a dive, zooming out backs out of the project; zooming further in has nowhere to go.
+  // Inside a dive, zooming out backs out of the project; zooming in heads for the script.
   if (dive.id) {
     if (dp > 0) undive()
+    else diveHooks.zoomIn()
     return
   }
   zoom.target = clamp01(zoom.target + dp)
