@@ -53,6 +53,8 @@ type AutomationState = {
   note: string | null
   /** Highest count reached, so milestones fire once. */
   best: number
+  /** When each script last ran (ms since epoch), for the log. Not persisted. */
+  lastRun: Partial<Record<ActionId, number>>
   send: (id: ActionId, e: AutoEvent) => void
   setPanelPhase: (phase: PanelPhase) => void
   closePanel: () => void
@@ -83,6 +85,7 @@ export const useAutomation = create<AutomationState>((set, get) => {
     statuses: initialStatuses,
     panel: null,
     queue: [],
+    lastRun: {},
     note: Object.values(initial).some(isRunning) ? automation.welcomeBack : null,
     best: automatedCount(initialStatuses),
 

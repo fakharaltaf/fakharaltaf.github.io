@@ -219,6 +219,7 @@ export const shortcuts = {
 export const automation = {
   counter: (n: number) => `You’ve automated ${n} ${n === 1 ? 'thing' : 'things'}.`,
   toggle: (n: number) => `Automated · ${n}`,
+  logHead: (n: number) => `~/automations · ${n} running`,
   toggleShort: (n: number) => `Auto · ${n}`,
   switchOff: 'off',
   milestones: { 1: 'There it is.', 3: 'You’re getting it.', 5: 'I’d hire you.' } as Record<

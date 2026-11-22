@@ -156,7 +156,7 @@ test('doing something twice writes a script, automates it, and remembers', async
   await expect(page.locator('.script-panel .file')).toHaveText('open-terminal.ts')
   await expect(page.locator('.script-panel .state-done')).toBeVisible({ timeout: 30_000 })
   // Wide screens: the log is always open in the HUD column.
-  await expect(page.locator('.tray .counter')).toHaveText('You’ve automated 1 thing.')
+  await expect(page.locator('.tray .log-head')).toHaveText('~/automations · 1 running')
   await page.reload()
   await expect(page.locator('.tray .note')).toHaveText('Welcome back. Your scripts kept running.')
   await page.click('.tray li button')

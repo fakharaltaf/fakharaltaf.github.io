@@ -1,6 +1,7 @@
 // The running tally: what runs by itself now, a toggle for each, and the milestone reactions.
 import { useEffect, useId, useRef, useState } from 'react'
 import { automation } from '../content/copy.ts'
+import { scripts } from '../content/scripts.ts'
 import { useWorld } from '../world/store.ts'
 import type { ActionId } from './machine.ts'
 import { automatedCount, useAutomation } from './store.ts'
@@ -10,6 +11,7 @@ const SHOW_MS = 4200
 export function Tray() {
   const statuses = useAutomation((s) => s.statuses)
   const note = useAutomation((s) => s.note)
+  const lastRun = useAutomation((s) => s.lastRun)
   const { send, clearNote } = useAutomation.getState()
   const reduced = useWorld((s) => s.reducedMotion)
   const count = automatedCount(statuses)
@@ -68,25 +70,29 @@ export function Tray() {
             </span>
           </button>
           <div id={listId} className="tray-list" hidden={!open}>
-            <p className="counter">{automation.counter(count)}</p>
+            {/* A log tail, not a settings list: each script's file and when it last ran. */}
+            <p className="log-head">{automation.logHead(count)}</p>
             {reduced && count > 0 && <p className="paused">{automation.pausedReducedMotion}</p>}
-            {/* Compact rows: the AUTO badge is the switch, so the log stays narrow. */}
             <ul>
               {listed.map((id) => {
                 const on = statuses[id] === 'automated'
                 const label = on ? automation.disable : automation.enable
+                const ran = lastRun[id]
                 return (
                   <li key={id} className={on ? 'on' : 'off'}>
-                    <span className="name">{automation.names[id]}</span>
                     <button
                       type="button"
-                      className="btn auto-badge switch"
+                      className="btn log-line"
                       aria-pressed={!on}
                       aria-label={`${automation.names[id]}: ${label}`}
                       title={label}
                       onClick={() => send(id, { type: 'TOGGLE' })}
                     >
-                      {on ? automation.marker : automation.switchOff}
+                      {/* Keyed on the run time, so the line flashes again every time it fires. */}
+                      <time key={ran ?? 0} className={ran ? 'ran' : undefined} aria-hidden="true">
+                        {!on ? '--:--:--' : ran ? clock(ran) : '··:··:··'}
+                      </time>
+                      <span aria-hidden="true">{scripts[id]?.file ?? id}</span>
                     </button>
                   </li>
                 )
@@ -98,3 +104,6 @@ export function Tray() {
     </section>
   )
 }
+
+/** 24-hour wall-clock time, like a log line. */
+const clock = (ms: number) => new Date(ms).toTimeString().slice(0, 8)

@@ -20,8 +20,13 @@ export function registerAction(id: ActionId, run: Run) {
 
 /** Perform an action once, as the script (used right after the panel finishes typing). */
 export function runNow(id: ActionId) {
+  logRun(id)
   void handlers.get(id)?.()
 }
+
+/** Stamp the log line for this script. */
+const logRun = (id: ActionId) =>
+  useAutomation.setState((s) => ({ lastRun: { ...s.lastRun, [id]: Date.now() } }))
 
 const GLOBAL_GAP_MS = 1500
 const BUSY_MS = 2500 // the visitor counts as busy this long after any input
@@ -56,6 +61,7 @@ export function startRunner(): () => void {
       nextAt.set(id, now + script.cadenceMs * (0.85 + Math.random() * 0.3))
       globalNext = now + GLOBAL_GAP_MS
       running = true
+      logRun(id)
       Promise.resolve(run()).finally(() => (running = false))
       return
     }

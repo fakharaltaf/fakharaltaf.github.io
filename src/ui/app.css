@@ -613,7 +613,7 @@ body {
   }
 }
 
-/* ---- Tray: the automation log, at the top of the HUD column ------------ */
+/* ---- Tray: the automation log, a tail under the zoom rail -------------- */
 .tray {
   position: relative;
   pointer-events: auto;
@@ -639,44 +639,51 @@ body {
 .tray .note:empty {
   display: none;
 }
-.tray .counter,
-.tray .name {
-  text-wrap: balance;
-}
-.tray .counter {
+.tray .log-head {
+  font-size: 0.625rem;
   color: var(--anchor-ink);
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.15rem;
 }
 .tray .paused {
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.15rem;
 }
 .tray ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.tray li {
+.tray .log-line.btn {
   display: flex;
   justify-content: flex-end;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 24px;
+  gap: 0.5em;
+  width: 100%;
+  min-height: 22px;
+  padding: 0;
+  background: transparent;
+  font: 400 0.625rem/1.4 var(--mono);
+  color: var(--ink);
 }
-.tray .switch.btn {
-  flex: none;
-  min-height: 0;
-  min-width: 2.6rem;
-  justify-content: center;
+.tray .log-line time {
+  color: var(--muted);
 }
-.tray li.off .switch.btn {
-  background: var(--neutral);
-  color: #9aa6a2;
+.tray .log-line:hover span {
+  text-decoration: underline;
+  text-decoration-color: var(--line);
 }
-/* Short labels for narrow screens; the wide label stays readable by screen readers. */
-.narrow-only {
-  display: none;
+/* Each run: the timestamp flashes green, then cools back to grey. */
+.tray .log-line time.ran {
+  animation: log-ran 1.6s ease-out;
 }
-.tray li.off .name {
+@keyframes log-ran {
+  from {
+    color: var(--anchor-ink);
+  }
+}
+.tray li.off .log-line {
+  color: var(--muted);
+  opacity: 0.6;
+}
+.tray li.off .log-line span {
   text-decoration: line-through;
 }
 
@@ -1189,7 +1196,7 @@ kbd {
     position: absolute;
     z-index: 7;
     right: 0;
-    top: calc(100% + 0.5rem);
+    bottom: calc(100% + 0.5rem); /* upward, over the rail, clear of the card */
     width: 11rem;
     padding: 0.5rem 0.65rem;
     background: var(--surface);

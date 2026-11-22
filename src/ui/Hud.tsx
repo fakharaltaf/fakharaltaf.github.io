@@ -23,10 +23,9 @@ export function Hud() {
   )
 
   return (
-    // One column down the right edge: the automation log, the zoom rail, then sound. Stacked
-    // in flow, so none of them can overlap another.
+    // One column down the right edge: the zoom rail, the automation log, then now playing.
+    // Stacked in flow, so none of them can overlap another.
     <nav className="hud" aria-label={hud.label}>
-      <Tray />
       <div className="hud-rail">
         <span className="hud-track" aria-hidden="true" />
         <span className="hud-dot" ref={dot} aria-hidden="true" />
@@ -48,6 +47,7 @@ export function Hud() {
           ))}
         </ol>
       </div>
+      <Tray />
       <div className="hud-foot">
         {/* Now playing: the song, its level bars, and a mute switch. */}
         <div className={`now-playing${sound ? ' on' : ''}`}>
