@@ -1285,3 +1285,50 @@ kbd {
     top: 7.5rem;
   }
 }
+
+/* The labels in a project frame's boxes (FrameModules): sized to each box, above the particles. */
+.frame-modules {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  visibility: hidden;
+}
+.frame-module {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 0.6em 0.7em;
+  overflow: hidden;
+  font-family: var(--mono);
+  line-height: 1.35;
+}
+.frame-module p {
+  margin: 0;
+}
+.fm-part {
+  color: var(--anchor);
+  font-weight: 600;
+}
+.fm-tech {
+  color: var(--ink);
+}
+.fm-what {
+  margin-top: 0.4em !important;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.95em;
+}
+/* RareMind's script slot: its file name sits just above it. */
+.fm-script {
+  overflow: visible;
+  padding: 0;
+}
+.fm-script p {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  margin-bottom: 0.3em;
+  white-space: nowrap;
+  font-size: 0.8em;
+}

@@ -6,6 +6,7 @@ import { Announcer, Hud, IdleHint } from './ui/Hud.tsx'
 import { Terminal } from './ui/terminal/Terminal.tsx'
 import { DemoHost } from './demos/DemoHost.tsx'
 import { Overlays } from './ui/Overlays.tsx'
+import { FrameModules } from './ui/FrameModules.tsx'
 import { Eggs } from './ui/Eggs.tsx'
 import { Engineering } from './ui/Engineering.tsx'
 import { StarLabels } from './ui/StarLabels.tsx'
@@ -142,6 +143,7 @@ export function App() {
       <StarLabels />
       <ThreadTips />
       <DemoHost />
+      <FrameModules />
       <Hud />
       <IdleHint />
       <Announcer />

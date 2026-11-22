@@ -10,6 +10,7 @@ import { type Pt, opaquePixels, scriptCanvas, textPixels } from './canvases.ts'
 import {
   type Box,
   FRAME,
+  MODULE_UV,
   PIN_HEAD,
   PIN_R,
   PIN_SHRINK,
@@ -155,33 +156,8 @@ export function buildShapes(n: number, portrait: boolean) {
   const raremind = projects[0]!
   const scriptSlot: Box = { ...SCRIPT_BOX, w: SCRIPT_BOX.w * 1.3, h: SCRIPT_BOX.h * 1.8 }
   const screen = SCREEN
-  const modules: [Box, string][] = [
-    [frameBox(0.17, 0.04, 0.38, 0.22), 'ocean · Three.js'],
-    [frameBox(0.41, 0.04, 0.6, 0.22), 'client · React'],
-    [frameBox(0.63, 0.04, 0.8, 0.22), 'api · Fastify'],
-    [frameBox(0.83, 0.04, 0.97, 0.22), 'db · PostgreSQL'],
-  ]
-  const em = FRAME.h * 0.026
-  const labels = modules.flatMap(([b, t]) =>
-    textPixels(t, {
-      x: b.x - b.w / 2 + em,
-      y: b.y + b.h / 2 - em * 1.3,
-      em,
-      align: 'left',
-      mono: true,
-      weight: 500,
-    }),
-  )
-  labels.push(
-    ...textPixels('scripts/tidy.ts', {
-      x: scriptSlot.x - scriptSlot.w / 2,
-      y: scriptSlot.y + scriptSlot.h / 2 + em * 1.1,
-      em: em * 0.8,
-      align: 'left',
-      mono: true,
-      weight: 500,
-    }),
-  )
+  // Their labels are crisp DOM text (FrameModules): particle text that small can't be read.
+  const modules = MODULE_UV.map((uv) => frameBox(...uv))
   const title = textPixels(raremind.title, {
     x: fx(0.03),
     y: fy(0.93),
@@ -200,9 +176,8 @@ export function buildShapes(n: number, portrait: boolean) {
     [10, () => onRect(FRAME, 1.4, muted, 0.9)],
     [4, () => onSegment(L, fy(0.885), L + FRAME.w, fy(0.885), 1.1, muted, 0.6)],
     [12, () => onRect(screen, 1.3, anchor, 0.8)],
-    [14, () => onRect(pick(modules)[0], 1.3, muted, 0.85)],
+    [14, () => onRect(pick(modules), 1.3, muted, 0.85)],
     [6, () => onRect(scriptSlot, 1.3, anchor, 0.9)],
-    [12, () => fromPixels(labels, 1.4, 0.95)],
     [14, () => ({ ...fromPixels(title, 1.8), c: ink })],
     [
       5,
