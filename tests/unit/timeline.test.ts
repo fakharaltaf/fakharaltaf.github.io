@@ -46,7 +46,7 @@ describe('project catalogue', () => {
     // Node has no history; browsing only needs replaceState.
     Object.assign(globalThis, { history: { replaceState: () => {} } })
     const { browseProjects } = await import('../../src/world/hash')
-    const { dive, zoom } = await import('../../src/world/zoom')
+    const { dive, emitFrame, zoom } = await import('../../src/world/zoom')
     const { projects } = await import('../../src/content/projects')
     const at = () => (dive.id && dive.target === 1 ? dive.id : 'raremind')
 
@@ -57,6 +57,13 @@ describe('project catalogue', () => {
     const seen = [at()]
     for (let i = 0; i < projects.length; i++) {
       expect(browseProjects(1)).toBe(true)
+      // Leaving the RareMind level: its frame dissolves into its star first, then the flight.
+      if (i === 0) {
+        expect(at()).toBe('raremind')
+        dive.value = 1
+        zoom.value = CENTERS.constellation
+        emitFrame(zoom.value)
+      }
       // As if the camera arrived (a step mid-flight is ignored on purpose).
       dive.value = dive.target
       dive.from = null

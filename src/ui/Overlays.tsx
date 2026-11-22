@@ -21,7 +21,8 @@ const fades = {
   script: window_(1, 0.6, 0.12),
   project: (f: Frame) =>
     dive.id ? remap(dive.value, 0.6, 1) * swapView().fade : window_(2, 0.7, 0.3)(f),
-  constellation: (f: Frame) => window_(3, 0.7, 0.3)(f) * (1 - dive.value),
+  // Hidden as soon as a dive starts (not as it progresses), so it never ghosts in mid-flight.
+  constellation: (f: Frame) => window_(3, 0.7, 0.3)(f) * (1 - Math.max(dive.value, dive.target)),
   person: window_(4, 0.7, 0.3),
   outro: (f: Frame) => f.outroCaret,
 }

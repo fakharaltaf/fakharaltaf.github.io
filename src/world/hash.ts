@@ -39,13 +39,27 @@ export function browseProjects(dir: 1 | -1): boolean {
   const current =
     dive.id && dive.target === 1 ? dive.id : levelAt(zoom.target) === 'project' ? 'raremind' : null
   if (!current) return false
-  if (dive.from) return true // mid-flight: finish this trip first
+  if (dive.from || leaving) return true // mid-flight: finish this trip first
   const i = TOUR.indexOf(current)
-  const next = { id: TOUR[(i + dir + TOUR.length) % TOUR.length]! }
-  history.replaceState(null, '', `#${next.id}`) // browsing isn't a trail of history entries
-  follow(`#${next.id}`)
+  const next = TOUR[(i + dir + TOUR.length) % TOUR.length]!
+  history.replaceState(null, '', `#${next}`) // browsing isn't a trail of history entries
+  // Browsing is always a flight between stars, RareMind's included.
+  if (dive.id) return (diveInto(next), true)
+  // On the RareMind level itself: first let its frame dissolve into its star (zoom out with
+  // the camera held on RareMind's screen), then fly from there.
+  leaving = true
+  dive.id = 'raremind'
+  dive.target = 1
+  flyTo(CENTERS.constellation)
+  const unsub = onFrame(() => {
+    if (dive.value < 0.98 || Math.abs(zoom.value - CENTERS.constellation) > 0.01) return
+    unsub()
+    leaving = false
+    diveInto(next)
+  })
   return true
 }
+let leaving = false
 
 const hashFor = (l: LevelId) => (l === 'cursor' ? location.pathname + location.search : `#${l}`)
 

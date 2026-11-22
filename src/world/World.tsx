@@ -146,7 +146,10 @@ function Scene({ particleCount }: { particleCount: number }) {
     view.scale = s
     const g = root.current
     if (!g) return
-    g.scale.setScalar(s)
+    // Inside a project the galaxy goes flat: zoomed right in, a star's depth would throw it far
+    // from its window (the window is placed on the z = 0 plane). Out at the galaxy it's 3D.
+    const depthScale = s * (1 - dive.value)
+    g.scale.set(s, s, depthScale)
     g.position.set(-cam.focus[0] * s, -cam.focus[1] * s, 0)
 
     // Parallax from the pointer, only where the world is actually 3D. Flat levels stay exact so
@@ -225,7 +228,7 @@ function Scene({ particleCount }: { particleCount: number }) {
     view.unproject = (px, py, z = 0) => {
       tmp.set((px / size.width) * 2 - 1, -(py / size.height) * 2 + 1, 0.5).unproject(camera)
       const dir = tmp.sub(camera.position).normalize()
-      const planeZ = z * s // the root only scales and translates in x/y
+      const planeZ = z * depthScale // the root only scales (and flattens) and translates in x/y
       const k = (planeZ - camera.position.z) / dir.z
       const wx = camera.position.x + dir.x * k
       const wy = camera.position.y + dir.y * k
