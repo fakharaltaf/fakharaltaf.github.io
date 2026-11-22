@@ -67,7 +67,8 @@ export function Cursor() {
         else if (interactive) {
           mode = 'link'
           const b = interactive.getBoundingClientRect()
-          if (b.width < 260 && b.height < 90) snap = b
+          // Log lines have their own hover state; a ring around them reads as a box.
+          if (b.width < 260 && b.height < 90 && !interactive.closest('.tray')) snap = b
         } else mode = 'zoom'
       }
       // Magnetic: lean toward the control and take its shape.

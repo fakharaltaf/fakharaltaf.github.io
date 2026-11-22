@@ -78,6 +78,19 @@ export const STARS = projects.map((p) => {
   const o = STAR_OFFSETS[p.id] ?? [0, 0, 0]
   return { id: p.id, pos: [FRAME.x + o[0] * S, FRAME.y + o[1] * S, o[2] * S] as const }
 })
+/**
+ * Browsing order: clockwise round the galaxy from RareMind, so the next project is always a
+ * neighbouring star and the flight between them is short. Derived from the positions.
+ */
+export const TOUR: string[] = (() => {
+  const cx = STARS.reduce((a, s) => a + s.pos[0], 0) / STARS.length
+  const cy = STARS.reduce((a, s) => a + s.pos[1], 0) / STARS.length
+  const ang = (s: (typeof STARS)[number]) => Math.atan2(s.pos[1] - cy, s.pos[0] - cx)
+  const start = ang(STARS.find((s) => s.id === 'raremind')!)
+  const turn = (s: (typeof STARS)[number]) => (start - ang(s) + 4 * Math.PI) % (2 * Math.PI)
+  return [...STARS].sort((a, b) => turn(a) - turn(b)).map((s) => s.id)
+})()
+
 /** A project's own frame, centred on its star (RareMind's is the Level 3 frame itself). */
 export function frameFor(id: string): Box {
   if (id === 'raremind') return FRAME

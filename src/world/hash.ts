@@ -2,6 +2,7 @@
 // Arriving at a level by zooming replaces the hash (no history spam); deliberate jumps push.
 import { projects } from '../content/projects.ts'
 import { CENTERS, type LevelId, isLevelId, levelAt } from './levels.ts'
+import { TOUR } from './layout.ts'
 import { dive, diveInto, flyTo, onFrame, undive, zoom } from './zoom.ts'
 
 export function targetForHash(hash: string): number | null {
@@ -39,8 +40,8 @@ export function browseProjects(dir: 1 | -1): boolean {
     dive.id && dive.target === 1 ? dive.id : levelAt(zoom.target) === 'project' ? 'raremind' : null
   if (!current) return false
   if (dive.from) return true // mid-flight: finish this trip first
-  const i = projects.findIndex((p) => p.id === current)
-  const next = projects[(i + dir + projects.length) % projects.length]!
+  const i = TOUR.indexOf(current)
+  const next = { id: TOUR[(i + dir + TOUR.length) % TOUR.length]! }
   history.replaceState(null, '', `#${next.id}`) // browsing isn't a trail of history entries
   follow(`#${next.id}`)
   return true

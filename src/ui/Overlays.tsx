@@ -7,6 +7,7 @@ import { projects } from '../content/projects.ts'
 import { browseProjects, navigate, openProject } from '../world/hash.ts'
 import { useDemos } from '../demos/store.ts'
 import { remap } from '../world/levels.ts'
+import { TOUR } from '../world/layout.ts'
 import { frameAt } from '../world/timeline.ts'
 import { dive, onFrame, swapView } from '../world/zoom.ts'
 import type { Frame } from '../world/timeline.ts'
@@ -80,7 +81,7 @@ function ProjectCard() {
           ←
         </button>
         <span className="browse-count">
-          {levels.project.browse.count(projects.indexOf(p) + 1, projects.length)}
+          {levels.project.browse.count(TOUR.indexOf(p.id) + 1, TOUR.length)}
         </span>
         <button
           type="button"
@@ -95,7 +96,7 @@ function ProjectCard() {
         </span>
         {/* Every project, in order: shows there are more, and jumps straight to one. */}
         <ol className={`browse-index${scan ? ' scan' : ''}`}>
-          {projects.map((q, i) => (
+          {TOUR.map((tid) => projects.find((x) => x.id === tid)!).map((q, i) => (
             <li key={q.id} style={{ '--i': i } as React.CSSProperties}>
               <button
                 type="button"

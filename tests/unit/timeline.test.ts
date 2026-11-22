@@ -63,14 +63,16 @@ describe('project catalogue', () => {
       dive.swap = 1
       seen.push(at())
     }
-    expect(seen).toEqual([...projects.map((p) => p.id), 'raremind'])
+    const { TOUR } = await import('../../src/world/layout')
+    expect(seen).toEqual([...TOUR, 'raremind'])
+    expect(new Set(TOUR)).toEqual(new Set(projects.map((p) => p.id)))
     expect(browseProjects(-1)).toBe(true)
-    expect(at()).toBe(projects.at(-1)!.id)
+    expect(at()).toBe(TOUR.at(-1)!)
     // Mid-flight, another step is swallowed until the trip finishes.
-    dive.from = projects.at(-2)!.id
+    dive.from = TOUR.at(-2)!
     dive.swap = 0.4
     expect(browseProjects(1)).toBe(true)
-    expect(at()).toBe(projects.at(-1)!.id)
+    expect(at()).toBe(TOUR.at(-1)!)
     dive.from = null
     dive.swap = 1
   })

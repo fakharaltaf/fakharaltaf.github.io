@@ -85,14 +85,19 @@ export function Tray() {
                       className="btn log-line"
                       aria-pressed={!on}
                       aria-label={`${automation.names[id]}: ${label}`}
-                      title={label}
                       onClick={() => send(id, { type: 'TOGGLE' })}
                     >
-                      {/* Keyed on the run time, so the line flashes again every time it fires. */}
-                      <time key={ran ?? 0} className={ran ? 'ran' : undefined} aria-hidden="true">
-                        {!on ? '--:--:--' : ran ? clock(ran) : '··:··:··'}
-                      </time>
-                      <span aria-hidden="true">{scripts[id]?.file ?? id}</span>
+                      {/* Keyed on the run time, so the line flashes again every time it fires.
+                          Hover or focus swaps the time for what a click does. */}
+                      <span className="log-time" aria-hidden="true">
+                        <time key={ran ?? 0} className={ran ? 'ran' : undefined}>
+                          {on && ran ? clock(ran) : '--:--:--'}
+                        </time>
+                        <span className="log-act">{on ? automation.stop : automation.rerun}</span>
+                      </span>
+                      <span className="log-file" aria-hidden="true">
+                        {scripts[id]?.file ?? id}
+                      </span>
                     </button>
                   </li>
                 )
