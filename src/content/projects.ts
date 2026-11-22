@@ -12,6 +12,8 @@ export type Project = {
   links: { play?: string; code: string }
   /** The four boxes along the bottom of the project's frame: [part, tech, what it does]. */
   modules: readonly (readonly [string, string, string])[]
+  /** A small real file from the repo, shown in the frame's script box (RareMind's is tidy.ts). */
+  script?: { file: string; code: readonly string[] }
   /** A deployed site that can run inside the demo window. Same origin, so its saves carry over. */
   live?: { url: string; note: string }
 }
@@ -54,6 +56,15 @@ export const projects: readonly Project[] = [
       ['world', 'Three.js', 'the farm in 3D'],
       ['saves', 'browser', 'your farm waits for you'],
     ],
+    script: {
+      file: 'scripts/playthrough.mjs',
+      code: [
+        '// Real-action balancing trace; never grants cash, goods, unlocks or population.',
+        '// Usage: node scripts/playthrough.mjs output.json [balanced|volume|town|city] [ticks] [source-root]',
+        "const [output,mode='balanced',limit='9000',root=process.cwd()]=process.argv.slice(2);",
+        "if(!output)throw new Error('Pass an evidence output path.');",
+      ],
+    },
     links: {
       play: 'https://fakharaltaf.github.io/agrarian/',
       code: 'https://github.com/fakharaltaf/agrarian',
@@ -77,6 +88,17 @@ export const projects: readonly Project[] = [
       ['terminal', '', 'tails a session live'],
       ['analysis', 'Python', 'efficiency stats'],
     ],
+    script: {
+      file: 'bin/wait-for-backend.mjs',
+      code: [
+        'const url = "http://127.0.0.1:11423/api/settings";',
+        'const timeout = 120_000;',
+        'const interval = 500;',
+        'const start = Date.now();',
+        '',
+        'process.stdout.write("Waiting for backend");',
+      ],
+    },
     links: { code: 'https://github.com/fakharaltaf/claude-trace' },
   },
   {
@@ -93,6 +115,17 @@ export const projects: readonly Project[] = [
       ['pose', '', 'gaze and head pose'],
       ['signals', '', 'attentiveness and yawns'],
     ],
+    script: {
+      file: 'tests/quick_test.py',
+      code: [
+        '# Model path',
+        'model_path = Path("models/retinaface_resnet50.onnx")',
+        '',
+        'print(f"\\n1. Checking model file...")',
+        'if not model_path.exists():',
+        '    print(f"   ❌ Model not found: {model_path}")',
+      ],
+    },
     links: {
       code: 'https://github.com/fakharaltaf/Multi-person_Facial-Behavioral_Monitoring-System',
     },
@@ -111,6 +144,16 @@ export const projects: readonly Project[] = [
       ['data', 'Supabase', 'jobs, people, matches'],
       ['matching', 'AI', 'does the matching'],
     ],
+    script: {
+      file: 'app/api/onboarding/chat/route.ts',
+      code: [
+        'const finishOnboardingTool = tool({',
+        '  description: "Mark the user\'s career onboarding as complete and save their summarized profile details.",',
+        '  inputSchema: z.object({',
+        '    career_goals: z.string().describe("A summary of the user\'s career aspirations."),',
+        '    interests: z.string().describe("Key professional and personal interests."),',
+      ],
+    },
     links: { code: 'https://github.com/fakharaltaf/Svype-Prototype' },
   },
   {
@@ -126,6 +169,17 @@ export const projects: readonly Project[] = [
       ['output', '', 'training recommendations'],
       ['app', 'Streamlit', 'where it all runs'],
     ],
+    script: {
+      file: 'start_app.py',
+      code: [
+        'try:',
+        '    import streamlit',
+        '    import plotly',
+        '    import pandas',
+        '    print(f"✅ Dependencies verified (Streamlit {streamlit.__version__})")',
+        'except ImportError as e:',
+      ],
+    },
     links: { code: 'https://github.com/fakharaltaf/LNA-Report-Parser' },
   },
 ]
