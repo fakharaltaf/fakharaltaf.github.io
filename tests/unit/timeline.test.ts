@@ -57,11 +57,21 @@ describe('project catalogue', () => {
     const seen = [at()]
     for (let i = 0; i < projects.length; i++) {
       expect(browseProjects(1)).toBe(true)
-      dive.value = dive.target // as if the camera arrived
+      // As if the camera arrived (a step mid-flight is ignored on purpose).
+      dive.value = dive.target
+      dive.from = null
+      dive.swap = 1
       seen.push(at())
     }
     expect(seen).toEqual([...projects.map((p) => p.id), 'raremind'])
     expect(browseProjects(-1)).toBe(true)
     expect(at()).toBe(projects.at(-1)!.id)
+    // Mid-flight, another step is swallowed until the trip finishes.
+    dive.from = projects.at(-2)!.id
+    dive.swap = 0.4
+    expect(browseProjects(1)).toBe(true)
+    expect(at()).toBe(projects.at(-1)!.id)
+    dive.from = null
+    dive.swap = 1
   })
 })

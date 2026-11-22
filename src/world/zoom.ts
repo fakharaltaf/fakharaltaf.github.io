@@ -33,7 +33,7 @@ export const dive = {
   swap: 1,
 }
 
-const SWAP_S = 0.75 // seconds to glide sideways between two projects
+const SWAP_S = 1.3 // seconds for the flight from one project to the next
 
 /** Camera state of the current frame, for projecting world boxes onto DOM overlays. */
 export const view = {
@@ -59,6 +59,19 @@ export function diveInto(id: string) {
   dive.target = 1
   flyTo(CENTERS.constellation)
 }
+
+/** The flight between two projects: which one is on show, and how visible it is (0..1). */
+export function swapView(): { id: string | null; fade: number } {
+  if (!dive.from) return { id: dive.id, fade: 1 }
+  const s = dive.swap
+  // The old project fades as the camera pulls back; the new one appears as it settles in.
+  return s < 0.5
+    ? { id: dive.from, fade: 1 - Math.min(1, s / 0.15) }
+    : { id: dive.id, fade: Math.max(0, (s - 0.8) / 0.2) }
+}
+
+/** 0 at rest, 1 at the top of the flight: the galaxy shows through while you travel. */
+export const swapLift = () => (dive.from ? Math.sin(Math.PI * dive.swap) : 0)
 
 export function undive() {
   dive.target = 0

@@ -38,6 +38,7 @@ export function browseProjects(dir: 1 | -1): boolean {
   const current =
     dive.id && dive.target === 1 ? dive.id : levelAt(zoom.target) === 'project' ? 'raremind' : null
   if (!current) return false
+  if (dive.from) return true // mid-flight: finish this trip first
   const i = projects.findIndex((p) => p.id === current)
   const next = projects[(i + dir + projects.length) % projects.length]!
   history.replaceState(null, '', `#${next.id}`) // browsing isn't a trail of history entries

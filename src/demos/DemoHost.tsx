@@ -15,7 +15,7 @@ import { projects } from '../content/projects.ts'
 import { SCREEN, projectBox, screenFor } from '../world/layout.ts'
 import { remap } from '../world/levels.ts'
 import { frameAt } from '../world/timeline.ts'
-import { dive, onFrame, view } from '../world/zoom.ts'
+import { dive, onFrame, swapView, view } from '../world/zoom.ts'
 import { type DemoProps, useDemos } from './store.ts'
 
 const LiveFrame = lazy(() => import('./LiveFrame.tsx'))
@@ -37,9 +37,9 @@ const DEMOS: Record<string, LazyExoticComponent<ComponentType<DemoProps>>> = {
 /** Opacity of the hosted demo for the current frame, and which project it is. */
 export function demoFade(p: number): { id: string | null; fade: number } {
   if (dive.id) {
-    // Browsing sideways, the next demo fades in as the camera arrives.
-    const arrive = dive.from ? remap(dive.swap, 0.6, 1) : 1
-    return { id: dive.value > 0.05 ? dive.id : null, fade: remap(dive.value, 0.55, 1) * arrive }
+    // Browsing: the old demo fades as the camera pulls back, the new one as it settles in.
+    const swap = swapView()
+    return { id: dive.value > 0.05 ? swap.id : null, fade: remap(dive.value, 0.55, 1) * swap.fade }
   }
   const f = frameAt(p)
   // Mount a little early (from the script level) so RareMind is ready when it arrives.
@@ -82,7 +82,8 @@ export function DemoHost() {
       host.style.width = `${r.width.toFixed(1)}px`
       host.style.height = `${r.height.toFixed(1)}px`
       // Too small to play in place (phones): show a preview and one big button instead.
-      host.classList.toggle('compact', r.width < 460)
+      // (Not mid-flight between projects: the window shrinks briefly, it isn't a phone.)
+      if (!dive.from) host.classList.toggle('compact', r.width < 460)
     })
   }, [host])
 

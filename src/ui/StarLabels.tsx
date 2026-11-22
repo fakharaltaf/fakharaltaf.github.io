@@ -8,7 +8,7 @@ import { STARS } from '../world/layout.ts'
 import { starPos } from '../world/physicsState.ts'
 import { remap } from '../world/levels.ts'
 import { frameAt } from '../world/timeline.ts'
-import { dive, onFrame, view } from '../world/zoom.ts'
+import { dive, onFrame, swapLift, view } from '../world/zoom.ts'
 
 export function StarLabels() {
   const wrap = useRef<HTMLDivElement>(null)
@@ -19,8 +19,12 @@ export function StarLabels() {
     return onFrame((p) => {
       const f = frameAt(p)
       const o =
-        Math.round(remap(f.t[3], 0.75, 1) * (1 - remap(f.t[4], 0, 0.25)) * (1 - dive.value) * 100) /
-        100
+        Math.round(
+          remap(f.t[3], 0.75, 1) *
+            (1 - remap(f.t[4], 0, 0.25)) *
+            (1 - dive.value * (1 - swapLift())) *
+            100,
+        ) / 100
       const w = wrap.current
       if (!w) return
       if (o !== last) {

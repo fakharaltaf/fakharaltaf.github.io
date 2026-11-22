@@ -40,7 +40,7 @@ import { MAX_LETTERS, grab, letterXforms, letters, starOffsets } from './physics
 import { Render } from './Render.tsx'
 import { TIERS, decideTier, qualityHeld, useQuality } from '../systems/quality.ts'
 import { stats } from '../systems/stats.ts'
-import { dive, emitFrame, tick, view, zoom } from './zoom.ts'
+import { dive, emitFrame, swapLift, tick, view, zoom } from './zoom.ts'
 
 const CAM_Z = 10
 const FOV = 50
@@ -115,9 +115,26 @@ function Scene({ particleCount }: { particleCount: number }) {
     if (dive.id && dive.value > 0) {
       let inside = fit(screenFor(dive.id), viewInfo, true, 1.06)
       if (dive.from) {
-        // Browsing sideways: glide from the last project's screen, eased at both ends.
-        const e = dive.swap * dive.swap * (3 - 2 * dive.swap)
-        inside = blendCam(fit(screenFor(dive.from), viewInfo, true, 1.06), inside, e)
+        // Browsing: pull back until both projects are in view, travel, settle in on the new one.
+        const a = fit(screenFor(dive.from), viewInfo, true, 1.06)
+        const t = dive.swap
+        const e = t * t * t * (t * (6 * t - 15) + 10) // most of the travel happens mid-flight
+        // Mid-flight the view is wide enough to hold both stars, with room around them.
+        const dx = Math.abs(inside.focus[0] - a.focus[0])
+        const dy = Math.abs(inside.focus[1] - a.focus[1])
+        const base = Math.sqrt(a.height * inside.height)
+        const lift = Math.max(2, (1.6 * Math.max(dx / viewInfo.aspect, dy)) / base)
+        const logH =
+          Math.log(a.height) +
+          (Math.log(inside.height) - Math.log(a.height)) * e +
+          Math.log(lift) * Math.sin(Math.PI * t)
+        inside = {
+          focus: [
+            a.focus[0] + (inside.focus[0] - a.focus[0]) * e,
+            a.focus[1] + (inside.focus[1] - a.focus[1]) * e,
+          ],
+          height: Math.exp(logH),
+        }
       }
       cam = blendCam(cam, inside, dive.value)
     }
@@ -159,7 +176,7 @@ function Scene({ particleCount }: { particleCount: number }) {
 
     // Particles.
     const unitsPerPx = cam.height / size.height
-    u.opacity.value = f.particles * (1 - 0.6 * dive.value)
+    u.opacity.value = f.particles * (1 - 0.6 * dive.value * (1 - swapLift()))
     for (let i = 0; i < u.stars.array.length; i++)
       (u.stars.array[i] as Vector4).set(
         starOffsets[i * 3]!,

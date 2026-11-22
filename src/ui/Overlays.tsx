@@ -8,7 +8,7 @@ import { browseProjects, navigate, openProject } from '../world/hash.ts'
 import { useDemos } from '../demos/store.ts'
 import { remap } from '../world/levels.ts'
 import { frameAt } from '../world/timeline.ts'
-import { dive, onFrame } from '../world/zoom.ts'
+import { dive, onFrame, swapView } from '../world/zoom.ts'
 import type { Frame } from '../world/timeline.ts'
 import { useFade } from './useFade.ts'
 
@@ -18,7 +18,8 @@ const window_ = (a: number, b: number, c: number) => (f: Frame) =>
 const fades = {
   line: window_(0, 0.6, 0.12),
   script: window_(1, 0.6, 0.12),
-  project: (f: Frame) => (dive.id ? remap(dive.value, 0.6, 1) : window_(2, 0.7, 0.3)(f)),
+  project: (f: Frame) =>
+    dive.id ? remap(dive.value, 0.6, 1) * swapView().fade : window_(2, 0.7, 0.3)(f),
   constellation: (f: Frame) => window_(3, 0.7, 0.3)(f) * (1 - dive.value),
   person: window_(4, 0.7, 0.3),
   outro: (f: Frame) => f.outroCaret,
