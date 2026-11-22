@@ -129,25 +129,29 @@ function personBox(portrait: boolean): Box {
 
 // ---- Camera ----------------------------------------------------------------
 
-export type View = { aspect: number; vh: number; caretPx: number }
+export type View = { aspect: number; vw: number; vh: number; caretPx: number }
 export type Cam = { focus: Vec2; height: number } // height = universe units visible vertically
 
-/** Fit a box, optionally leaving room for a DOM card (left on landscape, bottom on portrait). */
-export function fit(box: Box, view: View, card: boolean, margin = 1.12): Cam {
+/** Room the HUD rail takes on the right edge, in CSS px (portrait hides its labels). */
+const HUD_PX = { landscape: 170, portrait: 72 }
+
+/**
+ * Fit a box into the part of the screen that's free: left of the HUD rail, right of the DOM
+ * card on landscape (above it on portrait), and above `bottomPx` of captions if given.
+ */
+export function fit(box: Box, view: View, card: boolean, margin = 1.12, bottomPx = 0): Cam {
   const portrait = view.aspect < 1
-  // Landscape card: content lives in the band 40%–95% of the width (HUD sits right of it).
-  // Portrait card: content keeps clear of the HUD strip on the right edge.
-  const usableW = card ? (portrait ? 0.82 : 0.55) : 0.9
-  const usableH = card && portrait ? 0.42 : 1
+  const right = 1 - HUD_PX[portrait ? 'portrait' : 'landscape'] / view.vw
+  const left = card && !portrait ? 0.4 : 0.04 // landscape card: 6vw + min(30rem, 32vw)
+  const bottom = bottomPx / view.vh
+  const usableW = right - left
+  const usableH = card && portrait ? 0.42 : 1 - bottom
   const height = Math.max((box.h * margin) / usableH, (box.w * margin) / (view.aspect * usableW))
   const width = height * view.aspect
-  const focus: Vec2 = [box.x, box.y]
-  if (card && !portrait) focus[0] = box.x - width * 0.175
-  // Portrait card: content lives in the band between the skip link and the card (50%–92%).
-  if (card && portrait) {
-    focus[1] = box.y - height * 0.21
-    focus[0] = box.x + width * 0.07
-  }
+  // Look away from the box by as much as the free band's centre is off the screen's centre.
+  const focus: Vec2 = [box.x - ((left + right) / 2 - 0.5) * width, box.y - (bottom / 2) * height]
+  // Portrait card: content lives in the band between the skip link and the card.
+  if (card && portrait) focus[1] = box.y - height * 0.21
   return { focus, height }
 }
 
@@ -170,7 +174,8 @@ export function restCams(view: View): Record<LevelId, Cam> {
         )
       : fit(SCRIPT_BOX, view, false, 1.15),
     project: fit(FRAME, view, true, 1.08),
-    constellation: fit(CONSTELLATION, view, false, 1.05),
+    // Its two-line caption sits bottom-left; keep every star above it.
+    constellation: fit(CONSTELLATION, view, false, 1.05, view.vh * 0.15 + 64),
     person,
     outro: { focus: [PIN_HEAD[0], PIN_HEAD[1]], height: person.height * 3 },
   }

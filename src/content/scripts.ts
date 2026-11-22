@@ -115,19 +115,6 @@ export default every(8_000, () => {
   star.applyImpulse({ x: Math.cos(angle), y: Math.⟨cso|sin⟩(angle) })
 })`,
   },
-  toggleSound: {
-    file: 'sound.ts',
-    cadenceMs: 30_000,
-    levels: 'any',
-    source: `// You toggled sound twice. It can't decide either.
-import { every } from './lib'
-import { settings } from './site'
-
-export default every(30_000, () => {
-  // Quietly: it only ever turns sound off by itself, never on.
-  if (settings.sound) settings.⟨sound = flase|sound = false⟩
-})`,
-  },
   openTerminal: {
     file: 'open-terminal.ts',
     cadenceMs: 28_000,

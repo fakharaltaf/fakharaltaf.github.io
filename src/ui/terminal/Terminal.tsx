@@ -68,8 +68,7 @@ export function Terminal() {
           history.pushState(null, '', `#${e.project}`)
           return flyTo(CENTERS[e.level])
         case 'sound':
-          useSettings.setState({ sound: e.on })
-          return track('toggleSound')
+          return useSettings.setState({ sound: e.on })
         case 'automateAll':
           return useAutomation.getState().automateAll()
         case 'reset':

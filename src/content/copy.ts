@@ -217,6 +217,8 @@ export const shortcuts = {
 
 export const automation = {
   counter: (n: number) => `You’ve automated ${n} ${n === 1 ? 'thing' : 'things'}.`,
+  toggle: (n: number) => `Automated · ${n}`,
+  toggleShort: (n: number) => `Auto · ${n}`,
   milestones: { 1: 'There it is.', 3: 'You’re getting it.', 5: 'I’d hire you.' } as Record<
     number,
     string
@@ -239,7 +241,6 @@ export const automation = {
     submitAnswer: 'Answering trivia',
     expandToolCall: 'Expanding tool calls',
     dragRow: 'Dragging rows',
-    toggleSound: 'Toggling sound',
     openTerminal: 'Opening the terminal',
     flingStar: 'Flinging stars',
   },
@@ -252,7 +253,6 @@ export const automation = {
     submitAnswer: 'answered a question',
     expandToolCall: 'expanded a tool call',
     dragRow: 'dragged a row',
-    toggleSound: 'toggled the sound',
     openTerminal: 'opened the terminal',
     flingStar: 'flung a star',
   },

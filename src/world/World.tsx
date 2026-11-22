@@ -73,6 +73,7 @@ function Scene({ particleCount }: { particleCount: number }) {
   const viewInfo = useMemo(
     () => ({
       aspect: size.width / size.height,
+      vw: size.width,
       vh: size.height,
       caretPx: Math.min(260, Math.max(120, size.width * 0.22)),
     }),

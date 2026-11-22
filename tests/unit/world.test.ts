@@ -79,7 +79,7 @@ describe('universe layout', () => {
   })
   it('camera zooms out monotonically from cursor to outro', () => {
     for (const aspect of [16 / 9, 390 / 844]) {
-      const rest = restCams({ aspect, vh: 800, caretPx: 176 })
+      const rest = restCams({ aspect, vw: aspect * 800, vh: 800, caretPx: 176 })
       let prev = 0
       for (let p = 0; p <= 1; p += 0.002) {
         const h = cameraAt(p, rest).height

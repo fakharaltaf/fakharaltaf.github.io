@@ -2,7 +2,6 @@ import { Component, type ReactNode, Suspense, lazy, useEffect, useRef } from 're
 import { errors, site } from './content/copy.ts'
 import { startRunner } from './automation/runner.ts'
 import { ScriptPanel } from './automation/ScriptPanel.tsx'
-import { Tray } from './automation/Tray.tsx'
 import { Announcer, Hud, IdleHint } from './ui/Hud.tsx'
 import { Terminal } from './ui/terminal/Terminal.tsx'
 import { DemoHost } from './demos/DemoHost.tsx'
@@ -146,7 +145,6 @@ export function App() {
       <Hud />
       <IdleHint />
       <Announcer />
-      <Tray />
       <ScriptPanel />
       <Terminal />
       <Engineering />

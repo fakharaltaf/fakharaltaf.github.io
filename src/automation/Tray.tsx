@@ -1,5 +1,5 @@
 // The running tally: what runs by itself now, a toggle for each, and the milestone reactions.
-import { useEffect } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { automation } from '../content/copy.ts'
 import { useWorld } from '../world/store.ts'
 import type { ActionId } from './machine.ts'
@@ -13,6 +13,28 @@ export function Tray() {
   const { send, clearNote } = useAutomation.getState()
   const reduced = useWorld((s) => s.reducedMotion)
   const count = automatedCount(statuses)
+  const [open, setOpen] = useState(false)
+  const box = useRef<HTMLElement>(null)
+  const listId = useId()
+
+  // An open list closes on Escape or a click anywhere else.
+  useEffect(() => {
+    if (!open) return
+    const away = (e: PointerEvent) => {
+      if (!box.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      e.stopPropagation() // closing the list, not backing out of a project
+      setOpen(false)
+    }
+    addEventListener('pointerdown', away, true)
+    addEventListener('keydown', esc, true)
+    return () => {
+      removeEventListener('pointerdown', away, true)
+      removeEventListener('keydown', esc, true)
+    }
+  }, [open])
 
   useEffect(() => {
     if (!note) return
@@ -25,36 +47,51 @@ export function Tray() {
   )
   if (!listed.length && !note) return null
 
+  // One line in the HUD column; the full list opens beside it on demand.
   return (
-    <section className="tray" aria-label={automation.trayLabel}>
+    <section ref={box} className="tray" aria-label={automation.trayLabel}>
       <p className="note" role="status">
         {note ?? ''}
       </p>
       {listed.length > 0 && (
         <>
-          <p className="counter">{automation.counter(count)}</p>
-          {reduced && count > 0 && <p className="paused">{automation.pausedReducedMotion}</p>}
-          <ul>
-            {listed.map((id) => {
-              const on = statuses[id] === 'automated'
-              return (
-                <li key={id} className={on ? 'on' : 'off'}>
-                  <span className="auto-badge" title={automation.markerTooltip}>
-                    {automation.marker}
-                  </span>
-                  <span className="name">{automation.names[id]}</span>
-                  <button
-                    type="button"
-                    className="btn btn-quiet"
-                    aria-pressed={!on}
-                    onClick={() => send(id, { type: 'TOGGLE' })}
-                  >
-                    {on ? automation.disable : automation.enable}
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
+          <button
+            type="button"
+            className="btn btn-quiet tray-toggle"
+            aria-expanded={open}
+            aria-controls={listId}
+            onClick={() => setOpen(!open)}
+          >
+            <span className="wide-only">{automation.toggle(count)}</span>
+            <span className="narrow-only" aria-hidden="true">
+              {automation.toggleShort(count)}
+            </span>
+          </button>
+          <div id={listId} className="tray-list" hidden={!open}>
+            <p className="counter">{automation.counter(count)}</p>
+            {reduced && count > 0 && <p className="paused">{automation.pausedReducedMotion}</p>}
+            <ul>
+              {listed.map((id) => {
+                const on = statuses[id] === 'automated'
+                return (
+                  <li key={id} className={on ? 'on' : 'off'}>
+                    <span className="auto-badge" title={automation.markerTooltip}>
+                      {automation.marker}
+                    </span>
+                    <span className="name">{automation.names[id]}</span>
+                    <button
+                      type="button"
+                      className="btn btn-quiet"
+                      aria-pressed={!on}
+                      onClick={() => send(id, { type: 'TOGGLE' })}
+                    >
+                      {on ? automation.disable : automation.enable}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
         </>
       )}
     </section>

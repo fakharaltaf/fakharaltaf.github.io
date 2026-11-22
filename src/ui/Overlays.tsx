@@ -28,16 +28,14 @@ function Caption({
   text,
   fade,
   small,
-  hint,
 }: {
   text: string
   fade: (f: Frame) => number
   small?: boolean
-  hint?: boolean
 }) {
   const ref = useFade<HTMLParagraphElement>(fade)
   return (
-    <p ref={ref} className={`fade caption${small ? ' small' : ''}${hint ? ' hint-line' : ''}`}>
+    <p ref={ref} className={`fade caption${small ? ' small' : ''}`}>
       {text}
     </p>
   )
@@ -161,6 +159,7 @@ function PersonCard() {
       </p>
       <p className="muted">{person.currently}</p>
       <GitHubActivity />
+      <p className="knock">{levels.person.knockHint}</p>
     </section>
   )
 }
@@ -212,10 +211,13 @@ export function Overlays() {
       <Caption text={levels.line.caption} fade={fades.line} />
       <Caption text={levels.script.caption} fade={fades.script} />
       <ProjectCard />
-      <Caption text={levels.constellation.caption} fade={fades.constellation} small />
-      <Caption text={levels.constellation.hint} fade={fades.constellation} small hint />
+      {/* One block, so the two lines can never be drawn over each other. */}
+      <Caption
+        text={`${levels.constellation.caption}\n${levels.constellation.hint}`}
+        fade={fades.constellation}
+        small
+      />
       <PersonCard />
-      <Caption text={levels.person.knockHint} fade={fades.person} small hint />
       <Outro />
     </div>
   )
