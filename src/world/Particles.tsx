@@ -74,6 +74,8 @@ export function makeUniforms() {
     frameW: uniform(0), // 0 = all star, 1 = all frame
     /** Zooming from a project into the script: the star the script's particles set out from. */
     tripStar: uniform(-1),
+    /** 1 while zooming into the script: lent frame dots hold the frame until they leave for it. */
+    tripHold: uniform(0),
     starHome: uniformArray(
       STARS.map((st) => new Vector4(st.pos[0], st.pos[1], st.pos[2], 0)),
       'vec4',
@@ -205,7 +207,12 @@ export function Particles({
     const rmHome = at(u.starHome, int(RM_STAR)).xy.add(at(u.stars, int(RM_STAR)).xy)
     base = vec3(base.xy.add(home.add(homeOff).sub(rmHome).mul(lent).mul(w2)), base.z)
     // Each particle leaves on its own schedule, like every other morph.
-    const go = smoothstep(seed.mul(0.4), seed.mul(0.4).add(0.6), u.frameW).mul(mine).mul(w2)
+    const go = max(
+      smoothstep(seed.mul(0.4), seed.mul(0.4).add(0.6), u.frameW),
+      lent.mul(u.tripHold),
+    )
+      .mul(mine)
+      .mul(w2)
     base = vec3(mix(base.xy, onFrame, go), base.z.mul(float(1).sub(go)))
     // Name letters: rotate about the letter's centre, then translate. Only at the person level.
     const li = int(max(B1.x, 0))

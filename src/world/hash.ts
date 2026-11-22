@@ -129,9 +129,9 @@ function shapeRareMind(way: 'leave' | 'arrive', end: number = CENTERS.project) {
       forming = false
       return
     }
-    // Into the script, the frame forms early (seen from afar) and becomes the script as the
+    // Into the script, the frame's dots set off almost at once and become the script as the
     // camera closes in, eased so the last, deepest stretch isn't a blur.
-    const from = end === CENTERS.script ? 0.3 : ARRIVE_FROM
+    const from = end === CENTERS.script ? 0.08 : ARRIVE_FROM
     const k = Math.min(1, Math.max(0, (t - from) / (1 - from)))
     setForm(end === CENTERS.script ? k * k * (3 - 2 * k) : k, end)
     if (dive.from || dive.value < 0.98) return

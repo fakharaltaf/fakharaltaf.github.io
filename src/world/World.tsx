@@ -243,6 +243,15 @@ function Scene({ particleCount }: { particleCount: number }) {
       const t = dive.swap
       const w = !dive.from ? 1 : t < 0.5 ? 1 - Math.min(1, t / 0.35) : Math.max(0, (t - 0.6) / 0.4)
       u.frameW.value = dive.value * w
+      u.tripHold.value = 0
+      if (dive.id === SCRIPT_TRIP) {
+        // Into the script: the frame you're leaving stays put while its dots fly straight into
+        // the script (the project's own star dots still drop back into its star).
+        const from = STARS.findIndex((st) => st.id === dive.from)
+        u.frameStar.value = from
+        u.frameW.value = 1 - Math.min(1, t / 0.35)
+        u.tripHold.value = from >= 0 ? 1 : 0
+      }
     }
     u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * REPEL_PX
     u.pointer.value.set(pointer.x, pointer.y, 0) // compared on screen, in the shader
