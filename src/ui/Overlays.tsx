@@ -9,7 +9,7 @@ import { useDemos } from '../demos/store.ts'
 import { remap } from '../world/levels.ts'
 import { TOUR } from '../world/layout.ts'
 import { frameAt } from '../world/timeline.ts'
-import { dive, land, onFrame, swapView } from '../world/zoom.ts'
+import { dive, onFrame, swapView } from '../world/zoom.ts'
 import type { Frame } from '../world/timeline.ts'
 import { useFade } from './useFade.ts'
 
@@ -20,14 +20,9 @@ const fades = {
   line: window_(0, 0.6, 0.12),
   script: window_(1, 0.6, 0.12),
   project: (f: Frame) =>
-    land.active
-      ? 1
-      : dive.id
-        ? remap(dive.value, 0.6, 1) * swapView().fade
-        : window_(2, 0.7, 0.3)(f),
+    dive.id ? remap(dive.value, 0.6, 1) * swapView().fade : window_(2, 0.7, 0.3)(f),
   // Hidden as soon as a dive starts (not as it progresses), so it never ghosts in mid-flight.
-  constellation: (f: Frame) =>
-    land.active ? 0 : window_(3, 0.7, 0.3)(f) * (1 - Math.max(dive.value, dive.target)),
+  constellation: (f: Frame) => window_(3, 0.7, 0.3)(f) * (1 - Math.max(dive.value, dive.target)),
   person: window_(4, 0.7, 0.3),
   outro: (f: Frame) => f.outroCaret,
 }

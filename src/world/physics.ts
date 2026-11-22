@@ -12,7 +12,7 @@ import { openProject } from './hash.ts'
 import { MAX_LETTERS, grab, letterXforms, letters, starOffsets, starPos } from './physicsState.ts'
 import { useWorld } from './store.ts'
 import { frameAt } from './timeline.ts'
-import { dive, land, onFrame, view } from './zoom.ts'
+import { dive, onFrame, view } from './zoom.ts'
 
 const S = FRAME.w * 1.3 // star physics unit
 const C = [CONSTELLATION.x, CONSTELLATION.y, 0] as const
@@ -121,8 +121,7 @@ export async function startPhysics() {
   const onDown = (e: PointerEvent) => {
     px = e.clientX
     py = e.clientY
-    if (chain < 3.7 || chain > 4.3 || dive.id || land.active || useWorld.getState().reducedMotion)
-      return
+    if (chain < 3.7 || chain > 4.3 || dive.id || useWorld.getState().reducedMotion) return
     let best = -1
     let bestD = GRAB_PX
     STARS.forEach((_, i) => {

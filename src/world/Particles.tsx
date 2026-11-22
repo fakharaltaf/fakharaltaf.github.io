@@ -37,13 +37,15 @@ import {
   vec4,
 } from 'three/tsl'
 import { brand } from '../styles/tokens.ts'
-import { PIN_SHRINK, STARS } from './layout.ts'
+import { LINE_W, LINE_X0, PIN_SHRINK, STARS } from './layout.ts'
 import { FRAME_PIECES, framePieces } from './frames.ts'
 import { MAX_LETTERS, letters } from './physicsState.ts'
 import { SHAPES, STRIDE, buildShapes } from './shapes.ts'
 
 /** Radius of the cursor's hole in the particles, in CSS px. */
 export const REPEL_PX = 70
+
+const RM_STAR = STARS.findIndex((s) => s.id === 'raremind')
 
 export type ParticleUniforms = ReturnType<typeof makeUniforms>
 
@@ -134,7 +136,13 @@ export function Particles({
     // The opening: before its character is typed, each particle waits in the background field;
     // as the typing sweeps past its x it flies into the line (with a slight curve on the way).
     const fieldW = u.from[0]!
-    const sx = P[0]!.x.add(seed.mul(0.6))
+    // Background-only particles (B1.w) have no place in the line: they fade out as the typing
+    // passes a random point along it, instead of flying in.
+    const sx = mix(
+      P[0]!.x.add(seed.mul(0.6)),
+      hash(instanceIndex.add(53)).mul(LINE_W).add(LINE_X0),
+      B1.w,
+    )
     const arrive = smoothstep(sx.sub(2.5), sx, u.sweepX) // lands as the caret reaches it
     const inFlight = sin(arrive.mul(Math.PI)).mul(fieldW)
     // Field position rides in the bind buffer (vertex inputs are capped at 16); brightness and
@@ -200,7 +208,15 @@ export function Particles({
     const round = smoothstep(0.5, 0.15, length(uv().sub(vec2(0.5))))
     const c = mix(fromCol, cb, ti)
     m.colorNode = vec4(c.rgb, 1)
-    m.opacityNode = c.a.mul(round).mul(u.opacity)
+    // RareMind's frame shrinking into its star (or growing out of it): its particles dim while
+    // they travel, so the dense script module reads as a haze, not a bright streak.
+    const rmStar = float(1)
+      .sub(step(0.5, B0.x.sub(RM_STAR).abs()))
+      .mul(float(1).sub(step(0.5, B0.y.sub(RM_STAR).abs())))
+    const projGalaxy = u.from[2]!.mul(u.to[3]!).add(u.from[3]!.mul(u.to[2]!))
+    const moving = smoothstep(0, 0.08, ti).mul(float(1).sub(smoothstep(0.93, 1, ti)))
+    const travelDim = float(1).sub(moving.mul(0.85).mul(rmStar).mul(projGalaxy))
+    m.opacityNode = c.a.mul(round).mul(u.opacity).mul(travelDim)
 
     const s = new Sprite(m)
     s.count = count

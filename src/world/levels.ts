@@ -26,7 +26,7 @@ export const CENTERS: Record<LevelId, number> = {
 
 const centers = LEVELS.map((l) => CENTERS[l])
 /** Half-width of the still zone around each rest point. */
-const HOLD = 0.02
+export const HOLD = 0.02
 
 export const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v)
 export const remap = (v: number, a: number, b: number) => clamp01((v - a) / (b - a))

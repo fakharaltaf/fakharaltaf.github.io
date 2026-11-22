@@ -41,7 +41,7 @@ import { MAX_LETTERS, grab, letterXforms, letters, starOffsets } from './physics
 import { Render } from './Render.tsx'
 import { TIERS, decideTier, qualityHeld, useQuality } from '../systems/quality.ts'
 import { stats } from '../systems/stats.ts'
-import { dive, emitFrame, land, swapLift, swapView, tick, view, zoom } from './zoom.ts'
+import { dive, emitFrame, rmForm, swapLift, swapView, tick, view, zoom } from './zoom.ts'
 import { BROWSE } from './browse-version.ts'
 
 const CAM_Z = 10
@@ -143,7 +143,6 @@ function Scene({ particleCount }: { particleCount: number }) {
       }
       cam = blendCam(cam, inside, dive.value)
     }
-    if (land.active) cam = rest.project
     const s = VIEW_H / cam.height
     view.focus = cam.focus
     view.height = cam.height
@@ -156,7 +155,10 @@ function Scene({ particleCount }: { particleCount: number }) {
     // from its window (the window is placed on the z = 0 plane). Out at the galaxy it's 3D.
     // Depth never grows beyond what the galaxy itself has: zoomed in closer than that, a star's
     // depth would carry it past the camera (particles streaking across the screen).
-    const depthScale = Math.min(s, VIEW_H / rest.constellation.height) * (1 - dive.value)
+    const depthScale =
+      Math.min(s, VIEW_H / rest.constellation.height) *
+      (1 - dive.value) *
+      Math.min(1, Math.max(0, f.chain - 3)) // flat up to the project level, so nothing shifts there
     g.scale.set(s, s, depthScale)
     g.position.set(-cam.focus[0] * s, -cam.focus[1] * s, 0)
 
@@ -187,7 +189,7 @@ function Scene({ particleCount }: { particleCount: number }) {
 
     // Particles.
     const unitsPerPx = cam.height / size.height
-    u.opacity.value = f.particles * (1 - 0.6 * dive.value * (1 - swapLift()))
+    u.opacity.value = f.particles * (1 - 0.6 * dive.value * (1 - swapLift()) * (1 - rmForm.v))
     for (let i = 0; i < u.stars.array.length; i++)
       (u.stars.array[i] as Vector4).set(
         starOffsets[i * 3]!,
@@ -214,7 +216,7 @@ function Scene({ particleCount }: { particleCount: number }) {
     if (BROWSE === 'c') {
       const sv = swapView()
       const k = STARS.findIndex((st) => st.id === sv.id)
-      u.frameStar.value = sv.id && sv.id !== 'raremind' && !land.active ? k : -1
+      u.frameStar.value = sv.id && sv.id !== 'raremind' ? k : -1
       // Gather over the last 40% of a flight, scatter over the first 35%, like RareMind's frame.
       const t = dive.swap
       const w = !dive.from ? 1 : t < 0.5 ? 1 - Math.min(1, t / 0.35) : Math.max(0, (t - 0.6) / 0.4)

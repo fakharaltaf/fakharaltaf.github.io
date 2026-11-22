@@ -140,7 +140,12 @@ export function buildShapes(n: number, portrait: boolean) {
   // script's own row, so its particles don't move). The script then flies out of it.
   const slugY = rowY(SLUG_ROW)
   const line = code.filter((q) => Math.abs(q.y - slugY) < LH / 2)
-  const sL = s0.map(() => fromPixels(line, 1.3, 0.5))
+  const sL0 = s0.map(() => fromPixels(line, 1.3, 0.5))
+  // Where each particle waits as background before the line is typed (version c opening).
+  const field = Array.from({ length: n }, () => [
+    LINE_X0 - 24 + rnd() * (LINE_W + 48),
+    (rnd() * 2 - 1) * 20,
+  ])
 
   // 1: the project: the live demo's screen on top, the modules that run it along the bottom,
   // and the script as one of them, bottom-left, exactly where it already was.
@@ -208,7 +213,7 @@ export function buildShapes(n: number, portrait: boolean) {
     ],
   ])
   // The first 18% of particles keep their script position: the script stays put as a module.
-  let s1 = s1Pre.map((p, i) => (i < n * 0.18 ? s0[i]! : p))
+  const s1 = s1Pre.map((p, i) => (i < n * 0.18 ? s0[i]! : p))
 
   // 2: the constellation. Stars + threads for every pair of projects that share a skill.
   const S = FRAME.w * 1.3
@@ -258,14 +263,41 @@ export function buildShapes(n: number, portrait: boolean) {
     ],
   ])
 
-  // The project level shows RareMind's threads too, already where they'll be in the galaxy, so
-  // it sits in the galaxy like every other project, and those particles don't move later.
+  // RareMind's frame is made of RareMind's own star. The first K particles are RareMind's: the
+  // line, the script, its frame, and in the galaxy its star (faint, so the star doesn't outshine
+  // the others). The rest are the galaxy: invisible through the opening, already in place at the
+  // project level (its threads run behind the frame), and still between project and galaxy.
+  // So zooming out, or browsing away, the frame collapses into its star, as every project does.
+  const K = Math.floor(n * 0.5)
   const RM = STARS.findIndex((st) => st.id === 'raremind')
-  s1 = s1.map((p, i) => {
-    const q = s2[i]!
-    const rmThread = q.sa !== q.sb && (q.sa === RM || q.sb === RM)
-    return i >= n * 0.18 && rmThread ? { ...q, sa: undefined, sb: undefined } : p
-  })
+  const hm = STARS[RM]!.pos
+  const boost = (p: P, k: number): P => ({ ...p, a: Math.min(1, p.a * k) })
+  for (let i = 0; i < n; i++) {
+    if (i < K) {
+      const core = rnd() < 0.42
+      const sd = core ? 0.018 * S : 0.09 * S
+      s2[i] = {
+        sa: RM,
+        sb: RM,
+        st: 0,
+        x: hm[0] + gauss() * sd,
+        y: hm[1] + gauss() * sd,
+        z: hm[2] + gauss() * sd,
+        size: core ? 2.2 : 1.1,
+        c: core ? ink : anchor,
+        a: core ? 0.1 : 0.06,
+      }
+      s0[i] = boost(s0[i]!, 1.6)
+      s1[i] = i < n * 0.18 ? s0[i]! : boost(s1[i]!, 1.5) // the script slot stays put
+      sL0[i] = boost(sL0[i]!, 1.6)
+    } else {
+      s2[i] = boost(s2[i]!, 1.6) // half as many particles draw the galaxy: make each brighter
+      s1[i] = { ...s2[i]! }
+      s0[i] = { ...s2[i]!, a: 0 }
+      sL0[i] = { ...s2[i]!, x: field[i]![0]!, y: field[i]![1]!, z: 0, a: 0 }
+    }
+  }
+  const sL = sL0
 
   // 3: the person. The constellation shrinks into a map pin's head; the name assembles beside it.
   const d = Math.hypot(PIN_TIP[0] - PIN_HEAD[0], PIN_TIP[1] - PIN_HEAD[1])
@@ -330,7 +362,8 @@ export function buildShapes(n: number, portrait: boolean) {
     return glyphs.indexOf(k)
   }
   const s3 = s2.map((p, i): P => {
-    if (i < n * 0.45) {
+    // Pin head: the galaxy particles (a miniature constellation). Outline and name: the rest.
+    if (i >= n * 0.55) {
       return {
         ...p,
         x: PIN_HEAD[0] + (p.x - PIN_HEAD[0]) * PIN_SHRINK,
@@ -338,7 +371,7 @@ export function buildShapes(n: number, portrait: boolean) {
         z: p.z * PIN_SHRINK,
       }
     }
-    if (i < n * 0.63) return { ...pinP(), sa: -1 }
+    if (i >= n * 0.37) return { ...pinP(), sa: -1 }
     const q = fromPixels(name, 1.9)
     return { ...q, c: ink, sa: -1, letter: letterOf(q.x) }
   })
@@ -355,7 +388,7 @@ export function buildShapes(n: number, portrait: boolean) {
 
   const pos = new Float32Array(n * STRIDE)
   const color = new Float32Array(n * STRIDE)
-  // Bindings: (starA, starB, t, inPinHead) and (letter, fieldX, fieldY, 0). -1 means unbound.
+  // Bindings: (starA, starB, t, inPinHead) and (letter, fieldX, fieldY, backgroundOnly). -1 = unbound.
   const bind = new Float32Array(n * 8)
   s2.forEach((p, i) => {
     bind[i * 8] = p.sa ?? -1
@@ -364,8 +397,9 @@ export function buildShapes(n: number, portrait: boolean) {
     bind[i * 8 + 3] = s3[i]!.sa !== -1 ? 1 : 0
     bind[i * 8 + 4] = s3[i]!.letter ?? -1
     // Version c: where this particle waits, as background, until its character is typed.
-    bind[i * 8 + 5] = LINE_X0 - 24 + rnd() * (LINE_W + 48)
-    bind[i * 8 + 6] = (rnd() * 2 - 1) * 20
+    bind[i * 8 + 5] = field[i]![0]!
+    bind[i * 8 + 6] = field[i]![1]!
+    bind[i * 8 + 7] = i >= K ? 1 : 0 // background only: fades as the typing passes, never joins the line
   })
   ;[sL, s0, s1, s2, s3, s4].forEach((shape, k) =>
     shape.forEach((p, i) => {

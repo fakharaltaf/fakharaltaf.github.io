@@ -1,10 +1,10 @@
 // URL hash <-> zoom. Every level and project has a hash; loading one flies there; back/forward work.
 // Arriving at a level by zooming replaces the hash (no history spam); deliberate jumps push.
 import { projects } from '../content/projects.ts'
-import { CENTERS, type LevelId, isLevelId, levelAt } from './levels.ts'
+import { CENTERS, HOLD, type LevelId, isLevelId, levelAt } from './levels.ts'
 import { TOUR } from './layout.ts'
 import { BROWSE } from './browse-version.ts'
-import { dive, diveInto, flyTo, land, onFrame, undive, zoom } from './zoom.ts'
+import { dive, diveInto, flyTo, onFrame, rmForm, undive, zoom } from './zoom.ts'
 
 export function targetForHash(hash: string): number | null {
   const id = decodeURIComponent(hash.replace(/^#/, ''))
@@ -40,65 +40,79 @@ export function browseProjects(dir: 1 | -1): boolean {
   const current =
     dive.id && dive.target === 1 ? dive.id : levelAt(zoom.target) === 'project' ? 'raremind' : null
   if (!current) return false
-  if (dive.from || leaving) return true // mid-flight: finish this trip first
+  if (dive.from || forming) return true // mid-flight: finish this trip first
   const i = TOUR.indexOf(current)
   const next = TOUR[(i + dir + TOUR.length) % TOUR.length]!
   history.replaceState(null, '', `#${next}`) // browsing isn't a trail of history entries
   // Browsing is always a flight between stars, RareMind's included.
-  // (b: RareMind is browsed like any other project: its star, no frame.)
-  if (dive.id)
-    return (diveInto(next), next === 'raremind' && BROWSE !== 'b' && landOnRareMind(), true)
-  // On the RareMind level itself: first let its frame dissolve into its star (zoom out with
-  // the camera held on RareMind's screen), then fly from there.
-  leaving = true
-  dive.id = 'raremind'
-  dive.target = 1
-  dive.value = 1 // the camera holds on this exact view from the first frame (no lurch)
-  dive.velocity = 0
-  morphZoom(CENTERS.project, CENTERS.constellation, () => {
-    leaving = false
-    diveInto(next)
-  })
+  const onLevel = !dive.id
+  if (onLevel) {
+    // On the RareMind level: start from a dive at RareMind's star, which has this exact view.
+    dive.id = 'raremind'
+    dive.target = dive.value = 1
+    dive.velocity = 0
+  }
+  diveInto(next)
+  // RareMind's frame shrinks into its star as the flight leaves, and grows out of it as the flight
+  // arrives, in step with the demos, like every other project. (b: RareMind has no frame.)
+  if (onLevel) shapeRareMind('leave')
+  if (next === 'raremind' && BROWSE !== 'b') shapeRareMind('arrive')
   return true
 }
-let leaving = false
+let forming = false
 
-/** RareMind's frame forming or dissolving takes as long as any other project's frame does. */
-const MORPH_MS = 700
+/** The share of the flight RareMind's frame takes to dissolve (start) or form (end). */
+const LEAVE_UNTIL = 0.4
+const ARRIVE_FROM = 0.55
 
-/**
- * Move the zoom (and so the particles' shape) from one level to the next at a set pace while the
- * camera is held, instead of on the spring, which raced through it in a few frames.
- */
-function morphZoom(from: number, to: number, done: () => void) {
-  const start = performance.now()
-  const unsub = onFrame(() => {
-    const k = Math.min(1, (performance.now() - start) / MORPH_MS)
-    zoom.value = zoom.target = from + (to - from) * k
-    zoom.velocity = 0
-    zoom.lastInput = performance.now()
-    if (k < 1) return
-    unsub()
-    done()
-  })
+/** Zoom position whose particle shape is that much frame (1) or star (0). The camera ignores it
+ * during a flight, so it only drives the morph. Skips the level's hold so nothing pauses. */
+function formAt(k: number) {
+  if (k >= 1) return CENTERS.project
+  if (k <= 0) return CENTERS.constellation
+  const a = CENTERS.project + HOLD
+  const b = CENTERS.constellation - HOLD
+  return a + (b - a) * (1 - k)
 }
 
-/**
- * After the flight to RareMind's star, become the RareMind level itself (the same screen you
- * get by zooming in): the camera stays put while the star's particles grow into its frame.
- */
-function landOnRareMind() {
-  leaving = true // no browsing until it's landed
-  const wait = onFrame(() => {
-    if (dive.from || dive.id !== 'raremind' || dive.value < 0.98) return
-    wait()
-    land.active = true
+function setForm(k: number) {
+  rmForm.v = k
+  zoom.value = zoom.target = formAt(k)
+  zoom.velocity = 0
+  zoom.lastInput = performance.now()
+}
+
+function shapeRareMind(way: 'leave' | 'arrive') {
+  forming = true
+  const target = dive.id
+  const unsub = onFrame(() => {
+    if (dive.id !== target) {
+      // Interrupted (backed out, another browse): let go.
+      unsub()
+      forming = false
+      rmForm.v = 0
+      return
+    }
+    const t = dive.from ? dive.swap : 1
+    if (way === 'leave') {
+      const k = Math.max(0, 1 - t / LEAVE_UNTIL)
+      setForm(k)
+      if (k > 0) return
+      rmForm.v = 0
+      unsub()
+      forming = false
+      return
+    }
+    setForm(Math.min(1, Math.max(0, (t - ARRIVE_FROM) / (1 - ARRIVE_FROM))))
+    if (dive.from || dive.value < 0.98) return
+    // Landed with the frame formed: become the RareMind level (identical view), so it's the same
+    // screen you get by zooming in.
+    unsub()
     dive.id = null
     dive.value = dive.target = dive.velocity = 0
-    morphZoom(CENTERS.constellation, CENTERS.project, () => {
-      land.active = false
-      leaving = false
-    })
+    setForm(1)
+    rmForm.v = 0
+    forming = false
   })
 }
 

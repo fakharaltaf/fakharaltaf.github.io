@@ -20,9 +20,7 @@ export function frameAt(p: number) {
   // Shapes: 0 line, 1 script, 2 project, 3 constellation, 4 person, 5 outro.
   const seg = Math.min(4, Math.max(0, Math.floor(chain) - 1))
   // Every morph runs with its camera move, from the start, so you watch the particles travel.
-  // Project → galaxy: the frame finishes becoming the galaxy in the first half of the zoom,
-  // while the camera is still close, so the pull-back shows a settled galaxy, not streaks.
-  const segT = [t[1], t[2], remap(t[3], 0, 0.5), t[4], remap(t[5], 0, 0.8)][seg]!
+  const segT = [t[1], t[2], t[3], t[4], remap(t[5], 0, 0.8)][seg]!
 
   return {
     t,
