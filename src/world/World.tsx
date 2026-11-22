@@ -52,7 +52,6 @@ import {
   view,
   zoom,
 } from './zoom.ts'
-import { BROWSE } from './browse-version.ts'
 
 const CAM_Z = 10
 const FOV = 50
@@ -234,8 +233,8 @@ function Scene({ particleCount }: { particleCount: number }) {
     u.shimmer.value = rm ? 0 : unitsPerPx * 1.5
     // Where the caret is, continuously (not per character), so the flight is smooth.
     u.sweepX.value = LINE_X0 + (LINE_W + 1) * remap(f.t[0], 0.05, 0.85)
-    // Version c: the project you're in (or flying to) assembles its frame from its star.
-    if (BROWSE === 'c') {
+    // The project you're in (or flying to) assembles its frame from its star.
+    {
       const sv = swapView()
       const k = STARS.findIndex((st) => st.id === sv.id)
       u.frameStar.value = sv.id && sv.id !== 'raremind' ? k : -1

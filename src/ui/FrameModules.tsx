@@ -14,8 +14,7 @@ import {
   frameFor,
   projectBox,
 } from '../world/layout.ts'
-import { BROWSE } from '../world/browse-version.ts'
-import { dive, onFrame, view } from '../world/zoom.ts'
+import { onFrame, view } from '../world/zoom.ts'
 
 const SCRIPT_SLOT: Box = { ...SCRIPT_BOX, w: SCRIPT_BOX.w * 1.3, h: SCRIPT_BOX.h * 1.8 }
 
@@ -30,9 +29,7 @@ export function FrameModules() {
     const boxes = [...el.children] as HTMLElement[]
     return onFrame((p) => {
       const { id, fade } = demoFade(p)
-      // Only where there's a particle frame to sit in: RareMind's level (any frame, with ?browse=c).
-      const framed = BROWSE === 'c' || (project.id === 'raremind' && !dive.id)
-      const shown = framed && id === project.id && !useDemos.getState().expanded ? fade : 0
+      const shown = id === project.id && !useDemos.getState().expanded ? fade : 0
       el.style.opacity = String(Math.round(shown * 100) / 100)
       el.style.visibility = shown > 0 ? 'visible' : 'hidden'
       if (!shown) return

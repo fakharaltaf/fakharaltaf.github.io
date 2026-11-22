@@ -1,4 +1,4 @@
-// Version c: a project's frame (outline, header, screen, modules, script slot, wires) as line
+// A project's frame (outline, header, screen, modules, script slot, wires) as line
 // segments relative to its star, cut into equal-length pieces so a random piece is a fair sample.
 import { type Box, FRAME, SCREEN, SCRIPT_BOX, frameBox } from './layout.ts'
 

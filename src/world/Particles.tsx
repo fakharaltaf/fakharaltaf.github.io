@@ -38,7 +38,6 @@ import {
   vec4,
 } from 'three/tsl'
 import { brand, palette } from '../styles/tokens.ts'
-import { FX } from './browse-version.ts'
 import { LINE_W, LINE_X0, PIN_SHRINK, STARS } from './layout.ts'
 import { FRAME_PIECES, framePieces } from './frames.ts'
 import { MAX_LETTERS, letters } from './physicsState.ts'
@@ -62,14 +61,14 @@ export function makeUniforms() {
     pointer: uniform(new Vector3(1e9, 1e9, 0)), // NDC (x, y)
     halfPx: uniform(new Vector3(1, 1, 0)), // half the canvas in CSS px (x, y)
     radius: uniform(0), // repulsion radius, universe units
-    sweepX: uniform(1e9), // version c: universe x the typing has swept to (runs a little past the end)
+    sweepX: uniform(1e9), // universe x the typing has swept to (runs a little past the end)
     sizeScale: uniform(1),
     /** Physics: per-star offsets and per-letter (dx, dy, angle). Written every frame. */
     stars: uniformArray(
       STARS.map(() => new Vector4()),
       'vec4',
     ),
-    /** Version c: the frame a star's particles form when you're inside its project. */
+    /** The frame a star's particles form when you're inside its project. */
     frameStar: uniform(-1), // which star (index), -1 = none
     frameW: uniform(0), // 0 = all star, 1 = all frame
     /** Zooming from a project into the script: the star the script's particles set out from. */
@@ -172,7 +171,7 @@ export function Particles({
     )
     const starW = w2.add(w3.mul(B0.w).mul(PIN_SHRINK)).mul(step(0, B0.x))
     base = base.add(starOff.mul(starW))
-    // Version c: inside a project, nearly all of its star's particles fly out to its frame.
+    // Inside a project, nearly all of its star's particles fly out to its frame.
     const ownStar = step(0, B0.x).mul(float(1).sub(step(0.5, B0.x.sub(B0.y).abs())))
     const isFrameStar = float(1).sub(step(0.5, B0.x.sub(u.frameStar).abs()))
     // RareMind's half of the particles (B1.w = 0) waits in the galaxy as a faint copy of its
@@ -188,8 +187,8 @@ export function Particles({
       .add(lent)
       .min(1)
     const piece = at(u.framePieces, int(hash(instanceIndex.add(37)).mul(FRAME_PIECES).floor()))
-    // The frame's dots drift slowly along its lines, round the window (off with ?fx=off).
-    const along = fract(hash(instanceIndex.add(41)).add(time.mul(FX ? 0.06 : 0)))
+    // The frame's dots drift slowly along its lines, round the window.
+    const along = fract(hash(instanceIndex.add(41)).add(time.mul(0.06)))
     const home = at(u.starHome, int(max(u.frameStar, 0))).xy
     const homeOff = at(u.stars, int(max(u.frameStar, 0))).xy
     const onFrame = home.add(mix(piece.xy, piece.zw, along)).add(homeOff)
@@ -246,8 +245,8 @@ export function Particles({
     m.sizeAttenuation = false
     m.positionNode = p
     // On the frame, a star's particles become a thin dotted line, like RareMind's frame; a few
-    // become a faint wide glow along it (off with ?fx=off).
-    const glow = step(hash(instanceIndex.add(43)), float(FX ? 0.12 : 0))
+    // become a faint wide glow along it.
+    const glow = step(hash(instanceIndex.add(43)), float(0.12))
     m.sizeNode = mix(mix(fromSize, b.w, ti), mix(float(1.2), float(7), glow), go).mul(u.sizeScale)
     const round = smoothstep(0.5, 0.15, length(uv().sub(vec2(0.5))))
     const muted = new Color(palette.dark.muted)

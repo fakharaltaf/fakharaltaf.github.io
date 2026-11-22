@@ -142,7 +142,7 @@ export function buildShapes(n: number, portrait: boolean) {
   const slugY = rowY(SLUG_ROW)
   const line = code.filter((q) => Math.abs(q.y - slugY) < LH / 2)
   const sL0 = s0.map(() => fromPixels(line, 1.3, 0.5))
-  // Where each particle waits as background before the line is typed (version c opening).
+  // Where each particle waits as background before the line is typed.
   const field = Array.from({ length: n }, () => [
     LINE_X0 - 24 + rnd() * (LINE_W + 48),
     (rnd() * 2 - 1) * 20,
@@ -371,7 +371,7 @@ export function buildShapes(n: number, portrait: boolean) {
     bind[i * 8 + 2] = p.st ?? 0
     bind[i * 8 + 3] = s3[i]!.sa !== -1 ? 1 : 0
     bind[i * 8 + 4] = s3[i]!.letter ?? -1
-    // Version c: where this particle waits, as background, until its character is typed.
+    // Where this particle waits, as background, until its character is typed.
     bind[i * 8 + 5] = field[i]![0]!
     bind[i * 8 + 6] = field[i]![1]!
     bind[i * 8 + 7] = i >= K ? 1 : 0 // background only: fades as the typing passes, never joins the line

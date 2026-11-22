@@ -3,7 +3,6 @@
 import { projects } from '../content/projects.ts'
 import { CENTERS, HOLD, type LevelId, isLevelId, levelAt } from './levels.ts'
 import { TOUR } from './layout.ts'
-import { BROWSE } from './browse-version.ts'
 import {
   SCRIPT_TRIP,
   dive,
@@ -64,9 +63,9 @@ export function browseProjects(dir: 1 | -1): boolean {
   }
   diveInto(next)
   // RareMind's frame shrinks into its star as the flight leaves, and grows out of it as the flight
-  // arrives, in step with the demos, like every other project. (b: RareMind has no frame.)
+  // arrives, in step with the demos, like every other project.
   if (onLevel) shapeRareMind('leave')
-  if (next === 'raremind' && BROWSE !== 'b') shapeRareMind('arrive')
+  if (next === 'raremind') shapeRareMind('arrive')
   return true
 }
 let forming = false
@@ -77,11 +76,6 @@ let forming = false
  */
 diveHooks.zoomIn = () => {
   if (!dive.id || dive.target !== 1 || dive.from || forming) return
-  if (BROWSE === 'b' && dive.id === 'raremind') {
-    undive()
-    flyTo(CENTERS.script)
-    return
-  }
   diveInto(SCRIPT_TRIP)
   shapeRareMind('arrive', CENTERS.script)
 }
