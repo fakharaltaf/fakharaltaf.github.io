@@ -58,7 +58,11 @@ function ProjectCard() {
   const scan = useFirstArrivalScan()
   return (
     <section ref={ref} className="fade card" aria-labelledby="pj-title">
-      <p className="kicker">{levels.project.srHeading}</p>
+      <p className="kicker">
+        {levels.project.srHeading}
+        {/* Projects without a live site run a built-in demo: say so here, not over the demo. */}
+        {!p.live && <span className="kicker-demo"> · {levels.project.demoKicker}</span>}
+      </p>
       <h2 id="pj-title" className={p.title.length > 24 ? 'long' : undefined}>
         {p.title}
       </h2>

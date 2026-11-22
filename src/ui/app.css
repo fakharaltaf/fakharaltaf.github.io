@@ -847,6 +847,25 @@ body {
   border: 1px solid var(--line);
   pointer-events: none;
 }
+/* In the window the card says it's a demo; the label only shows full screen, where the card
+   is hidden. */
+.demo-host:not(.expanded) .demo-badge {
+  display: none;
+}
+.card .kicker-demo {
+  color: var(--muted);
+}
+/* Each demo's small print stops short of the buttons in the bottom-right corner. */
+/* (Claude Trace's sits in its narrow sidebar, under the button: it moves up instead.) */
+.demo-host:not(.expanded) .ct-sim {
+  padding-bottom: 2.75rem;
+}
+.demo-host :is(.mo-note, .sv-sim, .lna-sim, .rm-sim) {
+  padding-right: 8.5rem;
+}
+.demo-host.expanded :is(.mo-note, .sv-sim, .lna-sim, .rm-sim) {
+  padding-right: 22rem;
+}
 .demo-host.expanded .demo-badge {
   right: 10.2rem; /* "Back to the world" is wider than "Full screen" */
 }

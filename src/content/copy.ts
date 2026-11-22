@@ -117,6 +117,7 @@ export const levels = {
       hint: '← → or swipe',
     },
     demoBadge: 'Demo · not the real app',
+    demoKicker: 'a demo, not the real app',
     viewDemo: 'Demo',
     viewLive: 'Real site',
     liveTitle: (title: string) => `${title}, the real site`,
