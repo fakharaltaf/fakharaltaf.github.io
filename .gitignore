@@ -5,3 +5,7 @@ bin/
 test-results/
 playwright-report/
 *.log
+
+# Only the licensed song is published; anything else dropped in here stays local.
+public/music/*
+!public/music/the-man-who-sold-the-world.mp3
