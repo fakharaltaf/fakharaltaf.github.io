@@ -89,6 +89,9 @@ test('Agrarian shows the real game: a preview in the world, playable full screen
 })
 
 test('a live site that never answers falls back to a link', async ({ page }) => {
+  // A laptop-sized window: CI's small default makes the demo window a compact preview (one
+  // Full screen button) that hides this message until opened.
+  await page.setViewportSize({ width: 1280, height: 800 })
   await ready(page, '/#agrarian')
   await page.unroute('https://fakharaltaf.github.io/agrarian/**')
   await page.route('https://fakharaltaf.github.io/agrarian/**', () => {}) // hang forever
