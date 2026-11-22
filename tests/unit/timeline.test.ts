@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { CENTERS } from '../../src/world/levels'
 import { LINE } from '../../src/world/layout'
 import { frameAt } from '../../src/world/timeline'
@@ -49,6 +49,14 @@ describe('project catalogue', () => {
     const { dive, emitFrame, zoom } = await import('../../src/world/zoom')
     const { projects } = await import('../../src/content/projects')
     const at = () => (dive.id && dive.target === 1 ? dive.id : 'raremind')
+    // RareMind's frame forms and dissolves over a set time: jump the clock past it.
+    let clock = 0
+    vi.spyOn(performance, 'now').mockImplementation(() => clock)
+    const finishMorph = () => {
+      emitFrame(zoom.value) // starts timing
+      clock += 1000
+      emitFrame(zoom.value) // done
+    }
 
     zoom.target = CENTERS.cursor
     expect(browseProjects(1)).toBe(false)
@@ -60,9 +68,7 @@ describe('project catalogue', () => {
       // Leaving the RareMind level: its frame dissolves into its star first, then the flight.
       if (i === 0) {
         expect(at()).toBe('raremind')
-        dive.value = 1
-        zoom.value = CENTERS.constellation
-        emitFrame(zoom.value)
+        finishMorph()
       }
       // As if the camera arrived (a step mid-flight is ignored on purpose).
       dive.value = dive.target
@@ -76,13 +82,10 @@ describe('project catalogue', () => {
     // Back at RareMind: it lands on its own level (camera held while the star becomes its frame).
     emitFrame(zoom.value) // the flight has arrived: landing starts
     expect(dive.id).toBe(null)
-    expect(zoom.target).toBe(CENTERS.project)
-    zoom.value = CENTERS.project
-    emitFrame(zoom.value) // landed
+    finishMorph() // the star has grown into RareMind's frame
+    expect(zoom.value).toBe(CENTERS.project)
     expect(browseProjects(-1)).toBe(true)
-    dive.value = 1
-    zoom.value = CENTERS.constellation
-    emitFrame(zoom.value) // RareMind's frame has dissolved into its star: off it goes
+    finishMorph() // RareMind's frame has dissolved into its star: off it goes
     expect(at()).toBe(TOUR.at(-1)!)
     // Mid-flight, another step is swallowed until the trip finishes.
     dive.from = TOUR.at(-2)!

@@ -55,16 +55,33 @@ export function browseProjects(dir: 1 | -1): boolean {
   dive.target = 1
   dive.value = 1 // the camera holds on this exact view from the first frame (no lurch)
   dive.velocity = 0
-  flyTo(CENTERS.constellation)
-  const unsub = onFrame(() => {
-    if (dive.value < 0.98 || Math.abs(zoom.value - CENTERS.constellation) > 0.01) return
-    unsub()
+  morphZoom(CENTERS.project, CENTERS.constellation, () => {
     leaving = false
     diveInto(next)
   })
   return true
 }
 let leaving = false
+
+/** RareMind's frame forming or dissolving takes as long as any other project's frame does. */
+const MORPH_MS = 700
+
+/**
+ * Move the zoom (and so the particles' shape) from one level to the next at a set pace while the
+ * camera is held, instead of on the spring, which raced through it in a few frames.
+ */
+function morphZoom(from: number, to: number, done: () => void) {
+  const start = performance.now()
+  const unsub = onFrame(() => {
+    const k = Math.min(1, (performance.now() - start) / MORPH_MS)
+    zoom.value = zoom.target = from + (to - from) * k
+    zoom.velocity = 0
+    zoom.lastInput = performance.now()
+    if (k < 1) return
+    unsub()
+    done()
+  })
+}
 
 /**
  * After the flight to RareMind's star, become the RareMind level itself (the same screen you
@@ -78,11 +95,7 @@ function landOnRareMind() {
     land.active = true
     dive.id = null
     dive.value = dive.target = dive.velocity = 0
-    zoom.target = CENTERS.project
-    zoom.lastInput = performance.now()
-    const done = onFrame(() => {
-      if (Math.abs(zoom.value - CENTERS.project) > 0.004) return
-      done()
+    morphZoom(CENTERS.constellation, CENTERS.project, () => {
       land.active = false
       leaving = false
     })

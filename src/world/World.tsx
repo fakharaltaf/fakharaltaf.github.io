@@ -154,8 +154,9 @@ function Scene({ particleCount }: { particleCount: number }) {
     if (!g) return
     // Inside a project the galaxy goes flat: zoomed right in, a star's depth would throw it far
     // from its window (the window is placed on the z = 0 plane). Out at the galaxy it's 3D.
-    // (Also flat up to the project level, whose particles now include RareMind's threads.)
-    const depthScale = s * (1 - dive.value) * Math.min(1, Math.max(0, f.chain - 3))
+    // Depth never grows beyond what the galaxy itself has: zoomed in closer than that, a star's
+    // depth would carry it past the camera (particles streaking across the screen).
+    const depthScale = Math.min(s, VIEW_H / rest.constellation.height) * (1 - dive.value)
     g.scale.set(s, s, depthScale)
     g.position.set(-cam.focus[0] * s, -cam.focus[1] * s, 0)
 
@@ -214,7 +215,10 @@ function Scene({ particleCount }: { particleCount: number }) {
       const sv = swapView()
       const k = STARS.findIndex((st) => st.id === sv.id)
       u.frameStar.value = sv.id && sv.id !== 'raremind' && !land.active ? k : -1
-      u.frameW.value = dive.value * sv.fade
+      // Gather over the last 40% of a flight, scatter over the first 35%, like RareMind's frame.
+      const t = dive.swap
+      const w = !dive.from ? 1 : t < 0.5 ? 1 - Math.min(1, t / 0.35) : Math.max(0, (t - 0.6) / 0.4)
+      u.frameW.value = dive.value * w
     }
     u.radius.value = rm || !pointer.active || grab.active ? 0 : unitsPerPx * REPEL_PX
     u.pointer.value.set(pointer.x, pointer.y, 0) // compared on screen, in the shader
