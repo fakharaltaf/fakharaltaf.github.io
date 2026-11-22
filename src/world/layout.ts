@@ -152,17 +152,28 @@ const HUD_PX = { landscape: 200, portrait: 72 } // landscape: the .hud column's 
  * Fit a box into the part of the screen that's free: left of the HUD rail, right of the DOM
  * card on landscape (above it on portrait), and above `bottomPx` of captions if given.
  */
-export function fit(box: Box, view: View, card: boolean, margin = 1.12, bottomPx = 0): Cam {
+export function fit(
+  box: Box,
+  view: View,
+  card: boolean,
+  margin = 1.12,
+  bottomPx = 0,
+  centred = false, // keep the same space on both sides, so the box sits in the screen's centre
+): Cam {
   const portrait = view.aspect < 1
+  centred &&= !portrait // portrait has no room to spare: it keeps the plain fit
   const right = 1 - HUD_PX[portrait ? 'portrait' : 'landscape'] / view.vw
-  const left = card && !portrait ? 0.4 : 0.04 // landscape card: 6vw + min(30rem, 32vw)
+  const left = centred ? 1 - right : card && !portrait ? 0.4 : 0.04 // landscape card: 6vw + min(30rem, 32vw)
   const bottom = bottomPx / view.vh
   const usableW = right - left
-  const usableH = card && portrait ? 0.42 : 1 - bottom
+  const usableH = card && portrait ? 0.42 : 1 - bottom * (centred ? 2 : 1)
   const height = Math.max((box.h * margin) / usableH, (box.w * margin) / (view.aspect * usableW))
   const width = height * view.aspect
   // Look away from the box by as much as the free band's centre is off the screen's centre.
-  const focus: Vec2 = [box.x - ((left + right) / 2 - 0.5) * width, box.y - (bottom / 2) * height]
+  const focus: Vec2 = [
+    box.x - ((left + right) / 2 - 0.5) * width,
+    box.y - (centred ? 0 : bottom / 2) * height,
+  ]
   // Portrait card: content lives in the band between the skip link and the card.
   if (card && portrait) focus[1] = box.y - height * 0.21
   return { focus, height }
@@ -188,7 +199,8 @@ export function restCams(view: View): Record<LevelId, Cam> {
       : fit(SCRIPT_BOX, view, false, 1.15),
     project: fit(FRAME, view, true, 1.08),
     // Its two-line caption sits bottom-left; keep every star above it.
-    constellation: fit(CONSTELLATION, view, false, 1.05, view.vh * 0.15 + 64),
+    // Centred, with room above and below for the caption in the corner.
+    constellation: fit(CONSTELLATION, view, false, 1.05, view.vh * 0.1 + 44, true),
     person,
     outro: { focus: [PIN_HEAD[0], PIN_HEAD[1]], height: person.height * 3 },
   }
