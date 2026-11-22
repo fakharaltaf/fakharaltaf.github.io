@@ -212,7 +212,9 @@ export async function startPhysics() {
           bodies[i]!.addForce({ x: k * dx, y: k * dy, z: k * dz }, true)
           bodies[j]!.addForce({ x: -k * dx, y: -k * dy, z: -k * dz }, true)
         }
-        if (grabbed >= 0) {
+        // Only once it's really a drag: a tap that opens the star mustn't yank it towards the
+        // pointer first, or it springs back and wobbles all through the dive.
+        if (grabbed >= 0 && dragged) {
           const b = bodies[grabbed]!
           const t = b.translation()
           const [ux, uy] = view.unproject(px, py, STARS[grabbed]!.pos[2])
