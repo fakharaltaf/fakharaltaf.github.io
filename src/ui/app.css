@@ -185,18 +185,28 @@ body {
   position: fixed;
   z-index: 5;
   right: max(0.5rem, env(safe-area-inset-right));
-  top: 50%;
-  translate: 0 -50%;
-  height: min(44vh, 20rem);
-  width: 9rem;
+  top: 4.5rem; /* under the top links */
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  width: 9.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   pointer-events: none;
 }
-.hud > ol {
+/* The rail takes whatever height is left, centred between the log and the sound controls. */
+.hud-rail {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 7rem;
+  max-height: 20rem;
+  margin-block: auto;
+}
+.hud-rail > ol {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.hud > ol > li {
+.hud-rail > ol > li {
   position: absolute;
   right: 0;
   top: calc(var(--y) * 100%);
@@ -259,9 +269,7 @@ body {
   opacity: 1;
 }
 .hud-foot {
-  position: absolute;
-  right: 4px;
-  top: calc(100% + 1rem);
+  margin-right: 4px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -341,11 +349,6 @@ body {
   }
   /* The HUD sits high, under the top rows and above the card; only its rail shows (labels
      on hover or focus), so the world can use all but a thin strip on the right. */
-  .hud {
-    top: calc(max(1rem, env(safe-area-inset-top)) + 7rem);
-    translate: none;
-    height: min(22vh, 11rem);
-  }
   .notch[aria-current]:not(:hover, :focus-visible) .notch-label {
     opacity: 0;
   }
@@ -502,52 +505,42 @@ body {
   }
 }
 
-/* ---- Tray: one line in the HUD column; the list opens beside it -------- */
+/* ---- Tray: the automation log, at the top of the HUD column ------------ */
 .tray {
   position: relative;
+  pointer-events: auto;
   text-align: right;
-  font: 400 0.75rem/1.5 var(--mono);
+  font: 400 0.6875rem/1.35 var(--mono);
   color: var(--muted);
 }
 .tray p {
   margin: 0;
 }
-/* Short labels for narrow screens; the wide label stays readable by screen readers. */
-.narrow-only {
+/* Wide screens: always open, in flow. (Narrow screens get a toggle; see below.) */
+.tray-toggle.btn {
   display: none;
 }
-.tray-toggle.btn {
-  min-height: 32px;
-  font-size: 0.6875rem;
-  color: var(--anchor-ink);
-}
-.tray .note,
-.tray-list {
-  position: absolute;
-  z-index: 7;
-  right: 0;
-  bottom: calc(100% + 0.5rem);
-  width: 9.5rem; /* inside the strip the HUD keeps free; never over the world */
-  background: var(--surface);
-  border: 1px solid var(--line);
-  white-space: normal;
-  text-align: left;
+.tray-list[hidden] {
+  display: block;
 }
 .tray .note {
-  padding: 0.5rem 0.65rem;
+  margin-bottom: 0.4rem;
   color: var(--ink);
   font: 600 0.8125rem/1.35 var(--sans);
 }
-.tray .note:empty,
-.tray-list[hidden] {
+.tray .note:empty {
   display: none;
 }
-.tray-list {
-  padding: 0.35rem 0.65rem;
+.tray .counter,
+.tray .name {
+  text-wrap: balance;
+}
+.tray .counter {
+  color: var(--anchor-ink);
+  margin-bottom: 0.2rem;
 }
 .tray .paused {
-  padding: 0.25rem 0;
-  font-size: 0.6875rem;
+  margin-bottom: 0.2rem;
 }
 .tray ul {
   list-style: none;
@@ -556,22 +549,24 @@ body {
 }
 .tray li {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.6875rem;
-  line-height: 1.3;
+  gap: 0.45rem;
+  min-height: 24px;
 }
 .tray .switch.btn {
-  background: transparent;
-  min-height: 32px;
-  min-width: 2.75rem;
-  justify-content: flex-end;
-  font-size: 0.6875rem;
-  color: var(--anchor-ink);
+  flex: none;
+  min-height: 0;
+  min-width: 2.6rem;
+  justify-content: center;
 }
 .tray li.off .switch.btn {
-  color: var(--muted);
+  background: var(--neutral);
+  color: #9aa6a2;
+}
+/* Short labels for narrow screens; the wide label stays readable by screen readers. */
+.narrow-only {
+  display: none;
 }
 .tray li.off .name {
   text-decoration: line-through;
@@ -584,13 +579,6 @@ body {
     right: 1rem;
     width: auto;
     max-height: 42vh;
-  }
-  /* Too narrow to open sideways: the list and notes drop below the toggle instead. */
-  .tray .note,
-  .tray-list {
-    bottom: auto;
-    top: calc(100% + 0.5rem);
-    width: 11rem;
   }
 }
 
@@ -1058,6 +1046,38 @@ kbd {
 
 /* Portrait overrides that must come after the base rules they change. */
 @media (max-aspect-ratio: 1/1) {
+  /* No room for an open log beside the content: it folds into a toggle, and opens as a
+     panel below it. The column sits high and short, above the card. */
+  .hud {
+    top: calc(max(1rem, env(safe-area-inset-top)) + 7rem);
+    bottom: auto;
+    gap: 0.5rem;
+  }
+  .hud-rail {
+    flex: none;
+    height: min(22vh, 11rem);
+    margin-block: 0;
+  }
+  .tray-toggle.btn {
+    display: inline-flex;
+    min-height: 32px;
+    font-size: 0.6875rem;
+    color: var(--anchor-ink);
+  }
+  .tray-list[hidden] {
+    display: none;
+  }
+  .tray .note,
+  .tray-list {
+    position: absolute;
+    z-index: 7;
+    right: 0;
+    top: calc(100% + 0.5rem);
+    width: 11rem;
+    padding: 0.5rem 0.65rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
   .narrow-only {
     display: inline;
   }

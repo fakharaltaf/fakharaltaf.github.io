@@ -23,29 +23,32 @@ export function Hud() {
   )
 
   return (
+    // One column down the right edge: the automation log, the zoom rail, then sound. Stacked
+    // in flow, so none of them can overlap another.
     <nav className="hud" aria-label={hud.label}>
-      <span className="hud-track" aria-hidden="true" />
-      <span className="hud-dot" ref={dot} aria-hidden="true" />
-      <ol>
-        {LEVELS.map((l) => (
-          <li key={l} style={{ '--y': CENTERS[l] } as React.CSSProperties}>
-            <button
-              type="button"
-              className="notch"
-              aria-label={hud.flyTo(levelName(l))}
-              aria-current={l === level ? 'step' : undefined}
-              onClick={() => navigate(l)}
-            >
-              <span className="notch-label" aria-hidden="true">
-                {levelName(l)}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ol>
+      <Tray />
+      <div className="hud-rail">
+        <span className="hud-track" aria-hidden="true" />
+        <span className="hud-dot" ref={dot} aria-hidden="true" />
+        <ol>
+          {LEVELS.map((l) => (
+            <li key={l} style={{ '--y': CENTERS[l] } as React.CSSProperties}>
+              <button
+                type="button"
+                className="notch"
+                aria-label={hud.flyTo(levelName(l))}
+                aria-current={l === level ? 'step' : undefined}
+                onClick={() => navigate(l)}
+              >
+                <span className="notch-label" aria-hidden="true">
+                  {levelName(l)}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ol>
+      </div>
       <div className="hud-foot">
-        {/* First, so its list opens upward over the rail, not over Sound. */}
-        <Tray />
         <button
           type="button"
           className="btn btn-quiet sound-toggle"

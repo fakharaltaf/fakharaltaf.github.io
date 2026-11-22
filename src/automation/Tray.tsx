@@ -68,8 +68,9 @@ export function Tray() {
             </span>
           </button>
           <div id={listId} className="tray-list" hidden={!open}>
+            <p className="counter">{automation.counter(count)}</p>
             {reduced && count > 0 && <p className="paused">{automation.pausedReducedMotion}</p>}
-            {/* Compact rows so the list fits in the HUD's strip instead of covering the world. */}
+            {/* Compact rows: the AUTO badge is the switch, so the log stays narrow. */}
             <ul>
               {listed.map((id) => {
                 const on = statuses[id] === 'automated'
@@ -79,13 +80,13 @@ export function Tray() {
                     <span className="name">{automation.names[id]}</span>
                     <button
                       type="button"
-                      className="btn btn-quiet switch"
+                      className="btn auto-badge switch"
                       aria-pressed={!on}
                       aria-label={`${automation.names[id]}: ${label}`}
                       title={label}
                       onClick={() => send(id, { type: 'TOGGLE' })}
                     >
-                      {on ? automation.switchOn : automation.switchOff}
+                      {on ? automation.marker : automation.switchOff}
                     </button>
                   </li>
                 )
