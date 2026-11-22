@@ -51,8 +51,18 @@ export function Hud() {
       <div className="hud-foot">
         {/* Now playing: the song, its level bars, and a mute switch. */}
         <div className={`now-playing${sound ? ' on' : ''}`}>
-          <p className="np-title">{hud.nowPlaying.title}</p>
-          <p className="np-artist">{hud.nowPlaying.artist}</p>
+          {/* One line that scrolls right to left, fading at both edges; twice, for a seamless loop. */}
+          <p className="np-marquee">
+            <span className="sr-only">{`${hud.nowPlaying.title}, ${hud.nowPlaying.artist}`}</span>
+            <span className="np-roll" aria-hidden="true">
+              {[0, 1].map((k) => (
+                <span key={k}>
+                  {hud.nowPlaying.title}
+                  <span className="np-artist"> · {hud.nowPlaying.artist}</span>
+                </span>
+              ))}
+            </span>
+          </p>
           <span className="np-bars" aria-hidden="true">
             <i />
             <i />

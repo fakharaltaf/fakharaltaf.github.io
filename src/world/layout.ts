@@ -146,7 +146,7 @@ export type View = { aspect: number; vw: number; vh: number; caretPx: number }
 export type Cam = { focus: Vec2; height: number } // height = universe units visible vertically
 
 /** Room the HUD rail takes on the right edge, in CSS px (portrait hides its labels). */
-const HUD_PX = { landscape: 170, portrait: 72 }
+const HUD_PX = { landscape: 200, portrait: 72 } // landscape: the .hud column's width + gap
 
 /**
  * Fit a box into the part of the screen that's free: left of the HUD rail, right of the DOM
