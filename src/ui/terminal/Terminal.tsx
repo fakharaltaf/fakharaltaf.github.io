@@ -81,6 +81,9 @@ export function Terminal() {
         case 'exit':
           setTimeout(close, 350)
           return
+        case 'visit':
+          setTimeout(() => (location.href = e.href), 350)
+          return
       }
     },
     [close],

@@ -1,6 +1,6 @@
 // Static HTML for the pages that must work without JavaScript: plain mode, 404, and the
 // experience shell's <head>. Pure functions over the copy deck; the Vite plugin writes them out.
-import { github, notFound, person, plain, site, skip, levels, loading } from '../../content/copy.ts'
+import { github, notFound, person, plain, site, skip, levels, loading, writing } from '../../content/copy.ts'
 import type { Activity } from '../../systems/githubCore.ts'
 import { projects } from '../../content/projects.ts'
 import { toCss } from '../../styles/tokens.ts'
@@ -96,6 +96,7 @@ dd{margin:0;word-break:break-word}
 footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid var(--line);font:400 .8125rem/1.7 var(--mono);color:var(--muted)}
 footer p{margin:0 0 .25rem}
 footer .motto{color:var(--ink)}
+footer a.quiet{color:var(--muted)}
 @media (max-width:40rem){section{grid-template-columns:1fr;gap:.75rem}}
 @media print{
 :root{--canvas:#fff;--ink:#000;--muted:#444;--line:#ccc;--anchor-ink:#000}
@@ -175,6 +176,7 @@ ${ghList(gh)}
 <p class="motto">// ${esc(person.motto)}</p>
 <p class="back"><a href="/">${esc(skip.backToExperience)}</a></p>
 <p>${esc(plain.buildStamp(stamp.size, stamp.date, stamp.commit))}</p>
+<p><a class="quiet" href="/writing/">${esc(writing.footerLink)}</a></p>
 </footer>
 </div>
 </body>
@@ -210,6 +212,56 @@ ${head({ title: notFound.title, description: notFound.line, path: '404.html', cs
 </body>
 </html>
 `
+}
+
+// Writing: the plain pages' type and colours, a narrower column for reading, the caret to sign off.
+const writingCss = `${baseCss}
+.wrap{max-width:38rem;margin:0 auto;padding:clamp(2.5rem,8vw,5.5rem) max(1rem,env(safe-area-inset-right)) 3rem max(1rem,env(safe-area-inset-left))}
+.kicker{margin:0 0 1.25rem;font:500 .8125rem/1.4 var(--mono);color:var(--muted)}
+.kicker a{color:inherit;text-decoration:none}
+.kicker a:hover{color:var(--ink)}
+h1{margin:0 0 2.5rem;font-size:clamp(2rem,6vw,2.75rem);line-height:1.1;font-weight:700;letter-spacing:-.02em}
+ol.pieces{margin:0;padding:0;list-style:none}
+ol.pieces li{display:grid;grid-template-columns:9.5rem 1fr;gap:.25rem 1.5rem;padding:1rem 0;border-top:1px solid var(--line)}
+ol.pieces time{font:400 .8125rem/1.9 var(--mono);color:var(--muted)}
+ol.pieces a{color:var(--ink);text-decoration:none}
+ol.pieces a:hover{color:var(--anchor-ink)}
+.empty{color:var(--muted)}
+article time{display:block;margin:0 0 2rem;font:400 .8125rem var(--mono);color:var(--muted)}
+article h1{margin-bottom:1rem}
+.piece p{margin:0 0 1.4em;font-size:clamp(1.0625rem,2.2vw,1.1875rem);line-height:1.75}
+footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;font:400 .8125rem/1.7 var(--mono)}
+footer a{color:var(--muted)}
+footer a:hover{color:var(--ink)}
+ol.pieces .row{display:flex;flex-wrap:wrap;gap:.25rem 1rem;align-items:baseline}
+.linkish{background:none;border:0;padding:.25rem 0;font:inherit;font-family:var(--mono);font-size:.8125rem;color:var(--muted);text-decoration:underline;text-underline-offset:.2em;cursor:pointer}
+.linkish:hover{color:var(--ink)}
+.linkish.danger:hover{color:var(--action-ink)}
+.ok{color:var(--anchor-ink)}
+form.admin{display:grid;gap:1rem;max-width:38rem}
+form.admin>.btn,.actions .btn,p>.btn{border:0;cursor:pointer;justify-self:start}
+form.admin label{display:block;margin:0 0 .35rem;font:400 .8125rem var(--mono);color:var(--muted)}
+.field{margin:0}
+.field.check{display:flex;gap:.6rem;align-items:center}
+.field.check label{margin:0}
+form.admin input:not([type=checkbox]),form.admin textarea{width:100%;padding:.65rem .75rem;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:2px}
+form.admin textarea{font-size:1.0625rem;line-height:1.7;resize:vertical}
+form.admin input:disabled{color:var(--muted)}
+form.admin input[type=checkbox]{width:1.1rem;height:1.1rem;accent-color:var(--anchor)}
+.actions{display:flex;gap:.75rem;margin:0}
+@media (max-width:30rem){ol.pieces li{grid-template-columns:1fr}}
+@media print{.caret,footer{display:none}}`
+
+/** <head> for the writing pages (built by Vite; the text itself is fetched at runtime). */
+export function writingHead(path: string): string {
+  const admin = path.includes('/admin')
+  return `${head({
+    title: admin ? writing.adminTitle : writing.title,
+    description: writing.description,
+    path: path.replace(/^\/|index\.html$/g, ''),
+    css: toCss({ withLight: true }) + writingCss,
+  })}
+<meta name="robots" content="noindex">`
 }
 
 const shellCss = `${baseCss}

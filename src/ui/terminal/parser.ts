@@ -13,6 +13,7 @@ export type Effect =
   | { type: 'mail'; delayMs: number }
   | { type: 'clear' }
   | { type: 'exit' }
+  | { type: 'visit'; href: string }
 
 export type Result = { lines: string[]; effects: Effect[]; unknown?: true }
 export type Context = { atStart: boolean; atEnd: boolean; unknownCount: number }
@@ -50,7 +51,13 @@ export function run(input: string, ctx: Context): Result {
   switch (cmd) {
     case 'help':
       return out(t.help.map(([c, d]) => `${pad(c, 20)}${d}`))
-    case 'ls':
+    case 'ls': // the only place writing/ shows up: lowkey on purpose
+      return out([...projects.map((p) => `${pad(p.id, 16)}${p.title}`), t.writingEntry])
+    case 'cd writing':
+    case 'cd writing/':
+    case 'open writing':
+    case 'open writing/':
+      return out([t.writingOpen], [{ type: 'visit', href: '/writing/' }])
     case 'ls projects':
       return out(projects.map((p) => `${pad(p.id, 16)}${p.title}`))
     case 'whoami':

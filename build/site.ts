@@ -72,8 +72,11 @@ export function site(): Plugin {
         res.end(html)
       })
     },
-    async transformIndexHtml(html) {
-      const { head, body } = (await load()).shell()
+    async transformIndexHtml(html, ctx) {
+      const r = await load()
+      if (html.includes('<!-- writing:head -->'))
+        return html.replace('<!-- writing:head -->', r.writingHead(ctx.path))
+      const { head, body } = r.shell()
       return html.replace('<!-- site:head -->', head).replace('<!-- site:body -->', body)
     },
     async generateBundle(_, bundle) {
