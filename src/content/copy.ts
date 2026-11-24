@@ -466,6 +466,7 @@ export const writing = {
     emailLabel: 'Email',
     sendLink: 'Email me a sign-in link',
     sent: (email: string) => `If ${email} can write here, a sign-in link is on its way. Open it on this device.`,
+    linkFailed: 'That link didn’t work. Each link works once, only the newest one, and only in the browser that asked for it. Send a new one.',
     notAuthor: 'This account can’t write here.',
     signOut: 'Sign out',
     newPiece: 'New piece',

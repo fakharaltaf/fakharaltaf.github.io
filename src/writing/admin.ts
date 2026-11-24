@@ -12,10 +12,10 @@ const show = (...kids: (Node | null)[]) => main.replaceChildren(...kids.filter((
 const note = (text: string, cls = 'empty') => h('p', { class: cls, role: 'status' }, text)
 const today = () => new Date().toISOString().slice(0, 10)
 
-function signInForm() {
+function signInForm(msg?: string) {
   foot.replaceChildren(h('a', { href: '/writing/' }, writing.all))
   const email = h('input', { type: 'email', id: 'email', required: true, autocomplete: 'email' }) as HTMLInputElement
-  const status = h('p', { class: 'empty', role: 'status' })
+  const status = h('p', { class: 'empty', role: 'status' }, msg ?? '')
   const form = h(
     'form',
     {
@@ -24,12 +24,13 @@ function signInForm() {
         e.preventDefault()
         const addr = email.value.trim().toLowerCase()
         // shouldCreateUser: false — unknown emails never get an account, let alone a link.
-        await db!.auth.signInWithOtp({
+        const { error } = await db!.auth.signInWithOtp({
           email: addr,
           options: { shouldCreateUser: false, emailRedirectTo: `${location.origin}/writing/admin/` },
         })
-        // Same reply either way, so the form doesn't reveal who can write.
-        status.textContent = t.sent(addr)
+        // Same reply for known and unknown emails, so the form doesn't reveal who can write.
+        // A rate limit says nothing about the email, so that one is shown.
+        status.textContent = error?.status === 429 ? error.message : t.sent(addr)
       },
     },
     h('label', { for: 'email' }, t.emailLabel),
@@ -162,10 +163,17 @@ function editor(p?: Piece) {
 if (!db) show(note(writing.notSetUp))
 else {
   show(note(writing.loading))
+  // A spent, stale or other-browser link comes back with ?code or ?error but no session.
+  const q = new URLSearchParams(location.search)
+  const fromLink = q.has('code') || q.has('error')
   // The emailed link lands here with a code; the client trades it for a session.
   // Only these redraw the page: a token refresh mid-edit must not wipe the editor.
   db.auth.onAuthStateChange((event, session) => {
     if (event !== 'INITIAL_SESSION' && event !== 'SIGNED_IN' && event !== 'SIGNED_OUT') return
-    queueMicrotask(() => (session ? void dashboard() : signInForm()))
+    const failed = event === 'INITIAL_SESSION' && !session && fromLink
+    if (session) return queueMicrotask(() => void dashboard())
+    if (!failed) return queueMicrotask(() => signInForm())
+    // initialize() is the same promise the client already ran; it holds why the link failed.
+    void db!.auth.initialize().then(({ error }) => signInForm(error ? `${t.linkFailed} (${error.message})` : t.linkFailed))
   })
 }
